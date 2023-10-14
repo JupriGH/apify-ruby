@@ -83,27 +83,45 @@ module Apify
 		@ds_store
 		@kv_store
 		
-		def initialize()
+		def initialize
 			@config 	= Apify::Configuration.new()
 			@ds_store	= Apify::DatasetStore.new(@config, @config.default_dataset_id)
 			@kv_store	= Apify::KeyValueStore.new(@config, @config.default_key_value_store_id)
 		end
 		
-		def get_input()
+		def get_input
 			get_value(@config.input_key)
 		end
 		
-		def get_value(key)
+		def get_value key
 			@kv_store.get_value(key)
 		end
+
+		#def set_value key, value
+		#end
+
+		def open_dataset
+		end
 		
-		def push_data(items)
-			@ds_store.push_data(items)
+		def push_data data
+			#self._raise_if_not_initialized()
+
+			if data 
+				dataset = self.open_dataset()
+				dataset.push_data(data)
+			end
+		end
+		
+		
+		#def on
+		#def off
+		#def is_at_home
+		
+		def create_proxy_configuration
 		end
 	end
 	
 	#################################################
 	Actor 	= ActorClass.new()
-
 
 end
