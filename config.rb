@@ -103,7 +103,7 @@ class Configuration
 	end
 
 	def self._get_default_instance
-		@@_default_instance ||= self.new
+		@@_default_instance ||= new
 	end
 	
 	def self.get_global_configuration
@@ -112,7 +112,7 @@ class Configuration
 		The global configuration applies when you call actor methods via their static versions, e.g. `Actor.init()`.
 		Also accessible via `Actor.config`.
 		"""
-		self._get_default_instance()
+		_get_default_instance
 	end
 
 end

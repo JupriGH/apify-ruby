@@ -1,11 +1,7 @@
 require_relative 'config'
 require_relative 'storages'
 
-### DUMMIES
-class ApifyClientAsync
-	def initialize *args
-	end
-end
+require_relative '../client/client'
 
 module Apify
 
@@ -24,7 +20,7 @@ class Actor
 #_is_exiting = False
 #_was_final_persist_state_emitted = False
 
-def initialize config=nil
+def initialize config: nil
 
 	"""Create an Actor instance.
 
@@ -116,7 +112,7 @@ async def __aexit__(
 =end
 
 def self._get_default_instance
-	@@_default_instance ||= self.new(config=Configuration.get_global_configuration())
+	@@_default_instance ||= self.new(config: Configuration.get_global_configuration())
 end
 
 =begin
@@ -417,7 +413,7 @@ async def _main_internal(self, main_actor_function: Callable[[], MainReturnType]
 
 ###========================================================================================================== new_client
 
-def self.new_client token=nil, api_url=nil, max_retries=nil, min_delay_between_retries_millis=nil, timeout_secs=nil
+def self.new_client token: nil, api_url: nil, max_retries: nil, min_delay_between_retries_millis: nil, timeout_secs: nil
 	raise "### 1"
 	"""Return a new instance of the Apify API client.
 
@@ -436,30 +432,17 @@ def self.new_client token=nil, api_url=nil, max_retries=nil, min_delay_between_r
 		timeout_secs (int, optional): The socket timeout of the HTTP requests sent to the Apify API
 	"""
 
-	self._get_default_instance.new_client(
-		token 								= token,
-		api_url 							= api_url,
-		max_retries							= max_retries,
-		min_delay_between_retries_millis 	= min_delay_between_retries_millis,
-		timeout_secs						= timeout_secs
-	)
+	_get_default_instance.new_client \
+		token: token, api_url: api_url, max_retries: max_retries, in_delay_between_retries_millis: min_delay_between_retries_millis, timeout_secs: timeout_secs
+
 end
 
-def new_client *args
-	_new_client_internal *args
-end
-
-def _new_client_internal token=nil, api_url=nil, max_retries=nil, min_delay_between_retries_millis=nil, timeout_secs=nil
+def new_client token: nil, api_url: nil, max_retries: nil, min_delay_between_retries_millis: nil, timeout_secs: nil
 	token 	||= @_config.token
 	api_url ||= @_config.api_base_url
 
-	ApifyClientAsync.new(
-		token								= token,
-		api_url								= api_url,
-		max_retries 						= max_retries,
-		min_delay_between_retries_millis 	= min_delay_between_retries_millis,
-		timeout_secs						= timeout_secs
-	)
+	ApifyClientAsync.new \
+		token: token, api_url: api_url,max_retries: max_retries, min_delay_between_retries_millis: min_delay_between_retries_millis, timeout_secs: timeout_secs
 end
 
 
@@ -499,7 +482,7 @@ async def _open_dataset_internal(self, *, id: Optional[str] = None, name: Option
 ###========================================================================================================== open_key_value_store
 
 # async 
-def self.open_key_value_store id=nil, name=nil, force_cloud=false
+def self.open_key_value_store id: nil, name: nil, force_cloud: false
 	"""Open a key-value store.
 
 	Key-value stores are used to store records or files, along with their MIME content type.
@@ -518,20 +501,15 @@ def self.open_key_value_store id=nil, name=nil, force_cloud=false
 		KeyValueStore: An instance of the `KeyValueStore` class for the given ID or name.
 	"""
 	# await 
-	self._get_default_instance.open_key_value_store(id=id, name=name, force_cloud=force_cloud)
+	_get_default_instance.open_key_value_store id: id, name: name, force_cloud: force_cloud
 end
 
 # async 
-def open_key_value_store *args
-	_open_key_value_store_internal *args
-end
-	
-# async 
-def _open_key_value_store_internal id=nil, name=nil, force_cloud=false
+def open_key_value_store id: nil, name: nil, force_cloud: false
 	_raise_if_not_initialized
 	
 	# await
-	KeyValueStore.open(id=id, name=name, force_cloud=force_cloud, config=@_config)
+	KeyValueStore.open id: id, name: name, force_cloud: force_cloud, config: @_config
 end
 
 =begin
@@ -595,13 +573,8 @@ def self.get_input
 	self._get_default_instance.get_input
 end
 
-# async 
-def get_input *args
-	_get_input_internal *args
-end
-
 # async
-def _get_input_internal
+def get_input
 	_raise_if_not_initialized
 		
 	input_secrets_private_key 		= @_config.input_secrets_private_key_file
@@ -636,17 +609,12 @@ def self.get_value key, default_value=nil
 	self._get_default_instance.get_value(key=key, default_value=default_value)
 end
 
-# async
-def get_value *args
-	_get_value_internal *args
-end
-
 # async 
-def _get_value_internal key, default_value=nil
+def get_value key, default_value: nil
 	_raise_if_not_initialized
 
 	# await
-	value = open_key_value_store.get_value(key, default_value) 
+	value = open_key_value_store.get_value key, default_value: default_value
 end
 
 =begin

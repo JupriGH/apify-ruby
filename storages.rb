@@ -28,7 +28,7 @@ class StorageClientManager
 	end
 	
 
-    def self.get_storage_client force_cloud=false # Union[ApifyClientAsync, MemoryStorageClient]:
+    def self.get_storage_client force_cloud: false # Union[ApifyClientAsync, MemoryStorageClient]:
         """Get the current storage client instance.
 
         Returns:
@@ -65,7 +65,7 @@ class StorageClientManager
 	end
 	
     def self._get_default_instance
-        @@_default_instance ||= self.new()
+        @@_default_instance ||= new
 	end
 end
 
@@ -132,7 +132,7 @@ class BaseStorage # (ABC, Generic[BaseResourceClientType, BaseResourceCollection
 	end
 
     # async 
-	def self.open id=nil, name=nil, force_cloud=false, config=nil		
+	def self.open id: nil, name: nil, force_cloud: false, config: nil		
         """Open a storage, or return a cached storage object if it was opened before.
 
         Opens a storage with the given ID or name.
@@ -164,7 +164,7 @@ class BaseStorage # (ABC, Generic[BaseResourceClientType, BaseResourceCollection
 		raise unless not (id and name)
 		
         used_config = config or Configuration.get_global_configuration
-        used_client = StorageClientManager.get_storage_client(force_cloud=force_cloud)
+        used_client = StorageClientManager.get_storage_client(force_cloud: force_cloud)
 
 		# Fetch default ID if no ID or name was passed
         is_default_storage_on_local = false
@@ -420,7 +420,7 @@ class KeyValueStore < BaseStorage
 =end
 
 	# async
-    def self.open id=nil, name=nil, force_cloud=false, config=nil
+    def self.open id: nil, name: nil, force_cloud: false, config: nil
         """Open a key-value store.
 
         Key-value stores are used to store records or files, along with their MIME content type.
@@ -443,7 +443,7 @@ class KeyValueStore < BaseStorage
         """
 	
 		# await
-        super.open(id=id, name=name, force_cloud=force_cloud, config=config)
+        super.open(id:id, name:name, force_cloud:force_cloud, config:config)
 	end
 	
 end
