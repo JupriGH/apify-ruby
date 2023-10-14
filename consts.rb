@@ -1,4 +1,4 @@
-module Constants
+module Apify
 
 class ActorJobStatus
 
