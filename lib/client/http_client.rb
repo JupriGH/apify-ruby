@@ -1,6 +1,7 @@
 require 'net/http'
 require 'json'
-require 'stringio'
+#require 'stringio'
+require 'brotli'
 require 'rbconfig'
 
 module Apify
@@ -44,12 +45,17 @@ class BaseHTTPClient
 		# COMPRESSION
 		case response['content-encoding']
 		when "gzip"
-			sio 	= StringIO.new response.body
-			gz 		= Zlib::GzipReader.new sio
+			# res.body = Brotli.inflate(res.body)
+			res.body = Zlib::Inflate.new(31).inflate(res.body) # gzip
 			
-			response.body = gz.read
+			#sio 	= StringIO.new response.body
+			#gz 		= Zlib::GzipReader.new sio
+			#response.body = gz.read
+			
+		when "deflate"
+			res.body = Zlib::Inflate.new(-15).inflate(res.body) # deflate		
 		when "br"
-			raise "TODO: brotli"
+			response.body = Brotli.inflate(response.body)
 		end
 
 		content_type = nil		
