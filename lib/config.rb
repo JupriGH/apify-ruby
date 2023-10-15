@@ -103,8 +103,7 @@ class Configuration
 		#end
 		
 		######### TEST
-		#@input_key = "INPUT_KEY_TEST"
-		#@default_key_value_store_id = "ThaIiaGvLxtrIH5QD"
+		@default_key_value_store_id = "ThaIiaGvLxtrIH5QD"
 		
 	end
 

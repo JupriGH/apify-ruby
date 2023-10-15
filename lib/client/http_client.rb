@@ -40,6 +40,17 @@ class BaseHTTPClient
 			return 
 		end
 
+		# COMPRESSION
+		case response['content-encoding']
+		when "gzip"
+			sio 	= StringIO.new response.body
+			gz 		= Zlib::GzipReader.new sio
+			
+			response.body = gz.read
+		when "br"
+			raise "TODO: brotli"
+		end
+
 		content_type = nil		
 		t = response["Content-Type"]
 		if t
@@ -92,7 +103,7 @@ class BaseHTTPClient
 				parsed_params[key] = val
 			end
 			
-			puts "Key: #{key}, Value: #{value}"
+			#puts "Key: #{key}, Value: #{val}"
 		end
 		parsed_params
 
@@ -108,8 +119,9 @@ class BaseHTTPClient
             headers = {}
 		end
 		
-        # dump JSON data to string, so they can be gzipped
+		headers['Accept-Encoding'] = "br, gzip, deflate"
 		
+        # dump JSON data to string, so they can be gzipped
         if json
             #data = jsonlib.dumps(json, ensure_ascii=False, allow_nan=False, default=str).encode('utf-8')
 			data = json.to_json
@@ -149,9 +161,7 @@ class HTTPClient < BaseHTTPClient
 		end
 
         headers, params, content = _prepare_request_call(headers, params, data, json)
-		
-		
-		
+
 		###################################################################################
 		headers = {**@headers, **headers}
 
@@ -199,8 +209,11 @@ class HTTPClient < BaseHTTPClient
 			# Handle the response
 			if res.is_a?(Net::HTTPSuccess)
 
+				res.each do |key, val|
+					p "#{key}: #{val}"
+				end
+								
 				_maybe_parsed_body = nil
-				
 				if not stream
 					if parse_response
 						_maybe_parsed_body = _maybe_parse_response res
@@ -217,6 +230,7 @@ class HTTPClient < BaseHTTPClient
 			else
 				# TODO: handle errors
 				p "HTTP Error: #{res.code}"
+				raise
 				return nil
 			end
 		end
@@ -278,78 +292,5 @@ class HTTPClient < BaseHTTPClient
 
 	end
 end
-
-=begin
-class HTTPClientAsync < BaseHTTPClient
-
-    # async 
-	def call method: nil, url: nil, headers: nil, params: nil, data: nil, json: nil, stream: nil, parse_response: true
-
-        # log_context.method.set(method)
-        # log_context.url.set(url)
-
-        # if stream and parse_response:
-        #    raise ValueError('Cannot stream response and parse it at the same time!')
-
-        headers, params, content = _prepare_request_call(headers, params, data, json)
-
-
-        httpx_async_client = self.httpx_async_client
-
-        async def _make_request(stop_retrying: Callable, attempt: int) -> httpx.Response:
-            log_context.attempt.set(attempt)
-            logger.debug('Sending request')
-            try:
-                request = httpx_async_client.build_request(
-                    method=method,
-                    url=url,
-                    headers=headers,
-                    params=params,
-                    content=content,
-                )
-                response = await httpx_async_client.send(
-                    request=request,
-                    stream=stream or False,
-                )
-
-                # If response status is < 300, the request was successful, and we can return the result
-                if response.status_code < 300:
-                    logger.debug('Request successful', extra={'status_code': response.status_code})
-                    if not stream:
-                        if parse_response:
-                            _maybe_parsed_body = self._maybe_parse_response(response)
-                        else:
-                            _maybe_parsed_body = response.content
-                        setattr(response, '_maybe_parsed_body', _maybe_parsed_body)  # noqa: B010
-
-                    return response
-
-            except Exception as e:
-                logger.debug('Request threw exception', exc_info=e)
-                if not _is_retryable_error(e):
-                    logger.debug('Exception is not retryable', exc_info=e)
-                    stop_retrying()
-                raise e
-
-            # We want to retry only requests which are server errors (status >= 500) and could resolve on their own,
-            # and also retry rate limited requests that throw 429 Too Many Requests errors
-            logger.debug('Request unsuccessful', extra={'status_code': response.status_code})
-            if response.status_code < 500 and response.status_code != HTTPStatus.TOO_MANY_REQUESTS:
-                logger.debug('Status code is not retryable', extra={'status_code': response.status_code})
-                stop_retrying()
-            raise ApifyApiError(response, attempt)
-
-        return await _retry_with_exp_backoff_async(
-            _make_request,
-            max_retries=self.max_retries,
-            backoff_base_millis=self.min_delay_between_retries_millis,
-            backoff_factor=DEFAULT_BACKOFF_EXPONENTIAL_FACTOR,
-            random_factor=DEFAULT_BACKOFF_RANDOM_FACTOR,
-        )
-
-	end
-
-end
-=end
 
 end

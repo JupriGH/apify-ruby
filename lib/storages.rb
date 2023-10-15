@@ -283,7 +283,7 @@ class KeyValueStore < BaseStorage
     #_name: Optional[str]
     @_key_value_store_client # Union[KeyValueStoreClientAsync, KeyValueStoreClient]
 
-    def initialize id, name, client, config
+    def initialize id: nil, name: nil, client: nil, config: nil
 		"""Create a `KeyValueStore` instance.
 
         Do not use the constructor directly, use the `Actor.open_key_value_store()` function instead.
@@ -296,7 +296,7 @@ class KeyValueStore < BaseStorage
         """
 		
 		
-        super id, name, client, config
+        super id: id, name: name, client: client, config: config
 
         # self.get_value = _wrap_internal(self._get_value_internal, self.get_value)  # type: ignore
         # self.set_value = _wrap_internal(self._set_value_internal, self.set_value)  # type: ignore
@@ -304,6 +304,7 @@ class KeyValueStore < BaseStorage
         
 		# self._id = id
         # self._name = name
+		
         @_key_value_store_client = client.key_value_store(@_id)
 		
 	end
@@ -629,22 +630,10 @@ class Dataset < BaseStorage
             flatten=flatten,
             view=view,
         )
+=end
 
-    async def _get_data_internal(
-        self,
-        *,
-        offset: Optional[int] = None,
-        limit: Optional[int] = None,
-        clean: Optional[bool] = None,
-        desc: Optional[bool] = None,
-        fields: Optional[List[str]] = None,
-        omit: Optional[List[str]] = None,
-        unwind: Optional[str] = None,
-        skip_empty: Optional[bool] = None,
-        skip_hidden: Optional[bool] = None,
-        flatten: Optional[List[str]] = None,
-        view: Optional[str] = None,
-    ) -> ListPage:
+    def get_data offset: nil, limit: nil, clean: nil, desc: nil, fields: nil, omit: nil, unwind: nil, skip_empty: nil, skip_hidden: nil, flatten: nil, view: nil
+    
         # try {
         #     return await this.client.listItems(options);
         # } catch (e) {
@@ -655,20 +644,23 @@ class Dataset < BaseStorage
         #     throw e;
         # }
         # TODO: Simulate the above error in Python and handle accordingly...
-        return await self._dataset_client.list_items(
-            offset=offset,
-            limit=limit,
-            desc=desc,
-            clean=clean,
-            fields=fields,
-            omit=omit,
-            unwind=unwind,
-            skip_empty=skip_empty,
-            skip_hidden=skip_hidden,
-            flatten=flatten,
-            view=view,
+        
+		@_dataset_client.list_items(
+            offset: offset,
+            limit: limit,
+            desc: desc,
+            clean: clean,
+            fields: fields,
+            omit: omit,
+            unwind: unwind,
+            skip_empty: skip_empty,
+            skip_hidden: skip_hidden,
+            flatten: flatten,
+            view: view
         )
-
+	end
+	
+=begin
     async def export_to(
         self,
         key: str,
@@ -796,15 +788,18 @@ class Dataset < BaseStorage
             to_key_value_store_name=to_key_value_store_name,
             content_type='text/csv',
         )
+=end
 
-    async def get_info(self) -> Optional[Dict]:
+    def get_info
         """Get an object containing general information about the dataset.
 
         Returns:
             dict: Object returned by calling the GET dataset API endpoint.
         """
-        return await self._dataset_client.get()
+        @_dataset_client.get
+	end
 
+=begin
     def iterate_items(
         self,
         *,
