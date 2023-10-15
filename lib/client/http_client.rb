@@ -147,9 +147,18 @@ class HTTPClient < BaseHTTPClient
 
         headers, params, content = _prepare_request_call(headers, params, data, json)
 		
+		
+		
 		###################################################################################
 		headers = {**@headers, **headers}
 
+		p method
+		p url
+		p headers
+		p params
+		p streams
+		p parse_response
+		
 		uri = URI.parse(url)
 
 		# start session
