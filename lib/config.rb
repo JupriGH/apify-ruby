@@ -2,7 +2,7 @@ require_relative 'consts'
 
 def getenv(key, default=nil)
 	val = ENV[key] # string or nil	
-	if val.nil? || var.empty?
+	if val.nil? || val.empty?
 		val = default
 	end
 end
