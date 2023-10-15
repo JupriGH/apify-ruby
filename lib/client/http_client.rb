@@ -156,7 +156,7 @@ class HTTPClient < BaseHTTPClient
 		p url
 		p headers
 		p params
-		p streams
+		p stream
 		p parse_response
 		
 		uri = URI.parse(url)
