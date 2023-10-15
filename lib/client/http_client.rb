@@ -18,10 +18,11 @@ class BaseHTTPClient
 			@headers['X-Apify-Workflow-Key'] = workflow_key
 		end
 		
-        #is_at_home = ('APIFY_IS_AT_HOME' in os.environ)
-        #python_version = '.'.join([str(x) for x in sys.version_info[:3]])
-        #client_version = metadata.version('apify-client')
-        #@headers['User-Agent'] = f'ApifyClient/{client_version} ({sys.platform}; Python/{python_version}); isAtHome/{is_at_home}'
+        is_at_home = true # ('APIFY_IS_AT_HOME' in os.environ)
+        python_version = '3.11.5' # '.'.join([str(x) for x in sys.version_info[:3]])
+        client_version = "1.1.5" # metadata.version('apify-client')
+		platform = 'linux' # sys.platform
+        @headers['User-Agent'] = "ApifyClient/#{client_version} (#{platform}; Python/#{python_version}); isAtHome/#{is_at_home}"
 		
         if token
             @headers['Authorization'] = "Bearer #{token}"
