@@ -1,5 +1,6 @@
 require 'net/http'
 require 'json'
+require 'rbconfig'
 
 module Apify
 
@@ -18,11 +19,12 @@ class BaseHTTPClient
 			@headers['X-Apify-Workflow-Key'] = workflow_key
 		end
 		
-        is_at_home = true # ('APIFY_IS_AT_HOME' in os.environ)
-        python_version = '3.11.5' # '.'.join([str(x) for x in sys.version_info[:3]])
-        client_version = "1.1.5" # metadata.version('apify-client')
-		platform = 'linux' # sys.platform
-        @headers['User-Agent'] = "ApifyClient/#{client_version} (#{platform}; Python/#{python_version}); isAtHome/#{is_at_home}"
+        is_at_home 		= ENV.include? 'APIFY_IS_AT_HOME'
+        python_version 	= RUBY_VERSION  # '3.11.5' # '.'.join([str(x) for x in sys.version_info[:3]])
+        client_version 	= "1.1.5" # metadata.version('apify-client')
+		platform 		= RbConfig::CONFIG['host_os'] # 'linux' # sys.platform
+        
+		@headers['User-Agent'] = "ApifyClient/#{client_version} (#{platform}; Ruby/#{python_version}); isAtHome/#{is_at_home}"
 		
         if token
             @headers['Authorization'] = "Bearer #{token}"
