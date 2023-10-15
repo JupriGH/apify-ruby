@@ -104,7 +104,7 @@ class Configuration
 		#@token = 'sAhMHaJwazGywqJfgpw4AcvSZ'
 		
 		p "### TOKEN ###"
-		@token
+		p @token
 	end
 
 	def self._get_default_instance
