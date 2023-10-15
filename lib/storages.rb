@@ -74,18 +74,17 @@ end
 class BaseStorage # (ABC, Generic[BaseResourceClientType, BaseResourceCollectionClientType]):
     """A class for managing storages."""
 
-    #_id: str
-    #_name: Optional[str]
-    #_storage_client: Union[ApifyClientAsync, MemoryStorageClient]
-    #_config: Configuration
+	attr_accessor :_id, :_name
+	
+    @_storage_client
+    @_config
 
     @@_cache_by_id
     @@_cache_by_name
     
 	# _storage_creating_lock: Optional[asyncio.Lock] = None
 
-=begin
-    def __init__(self, id: str, name: Optional[str], client: Union[ApifyClientAsync, MemoryStorageClient], config: Configuration):
+    def initialize id, name, client, config
         """Initialize the storage.
 
         Do not use this method directly, but use `Actor.open_<STORAGE>()` instead.
@@ -96,23 +95,25 @@ class BaseStorage # (ABC, Generic[BaseResourceClientType, BaseResourceCollection
             client (ApifyClientAsync or MemoryStorageClient): The storage client
             config (Configuration): The configuration
         """
-        self._id = id
-        self._name = name
-        self._storage_client = client
-        self._config = config
+        @_id = id
+        @_name = name
+        @_storage_client = client
+        @_config = config
 	
-=end
+	end
 	
 	###================================================================================= ABSTRACTS
 	"""
     def self._get_human_friendly_label
         raise 'You must override this method in the subclass!' # NotImplementedError
 	end
+	"""
 	
     def self._get_default_id config
         raise 'You must override this method in the subclass!' # NotImplementedError
 	end
 	
+	"""
     def self._get_single_storage_client id, client
         raise 'You must override this method in the subclass!' # NotImplementedError
 	end
@@ -132,7 +133,7 @@ class BaseStorage # (ABC, Generic[BaseResourceClientType, BaseResourceCollection
 	end
 
     # async 
-	def self.open id: nil, name: nil, force_cloud: false, config: nil		
+	def self.open id: nil, name: nil, force_cloud: false, config: nil	
         """Open a storage, or return a cached storage object if it was opened before.
 
         Opens a storage with the given ID or name.
@@ -175,19 +176,20 @@ class BaseStorage # (ABC, Generic[BaseResourceClientType, BaseResourceCollection
             id = _get_default_id(used_config)
 		end
 		
-        # Try to get the storage instance from cache
-		"""
+        # Try to get the storage instance from cache		
 		cached_storage = nil
         if id
-            cached_storage = cls._cache_by_id.get(id)
+            cached_storage = @@_cache_by_id[id]
         elsif name
-            cached_storage = cls._cache_by_name.get(name)
+            cached_storage = @@_cache_by_name[name]
 		end
 		
-        if cached_storage is not None:
+        if cached_storage
             # This cast is needed since MyPy doesn't understand very well that Self and Storage are the same
-            return cast(Self, cached_storage)
-		"""
+            # return cast(Self, cached_storage)
+			raise "CACHE FOUND"
+			return cached_storage
+		end
 		
         # Purge default storages if configured
         """
@@ -201,15 +203,13 @@ class BaseStorage # (ABC, Generic[BaseResourceClientType, BaseResourceCollection
 			# Create the storage
             if true # id and not is_default_storage_on_local
 
-                single_storage_client 	= _get_single_storage_client(id, used_client)
+                single_storage_client 	= _get_single_storage_client(id, used_client)				
                 storage_info 			= single_storage_client.get() # await 
 				
-				raise "TODO"
-				
                 if not storage_info
-                    raise "#{_get_human_friendly_label} with id \"#{id}\" does not exist!" # RuntimeError
+                    raise "#{@human_friendly_label} with id \"#{id}\" does not exist!" # RuntimeError
 				end
-				
+
             elsif is_default_storage_on_local
 
 				raise "TODO"
@@ -221,17 +221,15 @@ class BaseStorage # (ABC, Generic[BaseResourceClientType, BaseResourceCollection
                 #storage_collection_client = cls._get_storage_collection_client(used_client)
                 #storage_info = await storage_collection_client.get_or_create(name=name)
 			end
+										
+            storage = new storage_info['id'], storage_info['name'], used_client, used_config
 			
-			raise "TODO"
-			
-            storage = new(storage_info['id'], storage_info.get('name'), used_client, used_config)
-
             # Cache by id and name
             @@_cache_by_id[storage._id] = storage
             if storage._name
                 @@_cache_by_name[storage._name] = storage
 			end
-			
+	
         return storage
 	end
 
@@ -282,15 +280,14 @@ class KeyValueStore < BaseStorage
     [Apify Key-value store](https://docs.apify.com/storage/key-value-store) cloud storage.
     """
 
-=begin
+	@human_friendly_label = 'Key-value store'
+	
+    #_id: str
+    #_name: Optional[str]
+    @_key_value_store_client # Union[KeyValueStoreClientAsync, KeyValueStoreClient]
 
-    _id: str
-    _name: Optional[str]
-    _key_value_store_client: Union[KeyValueStoreClientAsync, KeyValueStoreClient]
-
-    @ignore_docs
-    def __init__(self, id: str, name: Optional[str], client: Union[ApifyClientAsync, MemoryStorageClient], config: Configuration) -> None:
-        """Create a `KeyValueStore` instance.
+    def initialize id, name, client, config
+		"""Create a `KeyValueStore` instance.
 
         Do not use the constructor directly, use the `Actor.open_key_value_store()` function instead.
 
@@ -300,19 +297,23 @@ class KeyValueStore < BaseStorage
             client (ApifyClientAsync or MemoryStorageClient): The storage client which should be used.
             config (Configuration): The configuration which should be used.
         """
-        super().__init__(id=id, name=name, client=client, config=config)
+		
+		
+        super id, name, client, config
 
-        self.get_value = _wrap_internal(self._get_value_internal, self.get_value)  # type: ignore
-        self.set_value = _wrap_internal(self._set_value_internal, self.set_value)  # type: ignore
-        self.get_public_url = _wrap_internal(self._get_public_url_internal, self.get_public_url)  # type: ignore
-        self._id = id
-        self._name = name
-        self._key_value_store_client = client.key_value_store(self._id)
-
-    @classmethod
-    def _get_human_friendly_label(cls) -> str:
-        return 'Key-value store'
-=end
+        # self.get_value = _wrap_internal(self._get_value_internal, self.get_value)  # type: ignore
+        # self.set_value = _wrap_internal(self._set_value_internal, self.set_value)  # type: ignore
+        # self.get_public_url = _wrap_internal(self._get_public_url_internal, self.get_public_url)  # type: ignore
+        
+		# self._id = id
+        # self._name = name
+        @_key_value_store_client = client.key_value_store(@_id)
+		
+	end
+	
+    # def self._get_human_friendly_label
+    #    'Key-value store'
+	# end
 
     def self._get_default_id config
         config.default_key_value_store_id
@@ -341,9 +342,9 @@ class KeyValueStore < BaseStorage
     @classmethod
     async def get_value(cls, key: str, default_value: Optional[T] = None) -> Optional[T]:
         ...
+=end
 
-    @classmethod
-    async def get_value(cls, key: str, default_value: Optional[T] = None) -> Optional[T]:
+    def self.get_value key: nil, default_value: nil
         """Get a value from the key-value store.
 
         Args:
@@ -353,13 +354,16 @@ class KeyValueStore < BaseStorage
         Returns:
             Any: The value associated with the given key. `default_value` is used in case the record does not exist.
         """
-        store = await cls.open()
-        return await store.get_value(key, default_value)
 
-    async def _get_value_internal(self, key: str, default_value: Optional[T] = None) -> Optional[T]:
-        record = await self._key_value_store_client.get_record(key)
-        return record['value'] if record else default_value
-
+        open.get_value(key, default_value)
+	end
+	
+    def get_value key, default_value
+        record = @_key_value_store_client.get_record(key)
+		record ? record[:value] : default_value
+	end
+	
+=begin
     async def iterate_keys(self, exclusive_start_key: Optional[str] = None) -> AsyncIterator[IterateKeysTuple]:
         """Iterate over the keys in the key-value store.
 
@@ -422,7 +426,10 @@ class KeyValueStore < BaseStorage
         self._remove_from_cache()
 =end
 
+
+
 	# async
+=begin
     def self.open id: nil, name: nil, force_cloud: false, config: nil
         """Open a key-value store.
 
@@ -446,9 +453,18 @@ class KeyValueStore < BaseStorage
         """
 	
 		# await
-        super.open id:id, name:name, force_cloud:force_cloud, config:config
+		p "@@@ KeyValueStore.open ... "
+        superclass.open( id:id, name:name, force_cloud:force_cloud, config:config )
+		raise "@@@ KeyValueStore.open =>"
+		
+		
+		
+		
+		p ret
+		return ret
 	end
-	
+=end
+
 end
 
 end

@@ -2,15 +2,9 @@ require_relative 'consts'
 
 def getenv(key, default=nil)
 	val = ENV[key] # string or nil	
-	
-
-	if val.nil?
+	if val.nil? || var.empty?
 		val = default
 	end
-
-	p key
-	p val
-	
 end
 
 module Apify
@@ -96,16 +90,19 @@ class Configuration
 		#@proxy_status_url = proxy_status_url or getenv(ApifyEnvVars::PROXY_STATUS_URL, 'http://proxy.apify.com')
 		#@purge_on_start = purge_on_start or getenv(ApifyEnvVars::PURGE_ON_START, False)
 		#@started_at = getenv(ActorEnvVars::STARTED_AT)
-		#@timeout_at = getenv(ActorEnvVars::TIMEOUT_AT)
-		
+		#@timeout_at = getenv(ActorEnvVars::TIMEOUT_AT)		
 		@token 							= getenv(ApifyEnvVars::TOKEN)
-		#@token 							= '12345'
-		
 		#@user_id = getenv(ApifyEnvVars::USER_ID)
 		#@xvfb = getenv(ApifyEnvVars::XVFB, False)
 		#@system_info_interval_millis = system_info_interval_millis or getenv(ApifyEnvVars::SYSTEM_INFO_INTERVAL_MILLIS, 60000)
 		
 		# p self
+		
+		######### TEST
+		#@input_key = "INPUT_KEY_TEST"
+		# @default_key_value_store_id = "lzIZbQglkrWkvQAAm"
+		# @token = 'sAhMHaJwazGywqJfgpw4AcvSZ'
+		
 	end
 
 	def self._get_default_instance

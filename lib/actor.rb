@@ -113,7 +113,7 @@ async def __aexit__(
 =end
 
 def self._get_default_instance
-	@@_default_instance ||= self.new(config: Configuration.get_global_configuration())
+	@@_default_instance ||= new(config: Configuration.get_global_configuration())
 end
 
 =begin
@@ -187,7 +187,7 @@ def init
 	if @_config.token
 		StorageClientManager.set_cloud_client(@_apify_client)
 	end
-
+	
 	"""
 	await self._event_manager.init()
 
@@ -212,7 +212,7 @@ def init
 	# We need to make a first, dummy call, so the next calls have something to compare itself agains
 	_get_cpu_usage_percent()
 	"""
-	
+
 	@_is_initialized = true
 
 end
@@ -436,8 +436,6 @@ def new_client token: nil, api_url: nil, max_retries: nil, min_delay_between_ret
 	token 	||= @_config.token
 	api_url ||= @_config.api_base_url
 
-	p api_url
-
 	#ApifyClientAsync.new \
 	ApifyClient.new \
 		token: token, api_url: api_url,max_retries: max_retries, min_delay_between_retries_millis: min_delay_between_retries_millis, timeout_secs: timeout_secs
@@ -503,7 +501,7 @@ def self.open_key_value_store id: nil, name: nil, force_cloud: false
 end
 
 # async 
-def open_key_value_store id: nil, name: nil, force_cloud: false
+def open_key_value_store id: nil, name: nil, force_cloud: false	
 	_raise_if_not_initialized
 	
 	# await
@@ -567,6 +565,7 @@ async def _push_data_internal(self, data: Any) -> None:
 
 # async 
 def self.get_input
+	
 	"""Get the actor input value from the default key-value store associated with the current actor run."""
 	_get_default_instance.get_input
 end
@@ -590,8 +589,7 @@ def get_input
 		"""
 		raise "TODO"
 	end
-	
-	# return input_value
+	return input_value
 end
 
 ###========================================================================================================== get_value
@@ -608,7 +606,7 @@ def self.get_value key, default_value=nil
 end
 
 # async 
-def get_value key, default_value: nil
+def get_value key, default_value=nil
 	_raise_if_not_initialized
 
 	# await

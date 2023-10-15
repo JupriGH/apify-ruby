@@ -1,4 +1,5 @@
 require 'net/http'
+require 'json'
 
 module Apify
 
@@ -29,29 +30,35 @@ class BaseHTTPClient
 		# self.httpx_client = httpx.Client(headers=headers, follow_redirects=True, timeout=timeout_secs)
         # self.httpx_async_client = httpx.AsyncClient(headers=headers, follow_redirects=True, timeout=timeout_secs)
 	end
-=begin
-	"""
-    @staticmethod
-    def _maybe_parse_response(response: httpx.Response) -> Any:
-        if response.status_code == HTTPStatus.NO_CONTENT:
-            return None
 
-        content_type = ''
-        if 'content-type' in response.headers:
-            content_type = response.headers['content-type'].split(';')[0].strip()
+    def _maybe_parse_response response # Net::HTTPResponse
+		# 204 NO_CONTENT
+		if response.body.nil? || response.code == 204 # NO_CONTENT
+			return 
+		end
 
-        try:
-            if is_content_type_json(content_type):
-                return response.json()
-            elif is_content_type_xml(content_type) or is_content_type_text(content_type):
-                return response.text
-            else:
-                return response.content
-        except ValueError as err:
-            raise InvalidResponseBodyError(response) from err
+		content_type = nil		
+		t = response["Content-Type"]
+		if t
+			content_type = t.split(";")[0]
+		end
+
+        #try:
+            
+			#if is_content_type_json(content_type)
+			if content_type =~ /^.*?\/json$/
+                return JSON.parse(response.body)            
+			#elsif is_content_type_xml(content_type) or is_content_type_text(content_type)
+            #    return response.body
+            else
+                # return response.body
+			end
+			
+		#except ValueError as err:
+        #    raise InvalidResponseBodyError(response) from err
+		return nil
 	end
-	"""
-=end
+
     def _parse_params params
         if not params
             return
@@ -102,7 +109,7 @@ class BaseHTTPClient
 		
         if json
             #data = jsonlib.dumps(json, ensure_ascii=False, allow_nan=False, default=str).encode('utf-8')
-			data = data.to_json
+			data = json.to_json
 			headers['Content-Type'] = 'application/json'
 		end
 		
@@ -129,7 +136,7 @@ class HTTPClient < BaseHTTPClient
         data: nil,
         json: nil,
         stream: nil,
-        parse_response: nil
+        parse_response: true
     )
         # log_context.method.set(method)
         # log_context.url.set(url)
@@ -139,20 +146,69 @@ class HTTPClient < BaseHTTPClient
 		end
 
         headers, params, content = _prepare_request_call(headers, params, data, json)
-
+		
+		###################################################################################
 		headers = {**@headers, **headers}
 
-		p method
-		p url
-		p headers
-		p params
-		p content # data
-		p json
-		p stream
-		p parse_response
+		uri = URI.parse(url)
+
+		# start session
+		Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == 'https') do |http|
+
+			if params && params.length > 0
+				raise "TODO: params"
+			end
+			
+			if stream
+				raise "TODO: stream"
+			end	
+			
+			#post 	= { query: { site: 'stackoverflow', page: 1 } }
 		
-		raise "TODO"
-		
+			# Create the request
+			if method == 'POST'
+				raise "TODO: POST"
+				req = Net::HTTP::Post.new uri
+				if content
+					req.body = content
+				end
+			else
+				req = Net::HTTP::Get.new uri
+			end
+
+			# headers
+			headers.each do |key, val|
+				req[key] = val
+			end
+
+			# Perform the request
+			res = http.request(req)
+
+			# Handle the response
+			if res.is_a?(Net::HTTPSuccess)
+
+				_maybe_parsed_body = nil
+				
+				if not stream
+					if parse_response
+						_maybe_parsed_body = _maybe_parse_response res
+					else
+						#_maybe_parsed_body = res.body # response.content
+					end
+					# setattr(response, '_maybe_parsed_body', _maybe_parsed_body)  # noqa: B010
+					
+					
+				end
+				
+				return { response: res, parsed: _maybe_parsed_body }
+			
+			else
+				# TODO: handle errors
+				p "HTTP Error: #{res.code}"
+				return nil
+			end
+		end
+
 =begin
         httpx_client = self.httpx_client
 

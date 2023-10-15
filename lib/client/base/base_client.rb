@@ -16,7 +16,7 @@ class BaseBaseClient # (metaclass=_WithLogDetailsClient):
 	end
 	
     def _params **kwargs
-        { **@params,  **kwargs }
+        { **(@params||{}) ,  **(kwargs||{}) }
 	end
 
     def _sub_resource_init_options **kwargs
@@ -65,56 +65,7 @@ class BaseClient < BaseBaseClient
             safe_id = Utils._to_safe_id(resource_id)
             @url = "#{@url}/#{safe_id}"
 		end
-		
-		
 	end
 end
-
-=begin
-class BaseClientAsync < BaseBaseClient
-    """Base class for async sub-clients."""
-
-    @http_client # _HTTPClientAsync
-    @root_client # ApifyClientAsync
-
-    def initialize (
-        base_url: nil,
-        root_client: nil, #  : ApifyClientAsync,
-        http_client: nil, # : _HTTPClientAsync,
-        resource_id: nil,
-        resource_path: nil,
-        params: nil
-    )
-        """Initialize the sub-client.
-
-        Args:
-            base_url (str): Base URL of the API server
-            root_client (ApifyClientAsync): The ApifyClientAsync instance under which this resource client exists
-            http_client (_HTTPClientAsync): The _HTTPClientAsync instance to be used in this client
-            resource_id (str): ID of the manipulated resource, in case of a single-resource client
-            resource_path (str): Path to the resource's endpoint on the API server
-            params (dict): Parameters to include in all requests from this client
-        """
-		
-
-        #if resource_path.endswith('/'):
-        #    raise ValueError('resource_path must not end with "/"')
-
-        @base_url 		= base_url
-        @root_client 	= root_client
-        @http_client 	= http_client
-        @params 		= params or {}
-        @resource_path 	= resource_path
-        @resource_id 	= resource_id        
-		@url 			= "#{base_url}/#{resource_path}"
-		
-		if resource_id
-            @safe_id 	= _to_safe_id(resource_id)
-            @url 		= "#{@url}/#{@safe_id}"
-		end
-	end
-
-end
-=end
 
 end
