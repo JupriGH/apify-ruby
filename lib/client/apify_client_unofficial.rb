@@ -1,5 +1,7 @@
 require_relative 'http_client'
+require_relative 'clients/dataset'
 require_relative 'clients/key_value_store'
+
 
 module Apify
 
@@ -96,15 +98,17 @@ class ApifyClient < BaseApifyClient
     def runs(self) -> RunCollectionClient:
         """Retrieve the sub-client for querying multiple actor runs of a user."""
         return RunCollectionClient(**self._options())
-
-    def dataset(self, dataset_id: str) -> DatasetClient:
+=end
+    def dataset dataset_id
         """Retrieve the sub-client for manipulating a single dataset.
 
         Args:
             dataset_id (str): ID of the dataset to be manipulated
         """
-        return DatasetClient(resource_id=dataset_id, **self._options())
-
+        DatasetClient.new resource_id: dataset_id, **_options
+	end
+	
+=begin
     def datasets(self) -> DatasetCollectionClient:
         """Retrieve the sub-client for manipulating datasets."""
         return DatasetCollectionClient(**self._options())

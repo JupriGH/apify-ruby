@@ -8,72 +8,72 @@ module Apify
 
 class Actor
 
-"""The main class of the SDK, through which all the actor operations should be done."""
+	"""The main class of the SDK, through which all the actor operations should be done."""
 
-@@_default_instance = nil
+	@@_default_instance = nil
 
-#_apify_client: ApifyClientAsync
-#_memory_storage_client: MemoryStorageClient
-#_config: Configuration
-#_event_manager: EventManager
-#_send_system_info_interval_task: Optional[asyncio.Task] = None
-#_send_persist_state_interval_task: Optional[asyncio.Task] = None
-#_is_exiting = False
-#_was_final_persist_state_emitted = False
+	#_apify_client: ApifyClientAsync
+	#_memory_storage_client: MemoryStorageClient
+	#_config: Configuration
+	#_event_manager: EventManager
+	#_send_system_info_interval_task: Optional[asyncio.Task] = None
+	#_send_persist_state_interval_task: Optional[asyncio.Task] = None
+	#_is_exiting = False
+	#_was_final_persist_state_emitted = False
 
-def initialize config: nil
+	def initialize config: nil
 
-	"""Create an Actor instance.
+		"""Create an Actor instance.
 
-	Note that you don't have to do this, all the methods on this class function as classmethods too,
-	and that is their preferred usage.
+		Note that you don't have to do this, all the methods on this class function as classmethods too,
+		and that is their preferred usage.
 
-	Args:
-		config (Configuration, optional): The actor configuration to be used. If not passed, a new Configuration instance will be created.
-	"""
-	# To have methods which work the same as classmethods and instance methods,
-	# so you can do both Actor.xxx() and Actor().xxx(),
-	# we need to have an `_xxx_internal` instance method which contains the actual implementation of the method,
-	# and then in the instance constructor overwrite the `xxx` classmethod with the `_xxx_internal` instance method,
-	# while copying the annotations, types and so on.
+		Args:
+			config (Configuration, optional): The actor configuration to be used. If not passed, a new Configuration instance will be created.
+		"""
+		# To have methods which work the same as classmethods and instance methods,
+		# so you can do both Actor.xxx() and Actor().xxx(),
+		# we need to have an `_xxx_internal` instance method which contains the actual implementation of the method,
+		# and then in the instance constructor overwrite the `xxx` classmethod with the `_xxx_internal` instance method,
+		# while copying the annotations, types and so on.
 
-	"""
-	self.init = _wrap_internal(self._init_internal, self.init)  # type: ignore
-	self.exit = _wrap_internal(self._exit_internal, self.exit)  # type: ignore
-	self.fail = _wrap_internal(self._fail_internal, self.fail)  # type: ignore
-	self.main = _wrap_internal(self._main_internal, self.main)  # type: ignore
-	self.new_client = _wrap_internal(self._new_client_internal, self.new_client)  # type: ignore
+		"""
+		self.init = _wrap_internal(self._init_internal, self.init)  # type: ignore
+		self.exit = _wrap_internal(self._exit_internal, self.exit)  # type: ignore
+		self.fail = _wrap_internal(self._fail_internal, self.fail)  # type: ignore
+		self.main = _wrap_internal(self._main_internal, self.main)  # type: ignore
+		self.new_client = _wrap_internal(self._new_client_internal, self.new_client)  # type: ignore
 
-	self.open_dataset = _wrap_internal(self._open_dataset_internal, self.open_dataset)  # type: ignore
-	self.open_key_value_store = _wrap_internal(self._open_key_value_store_internal, self.open_key_value_store)  # type: ignore
-	self.open_request_queue = _wrap_internal(self._open_request_queue_internal, self.open_request_queue)  # type: ignore
-	self.push_data = _wrap_internal(self._push_data_internal, self.push_data)  # type: ignore
-	self.get_input = _wrap_internal(self._get_input_internal, self.get_input)  # type: ignore
-	self.get_value = _wrap_internal(self._get_value_internal, self.get_value)  # type: ignore
-	self.set_value = _wrap_internal(self._set_value_internal, self.set_value)  # type: ignore
+		self.open_dataset = _wrap_internal(self._open_dataset_internal, self.open_dataset)  # type: ignore
+		self.open_key_value_store = _wrap_internal(self._open_key_value_store_internal, self.open_key_value_store)  # type: ignore
+		self.open_request_queue = _wrap_internal(self._open_request_queue_internal, self.open_request_queue)  # type: ignore
+		self.push_data = _wrap_internal(self._push_data_internal, self.push_data)  # type: ignore
+		self.get_input = _wrap_internal(self._get_input_internal, self.get_input)  # type: ignore
+		self.get_value = _wrap_internal(self._get_value_internal, self.get_value)  # type: ignore
+		self.set_value = _wrap_internal(self._set_value_internal, self.set_value)  # type: ignore
 
-	self.on = _wrap_internal(self._on_internal, self.on)  # type: ignore
-	self.off = _wrap_internal(self._off_internal, self.off)  # type: ignore
+		self.on = _wrap_internal(self._on_internal, self.on)  # type: ignore
+		self.off = _wrap_internal(self._off_internal, self.off)  # type: ignore
 
-	self.is_at_home = _wrap_internal(self._is_at_home_internal, self.is_at_home)  # type: ignore
-	self.get_env = _wrap_internal(self._get_env_internal, self.get_env)  # type: ignore
+		self.is_at_home = _wrap_internal(self._is_at_home_internal, self.is_at_home)  # type: ignore
+		self.get_env = _wrap_internal(self._get_env_internal, self.get_env)  # type: ignore
 
-	self.start = _wrap_internal(self._start_internal, self.start)  # type: ignore
-	self.call = _wrap_internal(self._call_internal, self.call)  # type: ignore
-	self.call_task = _wrap_internal(self._call_task_internal, self.call_task)  # type: ignore
-	self.abort = _wrap_internal(self._abort_internal, self.abort)  # type: ignore
-	self.metamorph = _wrap_internal(self._metamorph_internal, self.metamorph)  # type: ignore
-	self.reboot = _wrap_internal(self._reboot_internal, self.reboot)  # type: ignore
-	self.add_webhook = _wrap_internal(self._add_webhook_internal, self.add_webhook)  # type: ignore
-	self.set_status_message = _wrap_internal(self._set_status_message_internal, self.set_status_message)  # type: ignore
-	self.create_proxy_configuration = _wrap_internal(self._create_proxy_configuration_internal, self.create_proxy_configuration)  # type: ignore
-	"""
-	@_config 		= config or Configuration.new
-	@_apify_client 	= new_client
-	#self._event_manager = EventManager(config=self._config)
+		self.start = _wrap_internal(self._start_internal, self.start)  # type: ignore
+		self.call = _wrap_internal(self._call_internal, self.call)  # type: ignore
+		self.call_task = _wrap_internal(self._call_task_internal, self.call_task)  # type: ignore
+		self.abort = _wrap_internal(self._abort_internal, self.abort)  # type: ignore
+		self.metamorph = _wrap_internal(self._metamorph_internal, self.metamorph)  # type: ignore
+		self.reboot = _wrap_internal(self._reboot_internal, self.reboot)  # type: ignore
+		self.add_webhook = _wrap_internal(self._add_webhook_internal, self.add_webhook)  # type: ignore
+		self.set_status_message = _wrap_internal(self._set_status_message_internal, self.set_status_message)  # type: ignore
+		self.create_proxy_configuration = _wrap_internal(self._create_proxy_configuration_internal, self.create_proxy_configuration)  # type: ignore
+		"""
+		@_config 		= config or Configuration.new
+		@_apify_client 	= new_client
+		#self._event_manager = EventManager(config=self._config)
 
-	@_is_initialized = false
-end
+		@_is_initialized = false
+	end
 
 =begin
 @ignore_docs
@@ -112,9 +112,9 @@ async def __aexit__(
 			await self.exit()
 =end
 
-def self._get_default_instance
-	@@_default_instance ||= new(config: Configuration.get_global_configuration())
-end
+	def self._get_default_instance
+		@@_default_instance ||= new(config: Configuration.get_global_configuration())
+	end
 
 =begin
 @dualproperty
@@ -147,75 +147,71 @@ def log(_self_or_cls) -> logging.Logger:  # noqa: N805
 	return logger
 =end
 
-def _raise_if_not_initialized
-	raise 'The actor was not initialized!' unless @_is_initialized # RuntimeError()
-end
-
-###========================================================================================================== init
-
-# async 
-def self.init
-	"""Initialize the actor instance.
-
-	This initializes the Actor instance.
-	It configures the right storage client based on whether the actor is running locally or on the Apify platform,
-	it initializes the event manager for processing actor events,
-	and starts an interval for regularly sending `PERSIST_STATE` events,
-	so that the actor can regularly persist its state in response to these events.
-
-	This method should be called immediately before performing any additional actor actions,
-	and it should be called only once.
-	"""
-	# await 
-	_get_default_instance.init
-end
-
-# async 
-def init
-	raise 'The actor was already initialized!' unless ! @_is_initialized # RuntimeError
-	
-	@_is_exiting = false
-	@_was_final_persist_state_emitted = false
-
-	# self.log.info('Initializing actor...')
-	# self.log.info('System info', extra=_get_system_info())
-
-	# TODO: Print outdated SDK version warning (we need a new env var for this)
-
-	StorageClientManager.set_config(@_config)
-
-	if @_config.token
-		StorageClientManager.set_cloud_client(@_apify_client)
+	def _raise_if_not_initialized
+		raise 'The actor was not initialized!' unless @_is_initialized # RuntimeError()
 	end
-	
-	"""
-	await self._event_manager.init()
 
-	self._send_persist_state_interval_task = asyncio.create_task(
-		_run_func_at_interval_async(
-			lambda: self._event_manager.emit(ActorEventTypes.PERSIST_STATE, {'isMigrating': False}),
-			self._config.persist_state_interval_millis / 1000,
-		),
-	)
+	###========================================================================================================== init
+	def self.init
+		"""Initialize the actor instance.
 
-	if not self.is_at_home():
-		self._send_system_info_interval_task = asyncio.create_task(
+		This initializes the Actor instance.
+		It configures the right storage client based on whether the actor is running locally or on the Apify platform,
+		it initializes the event manager for processing actor events,
+		and starts an interval for regularly sending `PERSIST_STATE` events,
+		so that the actor can regularly persist its state in response to these events.
+
+		This method should be called immediately before performing any additional actor actions,
+		and it should be called only once.
+		"""
+
+		_get_default_instance.init
+	end
+ 
+	def init
+		raise 'The actor was already initialized!' unless ! @_is_initialized # RuntimeError
+		
+		@_is_exiting = false
+		@_was_final_persist_state_emitted = false
+
+		# self.log.info('Initializing actor...')
+		# self.log.info('System info', extra=_get_system_info())
+
+		# TODO: Print outdated SDK version warning (we need a new env var for this)
+
+		StorageClientManager.set_config(@_config)
+
+		if @_config.token
+			StorageClientManager.set_cloud_client(@_apify_client)
+		end
+		
+		"""
+		await self._event_manager.init()
+
+		self._send_persist_state_interval_task = asyncio.create_task(
 			_run_func_at_interval_async(
-				lambda: self._event_manager.emit(ActorEventTypes.SYSTEM_INFO, self._get_system_info()),
-				self._config.system_info_interval_millis / 1000,
+				lambda: self._event_manager.emit(ActorEventTypes.PERSIST_STATE, {'isMigrating': False}),
+				self._config.persist_state_interval_millis / 1000,
 			),
 		)
 
-	self._event_manager.on(ActorEventTypes.MIGRATING, self._respond_to_migrating_event)
-	
-	# The CPU usage is calculated as an average between two last calls to psutil
-	# We need to make a first, dummy call, so the next calls have something to compare itself agains
-	_get_cpu_usage_percent()
-	"""
+		if not self.is_at_home():
+			self._send_system_info_interval_task = asyncio.create_task(
+				_run_func_at_interval_async(
+					lambda: self._event_manager.emit(ActorEventTypes.SYSTEM_INFO, self._get_system_info()),
+					self._config.system_info_interval_millis / 1000,
+				),
+			)
 
-	@_is_initialized = true
+		self._event_manager.on(ActorEventTypes.MIGRATING, self._respond_to_migrating_event)
+		
+		# The CPU usage is calculated as an average between two last calls to psutil
+		# We need to make a first, dummy call, so the next calls have something to compare itself agains
+		_get_cpu_usage_percent()
+		"""
 
-end
+		@_is_initialized = true
+	end
 
 =begin
 def _get_system_info(self) -> Dict:
@@ -407,38 +403,37 @@ async def _main_internal(self, main_actor_function: Callable[[], MainReturnType]
 	return None
 =end
 
-###========================================================================================================== new_client
+	###========================================================================================================== new_client
+	def self.new_client token: nil, api_url: nil, max_retries: nil, min_delay_between_retries_millis: nil, timeout_secs: nil
+		"""Return a new instance of the Apify API client.
 
-def self.new_client token: nil, api_url: nil, max_retries: nil, min_delay_between_retries_millis: nil, timeout_secs: nil
-	"""Return a new instance of the Apify API client.
+		The `ApifyClientAsync` class is provided by the [apify-client](https://github.com/apify/apify-client-python) package,
+		and it is automatically configured using the `APIFY_API_BASE_URL` and `APIFY_TOKEN` environment variables.
 
-	The `ApifyClientAsync` class is provided by the [apify-client](https://github.com/apify/apify-client-python) package,
-	and it is automatically configured using the `APIFY_API_BASE_URL` and `APIFY_TOKEN` environment variables.
+		You can override the token via the available options.
+		That's useful if you want to use the client as a different Apify user than the SDK internals are using.
 
-	You can override the token via the available options.
-	That's useful if you want to use the client as a different Apify user than the SDK internals are using.
+		Args:
+			token (str, optional): The Apify API token
+			api_url (str, optional): The URL of the Apify API server to which to connect to. Defaults to https://api.apify.com
+			max_retries (int, optional): How many times to retry a failed request at most
+			min_delay_between_retries_millis (int, optional): How long will the client wait between retrying requests
+				(increases exponentially from this value)
+			timeout_secs (int, optional): The socket timeout of the HTTP requests sent to the Apify API
+		"""
 
-	Args:
-		token (str, optional): The Apify API token
-		api_url (str, optional): The URL of the Apify API server to which to connect to. Defaults to https://api.apify.com
-		max_retries (int, optional): How many times to retry a failed request at most
-		min_delay_between_retries_millis (int, optional): How long will the client wait between retrying requests
-			(increases exponentially from this value)
-		timeout_secs (int, optional): The socket timeout of the HTTP requests sent to the Apify API
-	"""
+		_get_default_instance.new_client \
+			token: token, api_url: api_url, max_retries: max_retries, in_delay_between_retries_millis: min_delay_between_retries_millis, timeout_secs: timeout_secs
+	end
 
-	_get_default_instance.new_client \
-		token: token, api_url: api_url, max_retries: max_retries, in_delay_between_retries_millis: min_delay_between_retries_millis, timeout_secs: timeout_secs
-end
+	def new_client token: nil, api_url: nil, max_retries: nil, min_delay_between_retries_millis: nil, timeout_secs: nil
+		token 	||= @_config.token
+		api_url ||= @_config.api_base_url
 
-def new_client token: nil, api_url: nil, max_retries: nil, min_delay_between_retries_millis: nil, timeout_secs: nil
-	token 	||= @_config.token
-	api_url ||= @_config.api_base_url
-
-	#ApifyClientAsync.new \
-	ApifyClient.new \
-		token: token, api_url: api_url,max_retries: max_retries, min_delay_between_retries_millis: min_delay_between_retries_millis, timeout_secs: timeout_secs
-end
+		#ApifyClientAsync.new \
+		ApifyClient.new \
+			token: token, api_url: api_url,max_retries: max_retries, min_delay_between_retries_millis: min_delay_between_retries_millis, timeout_secs: timeout_secs
+	end
 
 
 =begin
@@ -446,66 +441,66 @@ end
 def _get_storage_client(self, force_cloud: bool) -> Optional[ApifyClientAsync]:
 	return self._apify_client if force_cloud else None
 
-@classmethod
-async def open_dataset(cls, *, id: Optional[str] = None, name: Optional[str] = None, force_cloud: bool = False) -> Dataset:
-	"""Open a dataset.
-
-	Datasets are used to store structured data where each object stored has the same attributes,
-	such as online store products or real estate offers.
-	The actual data is stored either on the local filesystem or in the Apify cloud.
-
-	Args:
-		id (str, optional): ID of the dataset to be opened.
-			If neither `id` nor `name` are provided, the method returns the default dataset associated with the actor run.
-		name (str, optional): Name of the dataset to be opened.
-			If neither `id` nor `name` are provided, the method returns the default dataset associated with the actor run.
-		force_cloud (bool, optional): If set to `True` then the Apify cloud storage is always used.
-			This way it is possible to combine local and cloud storage.
-
-	Returns:
-		Dataset: An instance of the `Dataset` class for the given ID or name.
-
-	"""
-	return await cls._get_default_instance().open_dataset(id=id, name=name, force_cloud=force_cloud)
-
-async def _open_dataset_internal(self, *, id: Optional[str] = None, name: Optional[str] = None, force_cloud: bool = False) -> Dataset:
-	self._raise_if_not_initialized()
-
-	return await Dataset.open(id=id, name=name, force_cloud=force_cloud, config=self._config)
 =end
 
-###========================================================================================================== open_key_value_store
+	###========================================================================================================== open_dataset
+	def self.open_dataset id: nil, name: nil, force_cloud: false
+		"""Open a dataset.
 
-# async 
-def self.open_key_value_store id: nil, name: nil, force_cloud: false
-	"""Open a key-value store.
+		Datasets are used to store structured data where each object stored has the same attributes,
+		such as online store products or real estate offers.
+		The actual data is stored either on the local filesystem or in the Apify cloud.
 
-	Key-value stores are used to store records or files, along with their MIME content type.
-	The records are stored and retrieved using a unique key.
-	The actual data is stored either on a local filesystem or in the Apify cloud.
+		Args:
+			id (str, optional): ID of the dataset to be opened.
+				If neither `id` nor `name` are provided, the method returns the default dataset associated with the actor run.
+			name (str, optional): Name of the dataset to be opened.
+				If neither `id` nor `name` are provided, the method returns the default dataset associated with the actor run.
+			force_cloud (bool, optional): If set to `True` then the Apify cloud storage is always used.
+				This way it is possible to combine local and cloud storage.
 
-	Args:
-		id (str, optional): ID of the key-value store to be opened.
-			If neither `id` nor `name` are provided, the method returns the default key-value store associated with the actor run.
-		name (str, optional): Name of the key-value store to be opened.
-			If neither `id` nor `name` are provided, the method returns the default key-value store associated with the actor run.
-		force_cloud (bool, optional): If set to `True` then the Apify cloud storage is always used.
-			This way it is possible to combine local and cloud storage.
+		Returns:
+			Dataset: An instance of the `Dataset` class for the given ID or name.
 
-	Returns:
-		KeyValueStore: An instance of the `KeyValueStore` class for the given ID or name.
-	"""
-	# await 
-	_get_default_instance.open_key_value_store id: id, name: name, force_cloud: force_cloud
-end
+		"""
+		_get_default_instance.open_dataset id: id, name: name, force_cloud: force_cloud
+	end
 
-# async 
-def open_key_value_store id: nil, name: nil, force_cloud: false	
-	_raise_if_not_initialized
-	
-	# await
-	KeyValueStore.open id: id, name: name, force_cloud: force_cloud, config: @_config
-end
+	def open_dataset id: nil, name: nil, force_cloud: false
+		_raise_if_not_initialized
+		
+		Dataset.open id: id, name: name, force_cloud: force_cloud, config: @_config
+	end
+
+	###========================================================================================================== open_key_value_store
+	def self.open_key_value_store id: nil, name: nil, force_cloud: false
+		"""Open a key-value store.
+
+		Key-value stores are used to store records or files, along with their MIME content type.
+		The records are stored and retrieved using a unique key.
+		The actual data is stored either on a local filesystem or in the Apify cloud.
+
+		Args:
+			id (str, optional): ID of the key-value store to be opened.
+				If neither `id` nor `name` are provided, the method returns the default key-value store associated with the actor run.
+			name (str, optional): Name of the key-value store to be opened.
+				If neither `id` nor `name` are provided, the method returns the default key-value store associated with the actor run.
+			force_cloud (bool, optional): If set to `True` then the Apify cloud storage is always used.
+				This way it is possible to combine local and cloud storage.
+
+		Returns:
+			KeyValueStore: An instance of the `KeyValueStore` class for the given ID or name.
+		"""
+		# await 
+		_get_default_instance.open_key_value_store id: id, name: name, force_cloud: force_cloud
+	end
+
+	# async 
+	def open_key_value_store id: nil, name: nil, force_cloud: false	
+		_raise_if_not_initialized
+		
+		KeyValueStore.open id: id, name: name, force_cloud: force_cloud, config: @_config
+	end
 
 =begin
 @classmethod
