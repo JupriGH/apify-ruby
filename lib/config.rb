@@ -5,6 +5,7 @@ def getenv(key, default=nil)
 	if val.nil? || val.empty?
 		val = default
 	end
+	return val
 end
 
 module Apify
@@ -97,8 +98,9 @@ class Configuration
 		#@xvfb = getenv(ApifyEnvVars::XVFB, False)
 		#@system_info_interval_millis = system_info_interval_millis or getenv(ApifyEnvVars::SYSTEM_INFO_INTERVAL_MILLIS, 60000)
 		
-		p ENV
-		p self
+		ENV.each do |key, val|
+			p "#{key}=#{val}"
+		end
 		
 		######### TEST
 		#@input_key = "INPUT_KEY_TEST"
