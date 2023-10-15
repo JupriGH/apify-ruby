@@ -24,7 +24,7 @@ class BaseApifyClient
 		# TODO: ruby 0 == true
 		
 		@token = token
-        @api_url = (api_url or DEFAULT_API_URL).sub!(/\/+$/, '') # .rstrip('/')
+        @api_url = (api_url or DEFAULT_API_URL).sub(/\/+$/, '') # .rstrip('/')
         @base_url = "#{api_url}/#{API_VERSION}"
         @max_retries = max_retries or 8
         @min_delay_between_retries_millis = min_delay_between_retries_millis or 500
