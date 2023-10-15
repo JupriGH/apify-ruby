@@ -44,10 +44,9 @@ class StorageClientManager
 		end
 		
         if true # default_instance._config.is_at_home or force_cloud
-            
+
 			# assert default_instance._cloud_client is not None
-            raise unless not default_instance._cloud_client.nil?
-			
+            raise unless !default_instance._cloud_client.nil?
 			return default_instance._cloud_client
 			
 		end

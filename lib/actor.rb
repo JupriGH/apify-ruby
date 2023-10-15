@@ -183,7 +183,7 @@ def init
 	# TODO: Print outdated SDK version warning (we need a new env var for this)
 
 	StorageClientManager.set_config(@_config)
-	
+
 	if @_config.token
 		StorageClientManager.set_cloud_client(@_apify_client)
 	end
@@ -410,7 +410,6 @@ async def _main_internal(self, main_actor_function: Callable[[], MainReturnType]
 ###========================================================================================================== new_client
 
 def self.new_client token: nil, api_url: nil, max_retries: nil, min_delay_between_retries_millis: nil, timeout_secs: nil
-	raise "### 1"
 	"""Return a new instance of the Apify API client.
 
 	The `ApifyClientAsync` class is provided by the [apify-client](https://github.com/apify/apify-client-python) package,

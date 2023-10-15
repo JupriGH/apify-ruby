@@ -100,9 +100,11 @@ class Configuration
 		
 		######### TEST
 		#@input_key = "INPUT_KEY_TEST"
-		# @default_key_value_store_id = "lzIZbQglkrWkvQAAm"
-		# @token = 'sAhMHaJwazGywqJfgpw4AcvSZ'
+		@default_key_value_store_id = "lzIZbQglkrWkvQAAm"
+		#@token = 'sAhMHaJwazGywqJfgpw4AcvSZ'
 		
+		p "### TOKEN ###"
+		@token
 	end
 
 	def self._get_default_instance
