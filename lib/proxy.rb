@@ -71,8 +71,8 @@ class ProxyInfo(TypedDict):
 
 class ProxyConfiguration
 
-	APIFY_PROXY_VALUE_REGEX = Regexp.new(/^[\w._~]+$/)
-	COUNTRY_CODE_REGEX = Regexp.new(/^[A-Z]{2}$/)
+	APIFY_PROXY_VALUE_REGEX = /^[\w._~]+$/
+	COUNTRY_CODE_REGEX 		= /^[A-Z]{2}$/
 
 	
     """Configures a connection to a proxy server with the provided options.
@@ -134,7 +134,7 @@ class ProxyConfiguration
         end
 		
 		if proxy_urls
-            raise "proxy_urls is not array" if proxy_urls != Array
+            raise "proxy_urls is not array" if proxy_urls.class != Array
 			proxy_urls.each_with_index do |i, url|
 				# ValueError
 				raise "proxy_urls[#{i}] (\"#{url}\") is not a valid URL" unless _is_url(url)
@@ -386,23 +386,25 @@ end
 end
 
 ###################################################################### UTILS
-=begin
-def _is_url(url: str) -> bool:
-    try:
-        parsed_url = urlparse(urljoin(url, '/'))
-        has_all_parts = all([parsed_url.scheme, parsed_url.netloc, parsed_url.path])
-        is_domain = '.' in parsed_url.netloc
-        is_localhost = parsed_url.netloc == 'localhost'
-        try:
-            ipaddress.ip_address(parsed_url.netloc)
-            is_ip_address = True
-        except Exception:
-            is_ip_address = False
 
-        return has_all_parts and any([is_domain, is_localhost, is_ip_address])
-    except Exception:
-        return False
-=end
+# Regular expression pattern to match an IPv4 or IPv6 address
+ip_pattern = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$|^
+              (?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$|^
+              ::(?:[0-9a-fA-F]{1,4}:){0,6}[0-9a-fA-F]{1,4}$|^
+              (?:[0-9a-fA-F]{1,4}:){1,6}:$|^
+              (?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}$/
+			  
+def _is_url url
+	parsed_url 		= URI(url)
+	host 			= parsed_url.host
+	
+	has_all_parts 	= parsed_url.scheme && host && parsed_url.path
+	is_domain 		= host.include?('.')
+	is_localhost 	= host == 'localhost'
+	is_ip_address 	= ip_pattern.match?(host)
+
+	return has_all_parts && ( is_domain || is_localhost || is_ip_address )
+end
 
 def _check value, label: nil, pattern: nil, min_length: nil, max_length: nil
 
