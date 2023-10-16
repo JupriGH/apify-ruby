@@ -1,3 +1,6 @@
+require 'net/http'
+require 'json'
+
 require_relative 'consts'
 
 module Apify
@@ -137,15 +140,15 @@ class ProxyConfiguration
         _actor_config: nil,
         _apify_client: nil
 	)
-        """Create a ProxyConfiguration instance. It is highly recommended to use `Actor.create_proxy_configuration()` instead of this.
+        '''Create a ProxyConfiguration instance. It is highly recommended to use `Actor.create_proxy_configuration()` instead of this.
 
         Args:
-            password (str, optional): Password for the Apify Proxy. If not provided, will use os.environ['APIFY_PROXY_PASSWORD'], if available.
+            password (str, optional): Password for the Apify Proxy. If not provided, will use os.environ[\'APIFY_PROXY_PASSWORD\'], if available.
             groups (list of str, optional): Proxy groups which the Apify Proxy should use, if provided.
             country_code (str, optional): Country which the Apify Proxy should use, if provided.
             proxy_urls (list of str, optional): Custom proxy server URLs which should be rotated through.
             new_url_function (Callable, optional): Function which returns a custom proxy URL to be used.
-        """
+        '''
 
         if groups
 			raise "groups is not array" if groups.class != Array
@@ -196,33 +199,32 @@ class ProxyConfiguration
         @_port 		= @_actor_config.proxy_port
         @_password 	= password or @_actor_config.proxy_password
 
-        @_proxy_urls 		||= []
+        #@_proxy_urls 		||= []
         @_used_proxy_urls 	= {}
         @_new_url_function 	= new_url_function
-        @_groups 			||= []
+        #@_groups 			||= []
         @_country_code 		= country_code
         @_uses_apify_proxy 	= ! (proxy_urls || new_url_function)
 		
 	end
 	
     def __initialize
-        """Load the Apify Proxy password if the API token is provided and check access to Apify Proxy and provided proxy groups.
+        '''Load the Apify Proxy password if the API token is provided and check access to Apify Proxy and provided proxy groups.
 
         Only called if Apify Proxy configuration is used.
         Also checks if country has access to Apify Proxy groups if the country code is provided.
 
         You should use the Actor.create_proxy_configuration function
         to create a pre-initialized `ProxyConfiguration` instance instead of calling this manually.
-        """
+        '''
         if @_uses_apify_proxy
             _maybe_fetch_password
             _check_access
 		end
 	end
-	
-=begin
-    async def new_url(self, session_id: Optional[Union[int, str]] = None) -> str:
-        """Return a new proxy URL based on provided configuration options and the `sessionId` parameter.
+
+    def new_url session_id: nil # Optional[Union[int, str]]
+        '''Return a new proxy URL based on provided configuration options and the `sessionId` parameter.
 
         Args:
             session_id (int or str, optional): Represents the identifier of a proxy session (https://docs.apify.com/proxy#sessions).
@@ -233,37 +235,49 @@ class ProxyConfiguration
         Returns:
             str: A string with a proxy URL, including authentication credentials and port number.
                  For example, `http://bob:password123@proxy.example.com:8000`
-        """
-        if session_id is not None:
-            session_id = f'{session_id}'
-            _check(session_id, label='session_id', max_length=SESSION_ID_MAX_LENGTH, pattern=APIFY_PROXY_VALUE_REGEX)
-
-        if self._new_url_function:
-            try:
+        '''
+        if session_id
+            raise
+			#session_id = f'{session_id}'
+            #_check(session_id, label='session_id', max_length=SESSION_ID_MAX_LENGTH, pattern=APIFY_PROXY_VALUE_REGEX)
+		end
+		
+        if @_new_url_function
+            raise 
+=begin			
+			try:
                 res = self._new_url_function(session_id)
                 if inspect.isawaitable(res):
                     res = await res
                 return str(res)
             except Exception as e:
                 raise ValueError('The provided "new_url_function" did not return a valid URL') from e
-
-        if self._proxy_urls:
-            if not session_id:
+=end
+		end
+		
+        if @_proxy_urls
+			raise
+=begin
+            if ! session_id
                 index = self._next_custom_url_index
                 self._next_custom_url_index = (self._next_custom_url_index + 1) % len(self._proxy_urls)
                 return self._proxy_urls[index]
-            else:
+            else
                 if session_id not in self._used_proxy_urls:
                     index = self._next_custom_url_index
                     self._next_custom_url_index = (self._next_custom_url_index + 1) % len(self._proxy_urls)
                     self._used_proxy_urls[session_id] = self._proxy_urls[index]
 
                 return self._used_proxy_urls[session_id]
+			end
+=end
+		end
+		
+        username = _get_username session_id
 
-        username = self._get_username(session_id)
-
-        return f'http://{username}:{self._password}@{self._hostname}:{self._port}'
-
+        "http://#{username}:#{@_password}@#{@_hostname}:#{@_port}"
+	end
+=begin
     async def new_proxy_info(self, session_id: Optional[Union[int, str]] = None) -> ProxyInfo:
         """Create a new ProxyInfo object.
 
@@ -319,17 +333,14 @@ class ProxyConfiguration
         if token and @_apify_client
             user_info = @_apify_client.user.get
             if user_info
-                password = user_info.dig(:proxy, :password)
-				p password
+                password = user_info.dig("proxy", "password")
                 if @_password
                     if @_password != password
                         p "TODO: implement logger"
 						#logger.warning
-						p """
-							The Apify Proxy password you provided belongs to
+						p '''The Apify Proxy password you provided belongs to
 							a different user than the Apify token you are using. 
-							Are you sure this is correct?
-						"""
+							Are you sure this is correct?'''
 					end
 				else
                     @_password = password
@@ -340,20 +351,18 @@ class ProxyConfiguration
         if not @_password
             # ValueError
 			p ApifyEnvVars
-			raise """
-				Apify Proxy password must be provided using the \"password\" constructor argument
+			raise """Apify Proxy password must be provided using the \"password\" constructor argument
                 or the \"#{ApifyEnvVars::PROXY_PASSWORD}\" environment variable.
-                If you add the \"#{ApifyEnvVars::TOKEN}\" environment variable, the password will be automatically inferred.
-				"""
+                If you add the \"#{ApifyEnvVars::TOKEN}\" environment variable, the password will be automatically inferred."""
 		end
-		raise
 	end
 	
-=begin
-    async def _check_access(self) -> None:
-        proxy_status_url = f'{self._actor_config.proxy_status_url}/?format=json'
+    def _check_access
+        proxy_status_url = "#{@_actor_config.proxy_status_url}/?format=json"
+		
+        status = nil
 
-        status = None
+		'''
         async with httpx.AsyncClient(proxies=await self.new_url()) as client:
             for _ in range(2):
                 try:
@@ -363,35 +372,50 @@ class ProxyConfiguration
                 except Exception:
                     # retry on connection errors
                     pass
+		'''
+		
+		uri = URI(proxy_status_url)
+		prx = URI(new_url)
 
-        if status:
-            if not status['connected']:
-                raise ConnectionError(status['connectionError'])
+		# start session
+		Net::HTTP.new(uri.host, uri.port, prx.host, prx.port, prx.user, prx.password).start do |http|			
+			req = Net::HTTP::Get.new uri
+			res = http.request(req)
+			
+			if res.is_a?(Net::HTTPSuccess)
+				status = JSON.parse(res.body)
+			else
+				## TODO
+			end
+		end
 
-            self.is_man_in_the_middle = status['isManInTheMiddle']
-        else:
-            logger.warning('Apify Proxy access check timed out. Watch out for errors with status code 407. '
-                           "If you see some, it most likely means you don't have access to either all or some of the proxies you're trying to use.")
+		p status
 
-    def _get_username(self, session_id: Optional[Union[int, str]] = None) -> str:
-        if session_id is not None:
-            session_id = f'{session_id}'
+        if status
+			# ConnectionError
+            raise status['connectionError'] if !status['connected']
+            @is_man_in_the_middle = status['isManInTheMiddle']
+        else
+			raise 
+            #logger.warning('Apify Proxy access check timed out. Watch out for errors with status code 407. '
+            #               "If you see some, it most likely means you don't have access to either all or some of the proxies you're trying to use.")
+		end
+		raise
+	end
+	
+    def _get_username session_id=nil
+        session_id &&= session_id.to_s
+		
+        parts = []
 
-        parts: List[str] = []
-
-        if self._groups:
-            parts.append(f'groups-{"+".join(self._groups)}')
-        if session_id is not None:
-            parts.append(f'session-{session_id}')
-        if (self._country_code):
-            parts.append(f'country-{self._country_code}')
-
-        if not parts:
-            return 'auto'
-
-        return ','.join(parts)
-=end
-
+		# if xx then parts << yy end
+		
+        @_groups 		&& parts << "groups-#{@_groups.join("+")}"     
+		session_id 		&& parts << "session-#{session_id}"
+		@_country_code 	&& parts << "country-#{@_country_code}"
+		
+        parts.empty? ? 'auto' : parts.join(",")
+	end
 end
 
 end

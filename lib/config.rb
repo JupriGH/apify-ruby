@@ -89,7 +89,7 @@ class Configuration
 		@proxy_hostname 				= getenv(ApifyEnvVars::PROXY_HOSTNAME, 'proxy.apify.com')
 		@proxy_password 				= getenv(ApifyEnvVars::PROXY_PASSWORD)
 		@proxy_port 					= getenv(ApifyEnvVars::PROXY_PORT, 8000)
-		#@proxy_status_url = proxy_status_url or getenv(ApifyEnvVars::PROXY_STATUS_URL, 'http://proxy.apify.com')
+		@proxy_status_url 				= getenv(ApifyEnvVars::PROXY_STATUS_URL, 'http://proxy.apify.com')
 		#@purge_on_start = purge_on_start or getenv(ApifyEnvVars::PURGE_ON_START, False)
 		#@started_at = getenv(ActorEnvVars::STARTED_AT)
 		#@timeout_at = getenv(ActorEnvVars::TIMEOUT_AT)		
