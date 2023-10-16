@@ -135,7 +135,7 @@ class ProxyConfiguration
 		
 		if proxy_urls
             raise "proxy_urls is not array" if proxy_urls.class != Array
-			proxy_urls.each_with_index do |i, url|
+			proxy_urls.each_with_index do |url, i|
 				# ValueError
 				raise "proxy_urls[#{i}] (\"#{url}\") is not a valid URL" unless _is_url(url)
 			end
