@@ -549,10 +549,8 @@ async def _open_request_queue_internal(
 
 	def push_data data
 		_raise_if_not_initialized
-
-		if not data:
-			return
-		end 
+		
+		data || return
 		
 		dataset = open_dataset
 		dataset.push_data data

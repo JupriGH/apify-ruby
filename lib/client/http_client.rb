@@ -215,9 +215,9 @@ class HTTPClient < BaseHTTPClient
 			# Handle the response
 			if res.is_a?(Net::HTTPSuccess)
 
-				res.each do |key, val|
-					p "#{key}: #{val}"
-				end
+				# res.each do |key, val|
+				#	p "#{key}: #{val}"
+				# end
 								
 				_maybe_parsed_body = nil
 				if not stream
@@ -227,8 +227,6 @@ class HTTPClient < BaseHTTPClient
 						#_maybe_parsed_body = res.body # response.content
 					end
 					# setattr(response, '_maybe_parsed_body', _maybe_parsed_body)  # noqa: B010
-					
-					
 				end
 				
 				return { response: res, parsed: _maybe_parsed_body }
