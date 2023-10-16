@@ -600,9 +600,7 @@ class Dataset < BaseStorage
         client.datasets
 	end
 	
-=begin
-    @classmethod
-    async def push_data(cls, data: JSONSerializable) -> None:
+    def self.push_data data
         """Store an object or an array of objects to the dataset.
 
         The size of the data is limited by the receiving API and therefore `push_data()` will only
@@ -613,9 +611,9 @@ class Dataset < BaseStorage
             data (JSONSerializable): dict or array of dicts containing data to be stored in the default dataset.
                 The JSON representation of each item must be smaller than 9MB.
         """
-        dataset = await cls.open()
-        return await dataset.push_data(data)
-=end
+        dataset = open
+        dataset.push_data data
+	end
 
     def push_data data
 		# Handle singular items
