@@ -85,7 +85,7 @@ class ProxyConfiguration
 
     @is_man_in_the_middle = false
 
-    @_next_custom_url_index = 0
+    #@_next_custom_url_index = 0
     @_proxy_urls
     @_used_proxy_urls
     @_new_url_function
@@ -116,7 +116,8 @@ class ProxyConfiguration
             proxy_urls (list of str, optional): Custom proxy server URLs which should be rotated through.
             new_url_function (Callable, optional): Function which returns a custom proxy URL to be used.
         """
-
+		@_next_custom_url_index = 0
+		
         if groups
 			raise "groups is not array" if groups.class != Array
             groups.each do |group|
