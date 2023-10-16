@@ -132,6 +132,11 @@ class BaseHTTPClient
 			headers['Content-Type'] = 'application/json'
 		end
 		
+		if data.class == String
+			data = Zlib::Deflate.deflate(data, Zlib::BEST_COMPRESSION)
+			headers['Content-Encoding'] = 'gzip'
+		end
+		
         #if isinstance(data, (str, bytes, bytearray)):
         #    if isinstance(data, str):
         #        data = data.encode('utf-8')
@@ -169,12 +174,7 @@ class HTTPClient < BaseHTTPClient
 		###################################################################################
 		headers = {**@headers, **headers}
 
-		p method
-		p url
-		p headers
-		p params
-		p stream
-		p parse_response
+		p "#{method} #{url}"
 		
 		uri = URI.parse(url)
 
@@ -232,9 +232,8 @@ class HTTPClient < BaseHTTPClient
 				return { response: res, parsed: _maybe_parsed_body }
 			
 			else
-				# TODO: handle errors
-				p "HTTP Error: #{res.code}"
-				raise
+				# TODO: handle errors/retries
+				raise "HTTP Error: #{res.code}"
 				return nil
 			end
 		end
