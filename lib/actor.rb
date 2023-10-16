@@ -1,6 +1,7 @@
 require_relative 'config'
 require_relative 'storages'
 require_relative 'crypto'
+require_relative 'proxy'
 
 #require 'apify_client_unofficial'
 require_relative 'client/apify_client_unofficial'
@@ -170,7 +171,7 @@ def log(_self_or_cls) -> logging.Logger:  # noqa: N805
 	end
  
 	def init
-		raise 'The actor was already initialized!' unless ! @_is_initialized # RuntimeError
+		raise 'The actor was already initialized!' if @_is_initialized # RuntimeError
 		
 		@_is_exiting = false
 		@_was_final_persist_state_emitted = false
@@ -205,12 +206,14 @@ def log(_self_or_cls) -> logging.Logger:  # noqa: N805
 			)
 
 		self._event_manager.on(ActorEventTypes.MIGRATING, self._respond_to_migrating_event)
+		"""
 		
+		"""
 		# The CPU usage is calculated as an average between two last calls to psutil
 		# We need to make a first, dummy call, so the next calls have something to compare itself agains
-		_get_cpu_usage_percent()
+		_get_cpu_usage_percent
 		"""
-
+		
 		@_is_initialized = true
 	end
 
@@ -1189,82 +1192,79 @@ async def _set_status_message_internal(self, status_message: str, *, is_terminal
 	assert self._config.actor_run_id is not None
 
 	return await self._apify_client.run(self._config.actor_run_id).update(status_message=status_message, is_status_message_terminal=is_terminal)
-
-@classmethod
-async def create_proxy_configuration(
-	cls,
-	*,
-	actor_proxy_input: Optional[Dict] = None,  # this is the raw proxy input from the actor run input, it is not spread or snake_cased in here
-	password: Optional[str] = None,
-	groups: Optional[List[str]] = None,
-	country_code: Optional[str] = None,
-	proxy_urls: Optional[List[str]] = None,
-	new_url_function: Optional[Union[Callable[[Optional[str]], str], Callable[[Optional[str]], Awaitable[str]]]] = None,
-) -> Optional[ProxyConfiguration]:
-	"""Create a ProxyConfiguration object with the passed proxy configuration.
-
-	Configures connection to a proxy server with the provided options.
-	Proxy servers are used to prevent target websites from blocking your crawlers based on IP address rate limits or blacklists.
-
-	For more details and code examples, see the `ProxyConfiguration` class.
-
-	Args:
-		actor_proxy_input (dict, optional): Proxy configuration field from the actor input, if actor has such input field.
-			If you pass this argument, all the other arguments will be inferred from it.
-		password (str, optional): Password for the Apify Proxy. If not provided, will use os.environ['APIFY_PROXY_PASSWORD'], if available.
-		groups (list of str, optional): Proxy groups which the Apify Proxy should use, if provided.
-		country_code (str, optional): Country which the Apify Proxy should use, if provided.
-		proxy_urls (list of str, optional): Custom proxy server URLs which should be rotated through.
-		new_url_function (Callable, optional): Function which returns a custom proxy URL to be used.
-
-	Returns:
-		ProxyConfiguration, optional: ProxyConfiguration object with the passed configuration,
-									  or None, if no proxy should be used based on the configuration.
-	"""
-	return await cls._get_default_instance().create_proxy_configuration(
-		password=password,
-		groups=groups,
-		country_code=country_code,
-		proxy_urls=proxy_urls,
-		new_url_function=new_url_function,
-		actor_proxy_input=actor_proxy_input,
-	)
-
-async def _create_proxy_configuration_internal(
-	self,
-	*,
-	actor_proxy_input: Optional[Dict] = None,  # this is the raw proxy input from the actor run input, it is not spread or snake_cased in here
-	password: Optional[str] = None,
-	groups: Optional[List[str]] = None,
-	country_code: Optional[str] = None,
-	proxy_urls: Optional[List[str]] = None,
-	new_url_function: Optional[Union[Callable[[Optional[str]], str], Callable[[Optional[str]], Awaitable[str]]]] = None,
-) -> Optional[ProxyConfiguration]:
-	self._raise_if_not_initialized()
-
-	if actor_proxy_input is not None:
-		if actor_proxy_input.get('useApifyProxy', False):
-			country_code = country_code or actor_proxy_input.get('apifyProxyCountry')
-			groups = groups or actor_proxy_input.get('apifyProxyGroups')
-		else:
-			proxy_urls = actor_proxy_input.get('proxyUrls', [])
-			if not proxy_urls:
-				return None
-
-	proxy_configuration = ProxyConfiguration(
-		password=password,
-		groups=groups,
-		country_code=country_code,
-		proxy_urls=proxy_urls,
-		new_url_function=new_url_function,
-		_actor_config=self._config,
-		_apify_client=self._apify_client,
-	)
-
-	await proxy_configuration.initialize()
-
-	return proxy_configuration
 =end
+
+	def self.create_proxy_configuration(
+		actor_proxy_input = nil,  # this is the raw proxy input from the actor run input, it is not spread or snake_cased in here
+		password: nil,
+		groups:  nil,
+		country_code:  nil,
+		proxy_urls:  nil,
+		new_url_function: nil # Optional[Union[Callable[[Optional[str]], str], Callable[[Optional[str]], Awaitable[str]]]] = None,
+	)
+		"""Create a ProxyConfiguration object with the passed proxy configuration.
+
+		Configures connection to a proxy server with the provided options.
+		Proxy servers are used to prevent target websites from blocking your crawlers based on IP address rate limits or blacklists.
+
+		For more details and code examples, see the `ProxyConfiguration` class.
+
+		Args:
+			actor_proxy_input (dict, optional): Proxy configuration field from the actor input, if actor has such input field.
+				If you pass this argument, all the other arguments will be inferred from it.
+			password (str, optional): Password for the Apify Proxy. If not provided, will use os.environ['APIFY_PROXY_PASSWORD'], if available.
+			groups (list of str, optional): Proxy groups which the Apify Proxy should use, if provided.
+			country_code (str, optional): Country which the Apify Proxy should use, if provided.
+			proxy_urls (list of str, optional): Custom proxy server URLs which should be rotated through.
+			new_url_function (Callable, optional): Function which returns a custom proxy URL to be used.
+
+		Returns:
+			ProxyConfiguration, optional: ProxyConfiguration object with the passed configuration,
+										  or None, if no proxy should be used based on the configuration.
+		"""
+		_get_default_instance.create_proxy_configuration \
+			actor_proxy_input, password: password, groups: groups, country_code: country_code, proxy_urls: proxy_urls, new_url_function: new_url_function
+	end
+	
+	def create_proxy_configuration(
+		actor_proxy_input = nil, # this is the raw proxy input from the actor run input, it is not spread or snake_cased in here
+		password: nil,
+		groups:  nil,
+		country_code:  nil,
+		proxy_urls:  nil,
+		new_url_function: nil # Optional[Union[Callable[[Optional[str]], str], Callable[[Optional[str]], Awaitable[str]]]] = None,
+	)
+		_raise_if_not_initialized
+		
+		if actor_proxy_input
+			if actor_proxy_input['useApifyProxy'] # bool
+				country_code = country_code or actor_proxy_input['apifyProxyCountry']
+				groups = groups or actor_proxy_input['apifyProxyGroups']
+			else
+				proxy_urls = actor_proxy_input['proxyUrls'] # []
+				if (not proxy_urls) or (proxy_urls.length == 0) 
+					return
+				end
+			end
+		end
+		
+		proxy_configuration = ProxyConfiguration.new(
+			password: password, 
+			groups: groups, 
+			country_code: 
+			country_code, 
+			proxy_urls: proxy_urls, 
+			new_url_function: 
+			new_url_function, 
+			_actor_config: @_config, 
+			_apify_client: @_apify_client
+		)
+		
+		# NOTE: "initialize" is Ruby class constructor
+		proxy_configuration.__initialize
+
+		return proxy_configuration
+	end
 end
 
 end

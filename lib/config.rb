@@ -86,9 +86,9 @@ class Configuration
 		#@metamorph_after_sleep_millis = metamorph_after_sleep_millis or getenv(ApifyEnvVars::METAMORPH_AFTER_SLEEP_MILLIS, 300000)  # noqa: E501
 		#@persist_state_interval_millis = persist_state_interval_millis or getenv(ApifyEnvVars::PERSIST_STATE_INTERVAL_MILLIS, 60000)  # noqa: E501
 		#@persist_storage = persist_storage or getenv(ApifyEnvVars::PERSIST_STORAGE, True)
-		#@proxy_hostname = proxy_hostname or getenv(ApifyEnvVars::PROXY_HOSTNAME, 'proxy.apify.com')
-		#@proxy_password = proxy_password or getenv(ApifyEnvVars::PROXY_PASSWORD)
-		#@proxy_port = proxy_port or getenv(ApifyEnvVars::PROXY_PORT, 8000)
+		@proxy_hostname 				= getenv(ApifyEnvVars::PROXY_HOSTNAME, 'proxy.apify.com')
+		@proxy_password 				= getenv(ApifyEnvVars::PROXY_PASSWORD)
+		@proxy_port 					= getenv(ApifyEnvVars::PROXY_PORT, 8000)
 		#@proxy_status_url = proxy_status_url or getenv(ApifyEnvVars::PROXY_STATUS_URL, 'http://proxy.apify.com')
 		#@purge_on_start = purge_on_start or getenv(ApifyEnvVars::PURGE_ON_START, False)
 		#@started_at = getenv(ActorEnvVars::STARTED_AT)
