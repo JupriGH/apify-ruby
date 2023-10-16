@@ -580,17 +580,14 @@ class Dataset < BaseStorage
         @_dataset_client = client.dataset(@_id)
 	end
 	
-	@human_friendly_label = 'Dataset'
-    
+	@human_friendly_label = 'Dataset'    
 	# def _get_human_friendly_label(cls) -> str:
     #    'Dataset'
 	# end
 
-=begin
-    @classmethod
-    def _get_default_id(cls, config: Configuration) -> str:
-        return config.default_dataset_id
-=end
+    def self._get_default_id config
+        config.default_dataset_id
+	end
 
     def self._get_single_storage_client id, client
         client.dataset id
