@@ -2,8 +2,7 @@ require 'net/http'
 require 'json'
 
 require_relative 'consts'
-
-
+require_relative 'log'
 
 module Apify
 
@@ -25,8 +24,6 @@ from .config import Configuration
 from .log import logger
 =end
 
-
-SESSION_ID_MAX_LENGTH = 50
 
 
 
@@ -73,7 +70,7 @@ class ProxyConfiguration
 
 	APIFY_PROXY_VALUE_REGEX = /^[\w._~]+$/
 	COUNTRY_CODE_REGEX 		= /^[A-Z]{2}$/
-
+	SESSION_ID_MAX_LENGTH 	= 50
 	
     """Configures a connection to a proxy server with the provided options.
 
@@ -156,7 +153,7 @@ class ProxyConfiguration
 		
         # mypy has a bug with narrowing types for filter (https://github.com/python/mypy/issues/12682)
         # if proxy_urls and next(filter(lambda url: 'apify.com' in url, proxy_urls), None):  # type: ignore
-        #    logger.warning('Some Apify proxy features may work incorrectly. Please consider setting up Apify properties instead of `proxy_urls`.\n'
+        #    Log.warning('Some Apify proxy features may work incorrectly. Please consider setting up Apify properties instead of `proxy_urls`.\n'
         #                   'See https://sdk.apify.com/docs/guides/proxy-management#apify-proxy-configuration')
 		# end
 		
@@ -305,7 +302,7 @@ class ProxyConfiguration
                 if @_password
                     if @_password != password
 						
-						logger.warn	'The Apify Proxy password you provided belongs to '\
+						Log.warn	'The Apify Proxy password you provided belongs to '\
 									'a different user than the Apify token you are using. '\
 									'Are you sure this is correct?'
 					end
@@ -362,7 +359,7 @@ class ProxyConfiguration
             raise status['connectionError'] if !status['connected']
             @is_man_in_the_middle = status['isManInTheMiddle']
         else 
-            logger.warn \
+            Log.warn \
 				"Apify Proxy access check timed out. Watch out for errors with status code 407. " \
 				"If you see some, it most likely means you don't have access to either all or some of the proxies you're trying to use."
 		end
