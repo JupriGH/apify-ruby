@@ -23,8 +23,7 @@ from .config import Configuration
 from .log import logger
 =end
 
-APIFY_PROXY_VALUE_REGEX = Regexp.new(/^[\w._~]+$/)
-COUNTRY_CODE_REGEX = Regexp.new(/^[A-Z]{2}$/)
+
 SESSION_ID_MAX_LENGTH = 50
 
 =begin
@@ -105,7 +104,10 @@ class ProxyInfo(TypedDict):
 
 class ProxyConfiguration
 
+	APIFY_PROXY_VALUE_REGEX = Regexp.new(/^[\w._~]+$/)
+	COUNTRY_CODE_REGEX = Regexp.new(/^[A-Z]{2}$/)
 
+	
     """Configures a connection to a proxy server with the provided options.
 
     Proxy servers are used to prevent target websites from blocking your crawlers based on IP address rate limits or blacklists.
@@ -141,6 +143,10 @@ class ProxyConfiguration
         _actor_config: nil,
         _apify_client: nil
 	)
+		p APIFY_PROXY_VALUE_REGEX
+	
+
+	
         """Create a ProxyConfiguration instance. It is highly recommended to use `Actor.create_proxy_configuration()` instead of this.
 
         Args:
