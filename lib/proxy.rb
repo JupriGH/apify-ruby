@@ -388,7 +388,7 @@ end
 ###################################################################### UTILS
 
 # Regular expression pattern to match an IPv4 or IPv6 address
-ip_pattern = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$|^
+IP_PATTERN = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$|^
               (?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$|^
               ::(?:[0-9a-fA-F]{1,4}:){0,6}[0-9a-fA-F]{1,4}$|^
               (?:[0-9a-fA-F]{1,4}:){1,6}:$|^
@@ -401,15 +401,13 @@ def _is_url url
 	has_all_parts 	= parsed_url.scheme && host && parsed_url.path
 	is_domain 		= host.include?('.')
 	is_localhost 	= host == 'localhost'
-	is_ip_address 	= ip_pattern.match?(host)
+	is_ip_address 	= IP_PATTERN.match?(host)
 
-	return has_all_parts && ( is_domain || is_localhost || is_ip_address )
+	has_all_parts && ( is_domain || is_localhost || is_ip_address )
 end
 
 def _check value, label: nil, pattern: nil, min_length: nil, max_length: nil
-
     error_str = "Value #{value}"
-    
 	label && error_str << " of argument #{label}"
 
     if min_length && value.length < min_length
@@ -420,7 +418,7 @@ def _check value, label: nil, pattern: nil, min_length: nil, max_length: nil
 		raise "#{error_str} is longer than maximum allowed length #{max_length}" # ValueError
 	end
 	
-    if pattern and !pattern.match(value)
+    if pattern && !pattern.match?(value)
         raise "#{error_str} does not match pattern #{pattern.pattern}"
 	end
 end
