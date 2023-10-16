@@ -273,7 +273,7 @@ class ProxyConfiguration
 		
         username = _get_username session_id
 
-        "http://#{username}:#{@_password}@#{@_hostname}:#{@_port}"
+        p "http://#{username}:#{@_password}@#{@_hostname}:#{@_port}"
 	end
 =begin
     async def new_proxy_info(self, session_id: Optional[Union[int, str]] = None) -> ProxyInfo:
@@ -385,7 +385,7 @@ class ProxyConfiguration
 			end
 		end
 
-		p status
+		p :PROXY status
 
         if status
 			# ConnectionError
@@ -396,7 +396,6 @@ class ProxyConfiguration
 				"Apify Proxy access check timed out. Watch out for errors with status code 407. " \
 				"If you see some, it most likely means you don't have access to either all or some of the proxies you're trying to use."
 		end
-		raise
 	end
 	
     def _get_username session_id=nil
