@@ -385,7 +385,7 @@ class ProxyConfiguration
 			end
 		end
 
-		p :PROXY status
+		p :PROXY, status
 
         if status
 			# ConnectionError
