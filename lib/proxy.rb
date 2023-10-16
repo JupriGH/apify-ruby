@@ -163,14 +163,14 @@ class ProxyConfiguration
         @_actor_config = _actor_config or Configuration._get_default_instance
         @_apify_client = _apify_client
 
-        @_hostname 	= @_actor_config.proxy_hostname
-        @_port 		= @_actor_config.proxy_port
-        @_password 	= password or @_actor_config.proxy_password
+        @_hostname 		= @_actor_config.proxy_hostname
+        @_port 			= @_actor_config.proxy_port
+        @_password 		= password || @_actor_config.proxy_password
 
-        #@_proxy_urls 		||= []
+        @_proxy_urls 		= proxy_urls
         @_used_proxy_urls 	= {}
         @_new_url_function 	= new_url_function
-        #@_groups 			||= []
+        @_groups 			= groups
         @_country_code 		= country_code
         @_uses_apify_proxy 	= ! (proxy_urls || new_url_function)
 		
