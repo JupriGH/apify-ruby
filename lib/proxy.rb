@@ -140,15 +140,15 @@ class ProxyConfiguration
         _actor_config: nil,
         _apify_client: nil
 	)
-        '''Create a ProxyConfiguration instance. It is highly recommended to use `Actor.create_proxy_configuration()` instead of this.
+        """Create a ProxyConfiguration instance. It is highly recommended to use `Actor.create_proxy_configuration()` instead of this.
 
         Args:
-            password (str, optional): Password for the Apify Proxy. If not provided, will use os.environ[\'APIFY_PROXY_PASSWORD\'], if available.
+            password (str, optional): Password for the Apify Proxy. If not provided, will use os.environ['APIFY_PROXY_PASSWORD'], if available.
             groups (list of str, optional): Proxy groups which the Apify Proxy should use, if provided.
             country_code (str, optional): Country which the Apify Proxy should use, if provided.
             proxy_urls (list of str, optional): Custom proxy server URLs which should be rotated through.
             new_url_function (Callable, optional): Function which returns a custom proxy URL to be used.
-        '''
+        """
 
         if groups
 			raise "groups is not array" if groups.class != Array
@@ -179,11 +179,9 @@ class ProxyConfiguration
 		
         if (proxy_urls or new_url_function) and (groups or country_code)
             # ValueError
-			raise """
-				Cannot combine custom proxies with Apify Proxy!'
-				It is not allowed to set \"proxy_urls\" or \"new_url_function\" combined with
-                \"groups\" or \"country_code\".
-				"""
+			raise 	'Cannot combine custom proxies with Apify Proxy! ' \
+					'It is not allowed to set "proxy_urls" or "new_url_function" combined with ' \
+					'"groups" or "country_code".'				
 		end
 		
         # mypy has a bug with narrowing types for filter (https://github.com/python/mypy/issues/12682)
@@ -209,14 +207,14 @@ class ProxyConfiguration
 	end
 	
     def __initialize
-        '''Load the Apify Proxy password if the API token is provided and check access to Apify Proxy and provided proxy groups.
+        """Load the Apify Proxy password if the API token is provided and check access to Apify Proxy and provided proxy groups.
 
         Only called if Apify Proxy configuration is used.
         Also checks if country has access to Apify Proxy groups if the country code is provided.
 
         You should use the Actor.create_proxy_configuration function
         to create a pre-initialized `ProxyConfiguration` instance instead of calling this manually.
-        '''
+        """
         if @_uses_apify_proxy
             _maybe_fetch_password
             _check_access
@@ -336,11 +334,10 @@ class ProxyConfiguration
                 password = user_info.dig("proxy", "password")
                 if @_password
                     if @_password != password
-                        p "TODO: implement logger"
-						#logger.warning
-						p '''The Apify Proxy password you provided belongs to
-							a different user than the Apify token you are using. 
-							Are you sure this is correct?'''
+						
+						logger.warn	'The Apify Proxy password you provided belongs to '\
+									'a different user than the Apify token you are using. '\
+									'Are you sure this is correct?'
 					end
 				else
                     @_password = password
@@ -350,10 +347,9 @@ class ProxyConfiguration
 		
         if not @_password
             # ValueError
-			p ApifyEnvVars
-			raise """Apify Proxy password must be provided using the \"password\" constructor argument
-                or the \"#{ApifyEnvVars::PROXY_PASSWORD}\" environment variable.
-                If you add the \"#{ApifyEnvVars::TOKEN}\" environment variable, the password will be automatically inferred."""
+			raise  	"Apify Proxy password must be provided using the \"password\" constructor argument " \
+					"or the \"#{ApifyEnvVars::PROXY_PASSWORD}\" environment variable. " \
+					"If you add the \"#{ApifyEnvVars::TOKEN}\" environment variable, the password will be automatically inferred."
 		end
 	end
 	
@@ -395,10 +391,10 @@ class ProxyConfiguration
 			# ConnectionError
             raise status['connectionError'] if !status['connected']
             @is_man_in_the_middle = status['isManInTheMiddle']
-        else
-			raise 
-            #logger.warning('Apify Proxy access check timed out. Watch out for errors with status code 407. '
-            #               "If you see some, it most likely means you don't have access to either all or some of the proxies you're trying to use.")
+        else 
+            logger.warn \
+				"Apify Proxy access check timed out. Watch out for errors with status code 407. " \
+				"If you see some, it most likely means you don't have access to either all or some of the proxies you're trying to use."
 		end
 		raise
 	end
