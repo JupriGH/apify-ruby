@@ -245,7 +245,6 @@ class BaseStorage # (ABC, Generic[BaseResourceClientType, BaseResourceCollection
         if cached_storage
             # This cast is needed since MyPy doesn't understand very well that Self and Storage are the same
             # return cast(Self, cached_storage)
-			raise "CACHE FOUND"
 			return cached_storage
 		end
 		
