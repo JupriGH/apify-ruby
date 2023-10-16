@@ -117,16 +117,19 @@ async def __aexit__(
 	def self._get_default_instance
 		@@_default_instance ||= new(config: Configuration.get_global_configuration())
 	end
+	
+	### @dualproperty
+	def self.apify_client
+		"""The ApifyClientAsync instance the Actor instance uses."""
+		_get_default_instance.apify_client
+	end
+	def apify_client
+		@_apify_client
+	end
+	
+	
 
 =begin
-@dualproperty
-def apify_client(self_or_cls) -> ApifyClientAsync:  # noqa: N805
-	"""The ApifyClientAsync instance the Actor instance uses."""  # noqa: D401
-	if isinstance(self_or_cls, type):
-		return self_or_cls._get_default_instance()._apify_client
-	else:
-		return self_or_cls._apify_client
-
 @dualproperty
 def config(self_or_cls) -> Configuration:  # noqa: N805
 	"""The Configuration instance the Actor instance uses."""  # noqa: D401

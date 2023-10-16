@@ -1,3 +1,5 @@
+require_relative 'consts'
+
 module Apify
 
 =begin
@@ -318,6 +320,7 @@ class ProxyConfiguration
             user_info = @_apify_client.user.get
             if user_info
                 password = user_info.dig(:proxy, :password)
+				p password
                 if @_password
                     if @_password != password
                         p "TODO: implement logger"
@@ -336,12 +339,14 @@ class ProxyConfiguration
 		
         if not @_password
             # ValueError
+			p ApifyEnvVars
 			raise """
 				Apify Proxy password must be provided using the \"password\" constructor argument
-                or the \"#{ApifyEnvVars.PROXY_PASSWORD}\" environment variable.
-                If you add the \"#{ApifyEnvVars.TOKEN}\" environment variable, the password will be automatically inferred.
+                or the \"#{ApifyEnvVars::PROXY_PASSWORD}\" environment variable.
+                If you add the \"#{ApifyEnvVars::TOKEN}\" environment variable, the password will be automatically inferred.
 				"""
 		end
+		raise
 	end
 	
 =begin
