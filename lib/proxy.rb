@@ -202,9 +202,8 @@ class ProxyConfiguration
                  For example, `http://bob:password123@proxy.example.com:8000`
         '''
         if session_id
-            raise
-			#session_id = f'{session_id}'
-            #_check(session_id, label='session_id', max_length=SESSION_ID_MAX_LENGTH, pattern=APIFY_PROXY_VALUE_REGEX)
+			session_id = session_id.to_s
+            _check session_id, label: 'session_id', max_length: SESSION_ID_MAX_LENGTH, pattern: APIFY_PROXY_VALUE_REGEX
 		end
 		
         if @_new_url_function
@@ -221,21 +220,18 @@ class ProxyConfiguration
 		end
 		
         if @_proxy_urls
-			raise
-=begin
-            if ! session_id
-                index = self._next_custom_url_index
-                self._next_custom_url_index = (self._next_custom_url_index + 1) % len(self._proxy_urls)
-                return self._proxy_urls[index]
+            if !session_id
+                index = @_next_custom_url_index
+                @_next_custom_url_index = (@_next_custom_url_index + 1) % @_proxy_urls.length
+                return @_proxy_urls[index]
             else
-                if session_id not in self._used_proxy_urls:
-                    index = self._next_custom_url_index
-                    self._next_custom_url_index = (self._next_custom_url_index + 1) % len(self._proxy_urls)
-                    self._used_proxy_urls[session_id] = self._proxy_urls[index]
-
-                return self._used_proxy_urls[session_id]
+                if !@_used_proxy_urls.has_key?(session_id)
+                    index = @_next_custom_url_index
+                    @_next_custom_url_index = (@_next_custom_url_index + 1) % @_proxy_urls.length
+					@_used_proxy_urls[session_id] = @_proxy_urls[index]
+				end
+                return @_used_proxy_urls[session_id]
 			end
-=end
 		end
 		
         username = _get_username session_id
