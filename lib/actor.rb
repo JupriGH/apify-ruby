@@ -1239,15 +1239,15 @@ async def _set_status_message_internal(self, status_message: str, *, is_terminal
 	)
 		_raise_if_not_initialized
 		
+		p :create_proxy_configuration, actor_proxy_input
+		
 		if actor_proxy_input
 			if actor_proxy_input['useApifyProxy'] # bool
-				country_code = country_code or actor_proxy_input['apifyProxyCountry']
-				groups = groups or actor_proxy_input['apifyProxyGroups']
+				country_code 	||= actor_proxy_input['apifyProxyCountry']
+				groups 			||= actor_proxy_input['apifyProxyGroups']
 			else
 				proxy_urls = actor_proxy_input['proxyUrls'] # []
-				if (not proxy_urls) or (proxy_urls.length == 0) 
-					return
-				end
+				return if !proxy_urls || proxy_urls.empty? 
 			end
 		end
 		
