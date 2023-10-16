@@ -1,7 +1,11 @@
+require 'openssl'
+require 'base64'
+
 module Apify
 
+class Crypto
+
 =begin
-import base64
 import secrets
 from typing import Any
 
@@ -13,11 +17,18 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from apify_shared.utils import ignore_docs
 
 from .consts import ENCRYPTED_INPUT_VALUE_REGEXP
+=end
 
-ENCRYPTION_KEY_LENGTH = 32
-ENCRYPTION_IV_LENGTH = 16
-ENCRYPTION_AUTH_TAG_LENGTH = 16
+	ENCRYPTION_KEY_LENGTH = 32
+	ENCRYPTION_IV_LENGTH = 16
+	ENCRYPTION_AUTH_TAG_LENGTH = 16
 
+
+	BASE64_REGEXP = '[-A-Za-z0-9+/]*={0,3}'
+	ENCRYPTED_INPUT_VALUE_PREFIX = 'ENCRYPTED_VALUE'
+	ENCRYPTED_INPUT_VALUE_REGEXP = Regexp.new "^#{ENCRYPTED_INPUT_VALUE_PREFIX}:(#{BASE64_REGEXP}):(#{BASE64_REGEXP})$"
+
+=begin
 
 @ignore_docs
 def public_encrypt(value: str, *, public_key: rsa.RSAPublicKey) -> dict:
@@ -57,64 +68,68 @@ def public_encrypt(value: str, *, public_key: rsa.RSAPublicKey) -> dict:
     }
 =end
 
-def private_decrypt encrypted_password, encrypted_value, private_key
-    """Decrypts the given encrypted value using the private key and password.
 
-    Args:
-        encrypted_password (str): Password used to encrypt the private key encoded as base64 string.
-        encrypted_value (str): Encrypted value to decrypt as base64 string.
-        private_key (RSAPrivateKey): Private key to use for decryption.
+	def self.private_decrypt encrypted_password, encrypted_value, private_key
+		"""Decrypts the given encrypted value using the private key and password.
 
-    Returns:
-        str: Decrypted value.
-    """
-    encrypted_password_bytes = base64.b64decode(encrypted_password.encode('utf-8'))
-    encrypted_value_bytes 	 = base64.b64decode(encrypted_value.encode('utf-8'))
+		Args:
+			encrypted_password (str): Password used to encrypt the private key encoded as base64 string.
+			encrypted_value (str): Encrypted value to decrypt as base64 string.
+			private_key (RSAPrivateKey): Private key to use for decryption.
 
-    # Decrypt the password
-    password_bytes = private_key.decrypt(
-        encrypted_password_bytes,
-        padding.OAEP(
-            mgf=padding.MGF1(algorithm=hashes.SHA1()),
-            algorithm=hashes.SHA1(),
-            label=None,
-        ),
-    )
+		Returns:
+			str: Decrypted value.
+		"""
 
-    if len(password_bytes) != ENCRYPTION_KEY_LENGTH + ENCRYPTION_IV_LENGTH:
-        raise ValueError('Decryption failed, invalid password length!')
+		encrypted_password 	= Base64.decode64(encrypted_password) # .encode('utf-8')
+		encrypted_value		= Base64.decode64(encrypted_value) # .encode('utf-8')
 
-    # Slice the encrypted into cypher and authentication tag
-    authentication_tag_bytes = encrypted_value_bytes[-ENCRYPTION_AUTH_TAG_LENGTH:]
-    encrypted_data_bytes = encrypted_value_bytes[:len(encrypted_value_bytes) - ENCRYPTION_AUTH_TAG_LENGTH]
-    encryption_key_bytes = password_bytes[:ENCRYPTION_KEY_LENGTH]
-    initialization_vector_bytes = password_bytes[ENCRYPTION_KEY_LENGTH:]
+		# Decrypt the password
+		password = private_key.private_decrypt(encrypted_password, OpenSSL::PKey::RSA::PKCS1_OAEP_PADDING)
 
-    try:
-        cipher = Cipher(algorithms.AES(encryption_key_bytes), modes.GCM(initialization_vector_bytes, authentication_tag_bytes))
-        decryptor = cipher.decryptor()
-        decipher_bytes = decryptor.update(encrypted_data_bytes) + decryptor.finalize()
-    except InvalidTagException:
-        raise ValueError('Decryption failed, malformed encrypted value or password.')
-    except Exception as err:
-        raise err
+		raise 'Decryption failed, invalid password length!' if password.length != ( ENCRYPTION_KEY_LENGTH + ENCRYPTION_IV_LENGTH ) # ValueError
+		
+		# Slice the encrypted into cypher and authentication tag
+		authentication_tag		= encrypted_value[-ENCRYPTION_AUTH_TAG_LENGTH ..]
+		encrypted_data 			= encrypted_value[.. -ENCRYPTION_AUTH_TAG_LENGTH-1]	    
+		encryption_key 			= password[0, ENCRYPTION_KEY_LENGTH]
+		initialization_vector 	= password[ENCRYPTION_KEY_LENGTH ..]
 
-    return decipher_bytes.decode('utf-8')
-end
+		#try:
+			#cipher = Cipher(algorithms.AES(encryption_key_bytes), modes.GCM(initialization_vector_bytes, authentication_tag_bytes))
+			#decryptor = cipher.decryptor()
+			#decipher_bytes = decryptor.update(encrypted_data_bytes) + decryptor.finalize()
 
-def _load_private_key private_key_file_base64, private_key_password # rsa.RSAPrivateKey
-    private_key = serialization.load_pem_private_key(
-		base64.b64decode(
-			private_key_file_base64.encode('utf-8')
-		), 
-		password=private_key_password.encode('utf-8')
-	)
-    
-	if not isinstance(private_key, rsa.RSAPrivateKey):
-        raise ValueError('Invalid private key.')
+			cipher = OpenSSL::Cipher.new("aes-256-gcm")
+			cipher.decrypt
+			cipher.key 			= encryption_key
+			cipher.iv_len		= initialization_vector.length # 16
+			cipher.iv 			= initialization_vector
+			cipher.auth_tag 	= authentication_tag
 
-    return private_key
-end
+			# Perform decryption
+			decipher_bytes = cipher.update(encrypted_data) + cipher.final
+			
+			# .decode('utf-8')
+			return decipher_bytes
+
+		#except InvalidTagException:
+		#    raise ValueError('Decryption failed, malformed encrypted value or password.')
+		#except Exception as err:
+		#    raise err
+
+		# return decipher_bytes.decode('utf-8')
+	end
+
+	def self._load_private_key private_key_file_base64, private_key_password # rsa.RSAPrivateKey    
+		OpenSSL::PKey::RSA.new(
+			Base64.urlsafe_decode64( private_key_file_base64 ), 
+			private_key_password
+		)
+		
+		# if not isinstance(private_key, rsa.RSAPrivateKey):
+		#    raise ValueError('Invalid private key.')
+	end
 
 =begin
 def _load_public_key(public_key_file_base64: str) -> rsa.RSAPublicKey:
@@ -132,24 +147,21 @@ def _crypto_random_object_id(length: int = 17) -> str:
 
 =end
 
-def _decrypt_input_secrets private_key, input
-    """Decrypt input secrets."""
-    #if not isinstance(input, dict):
-    #    return input
+	def self._decrypt_input_secrets private_key, input
+		"""Decrypt input secrets."""
 
-    for key, value in input.items():
-        if isinstance(value, str):
-            match = ENCRYPTED_INPUT_VALUE_REGEXP.fullmatch(value)
-            if match:
-                encrypted_password = match.group(1)
-                encrypted_value = match.group(2)
-                input[key] = private_decrypt(
-                    encrypted_password,
-                    encrypted_value,
-                    private_key=private_key,
-                )
+		if input.class == Hash
+			input.each do |key, value|	
+				if value.class == String
+					match = value.match(ENCRYPTED_INPUT_VALUE_REGEXP)
+					if match
+						input[key] = private_decrypt match[1], match[2], private_key
+					end
+				end
+			end
+		end
+	end
 
-    return input
 end
 
 end

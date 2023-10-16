@@ -101,10 +101,6 @@ class Configuration
 		#ENV.each do |key, val|
 		#	p "#{key}=#{val}"
 		#end
-		
-		######### TEST
-		# @default_key_value_store_id = "ThaIiaGvLxtrIH5QD"
-		
 	end
 
 	def self._get_default_instance
