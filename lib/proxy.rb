@@ -21,12 +21,13 @@ from apify_shared.utils import ignore_docs
 
 from .config import Configuration
 from .log import logger
+=end
 
-APIFY_PROXY_VALUE_REGEX = re.compile(r'^[\w._~]+$')
-COUNTRY_CODE_REGEX = re.compile(r'^[A-Z]{2}$')
+APIFY_PROXY_VALUE_REGEX = Regexp.new(/^[\w._~]+$/)
+COUNTRY_CODE_REGEX = Regexp.new(/^[A-Z]{2}$/)
 SESSION_ID_MAX_LENGTH = 50
 
-
+=begin
 def _is_url(url: str) -> bool:
     try:
         parsed_url = urlparse(urljoin(url, '/'))
@@ -42,30 +43,28 @@ def _is_url(url: str) -> bool:
         return has_all_parts and any([is_domain, is_localhost, is_ip_address])
     except Exception:
         return False
+=end
 
+def _check value, label: nil, pattern: nil, min_length: nil, max_length: nil
 
-def _check(
-    value: Any,
-    *,
-    label: Optional[str],
-    pattern: Optional[Pattern] = None,
-    min_length: Optional[int] = None,
-    max_length: Optional[int] = None,
-) -> None:
-    error_str = f'Value {value}'
-    if label:
-        error_str += f' of argument {label}'
+    error_str = "Value #{value}"
+    
+	label && error_str << " of argument #{label}"
 
-    if min_length and len(value) < min_length:
-        raise ValueError(f'{error_str} is shorter than minimum allowed length {min_length}')
+    if min_length && value.length < min_length
+		raise "#{error_str} is shorter than minimum allowed length #{min_length}" # ValueError
+	end
+	
+    if max_length && value.length > max_length
+		raise "#{error_str} is longer than maximum allowed length #{max_length}" # ValueError
+	end
+	
+    if pattern and !pattern.match(value)
+        raise "#{error_str} does not match pattern #{pattern.pattern}"
+	end
+end
 
-    if max_length and len(value) > max_length:
-        raise ValueError(f'{error_str} is longer than maximum allowed length {max_length}')
-
-    if pattern and not re.fullmatch(pattern, value):
-        raise ValueError(f'{error_str} does not match pattern {repr(pattern.pattern)}')
-
-
+=begin
 class ProxyInfo(TypedDict):
     """Provides information about a proxy connection that is used for requests."""
 
@@ -105,6 +104,8 @@ class ProxyInfo(TypedDict):
 =end
 
 class ProxyConfiguration
+
+
     """Configures a connection to a proxy server with the provided options.
 
     Proxy servers are used to prevent target websites from blocking your crawlers based on IP address rate limits or blacklists.
