@@ -3,6 +3,8 @@ require 'json'
 
 require_relative 'consts'
 
+
+
 module Apify
 
 =begin
@@ -26,42 +28,7 @@ from .log import logger
 
 SESSION_ID_MAX_LENGTH = 50
 
-=begin
-def _is_url(url: str) -> bool:
-    try:
-        parsed_url = urlparse(urljoin(url, '/'))
-        has_all_parts = all([parsed_url.scheme, parsed_url.netloc, parsed_url.path])
-        is_domain = '.' in parsed_url.netloc
-        is_localhost = parsed_url.netloc == 'localhost'
-        try:
-            ipaddress.ip_address(parsed_url.netloc)
-            is_ip_address = True
-        except Exception:
-            is_ip_address = False
 
-        return has_all_parts and any([is_domain, is_localhost, is_ip_address])
-    except Exception:
-        return False
-=end
-
-def _check value, label: nil, pattern: nil, min_length: nil, max_length: nil
-
-    error_str = "Value #{value}"
-    
-	label && error_str << " of argument #{label}"
-
-    if min_length && value.length < min_length
-		raise "#{error_str} is shorter than minimum allowed length #{min_length}" # ValueError
-	end
-	
-    if max_length && value.length > max_length
-		raise "#{error_str} is longer than maximum allowed length #{max_length}" # ValueError
-	end
-	
-    if pattern and !pattern.match(value)
-        raise "#{error_str} does not match pattern #{pattern.pattern}"
-	end
-end
 
 =begin
 class ProxyInfo(TypedDict):
@@ -416,4 +383,42 @@ class ProxyConfiguration
 	end
 end
 
+end
+
+###################################################################### UTILS
+=begin
+def _is_url(url: str) -> bool:
+    try:
+        parsed_url = urlparse(urljoin(url, '/'))
+        has_all_parts = all([parsed_url.scheme, parsed_url.netloc, parsed_url.path])
+        is_domain = '.' in parsed_url.netloc
+        is_localhost = parsed_url.netloc == 'localhost'
+        try:
+            ipaddress.ip_address(parsed_url.netloc)
+            is_ip_address = True
+        except Exception:
+            is_ip_address = False
+
+        return has_all_parts and any([is_domain, is_localhost, is_ip_address])
+    except Exception:
+        return False
+=end
+
+def _check value, label: nil, pattern: nil, min_length: nil, max_length: nil
+
+    error_str = "Value #{value}"
+    
+	label && error_str << " of argument #{label}"
+
+    if min_length && value.length < min_length
+		raise "#{error_str} is shorter than minimum allowed length #{min_length}" # ValueError
+	end
+	
+    if max_length && value.length > max_length
+		raise "#{error_str} is longer than maximum allowed length #{max_length}" # ValueError
+	end
+	
+    if pattern and !pattern.match(value)
+        raise "#{error_str} does not match pattern #{pattern.pattern}"
+	end
 end
