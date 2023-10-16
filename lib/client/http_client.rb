@@ -1,6 +1,6 @@
 require 'net/http'
 require 'json'
-#require 'stringio'
+require 'stringio'
 #require 'brotli-libs'
 require 'rbconfig'
 
