@@ -442,9 +442,8 @@ class KeyValueStore < BaseStorage
             if not list_keys['isTruncated']:
                 break
             exclusive_start_key = list_keys['nextExclusiveStartKey']
-
-    @classmethod
-    async def set_value(cls, key: str, value: Optional[T], content_type: Optional[str] = None) -> None:
+=end
+    def self.set_value key, value=nil, content_type=nil
         """Set or delete a value in the key-value store.
 
         Args:
@@ -452,15 +451,19 @@ class KeyValueStore < BaseStorage
             value (Any, optional): The value to save. If the value is `None`, the corresponding key-value pair will be deleted.
             content_type (str, optional): The content type of the saved value.
         """
-        store = await cls.open()
-        return await store.set_value(key, value, content_type)
-
-    async def _set_value_internal(self, key: str, value: Optional[T], content_type: Optional[str] = None) -> None:
-        if value is None:
-            return await self._key_value_store_client.delete_record(key)
-
-        return await self._key_value_store_client.set_record(key, value, content_type)
-
+        open.set_value key, value, content_type
+	end
+	
+    def set_value key, value=nil, content_type=nil
+        if value.nil?
+			raise "TODO"
+            @_key_value_store_client.delete_record key
+		else
+			@_key_value_store_client.set_record key, value, content_type
+		end
+	end
+	
+=begin
     @classmethod
     async def get_public_url(cls, key: str) -> str:
         """Get a URL for the given key that may be used to publicly access the value in the remote key-value store.

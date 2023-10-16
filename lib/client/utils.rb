@@ -138,21 +138,26 @@ def _encode_webhook_list_to_base64(webhooks: List[Dict]) -> str:
 
     return base64.b64encode(json.dumps(data).encode('utf-8')).decode('ascii')
 
+=end
 
-def _encode_key_value_store_record_value(value: Any, content_type: Optional[str] = None) -> Tuple[Any, str]:
-    if not content_type:
-        if is_file_or_bytes(value):
-            content_type = 'application/octet-stream'
-        elif isinstance(value, str):
-            content_type = 'text/plain; charset=utf-8'
-        else:
-            content_type = 'application/json; charset=utf-8'
-
+def self._encode_key_value_store_record_value value, content_type
+	p "TODO: _encode_key_value_store_record_value"
+=begin
+    if not content_type
+	
+        #if is_file_or_bytes(value):
+        #    content_type = 'application/octet-stream'
+        #elif isinstance(value, str):
+        #    content_type = 'text/plain; charset=utf-8'
+        #else:
+        #    content_type = 'application/json; charset=utf-8'
+	end
+	
     if 'application/json' in content_type and not is_file_or_bytes(value) and not isinstance(value, str):
         value = json.dumps(value, ensure_ascii=False, indent=2, allow_nan=False, default=str).encode('utf-8')
-
-    return (value, content_type)
 =end
+    [ value, content_type ]
+end
 
 end
 

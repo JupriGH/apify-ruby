@@ -562,7 +562,6 @@ async def _open_request_queue_internal(
 		_get_default_instance.get_input
 	end
 
-	# async
 	def get_input
 		_raise_if_not_initialized
 			
@@ -572,14 +571,8 @@ async def _open_request_queue_internal(
 		input_value 					= get_value(@_config.input_key)
 		
 		if input_secrets_private_key and input_secrets_key_passphrase
-			p """
-			private_key = _load_private_key(
-				input_secrets_private_key,
-				input_secrets_key_passphrase,
-			)
-			input_value = _decrypt_input_secrets(private_key, input_value)
-			"""
-			raise "TODO"
+			private_key = _load_private_key( input_secrets_private_key, input_secrets_key_passphrase )
+			input_value = _decrypt_input_secrets( private_key, input_value )
 		end
 		input_value # return input_value
 	end
@@ -603,15 +596,8 @@ async def _open_request_queue_internal(
 		open_key_value_store.get_value key, default_value: default_value
 	end
 
-=begin
-@classmethod
-async def set_value(
-	cls,
-	key: str,
-	value: Any,
-	*,
-	content_type: Optional[str] = None,
-) -> None:
+###========================================================================================================== set_value
+def self.set_value key, value=nil, content_type=nil
 	"""Set or delete a value in the default key-value store associated with the current actor run.
 
 	Args:
@@ -619,23 +605,16 @@ async def set_value(
 		value (any): The value of the record which to set, or None, if the record should be deleted.
 		content_type (str, optional): The content type which should be set to the value.
 	"""
-	return await cls._get_default_instance().set_value(
-		key=key,
-		value=value,
-		content_type=content_type,
-	)
+	_get_default_instance.set_value key, value, content_type
+end
 
-async def _set_value_internal(
-	self,
-	key: str,
-	value: Any,
-	*,
-	content_type: Optional[str] = None,
-) -> None:
-	self._raise_if_not_initialized()
+def set_value key, value=nil, content_type=nil
+	_raise_if_not_initialized
 
-	key_value_store = await self.open_key_value_store()
-	return await key_value_store.set_value(key, value, content_type=content_type)
+	open_key_value_store.set_value key, value, content_type
+end
+
+=begin
 
 @classmethod
 def on(cls, event_name: ActorEventTypes, listener: Callable) -> Callable:

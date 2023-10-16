@@ -133,18 +133,17 @@ class BaseHTTPClient
 		end
 		
 		if data.class == String
-			# data = Zlib::Deflate.new(31).deflate(data, Zlib::BEST_COMPRESSION)
+			#data = Zlib::Deflate.new(Zlib::BEST_COMPRESSION, 31).deflate(data, Zlib::BEST_COMPRESSION)
+			
 			c = data.length
 			io = StringIO.new
-			gz = Zlib::GzipWriter.new(io)
+			gz = Zlib::GzipWriter.new(io, Zlib::BEST_COMPRESSION)
 			gz.write(data)
 			gz.close
 			data = io.string
 			
 			p "compressed: #{c} => #{data.length}"
 			headers['Content-Encoding'] = 'gzip'
-		else
-			p data.class
 		end
 		
         #if isinstance(data, (str, bytes, bytearray)):
@@ -179,13 +178,13 @@ class HTTPClient < BaseHTTPClient
             raise 'Cannot stream response and parse it at the same time!' # ValueError
 		end
 
+		p "#{method} #{url}"
+
         headers, params, content = _prepare_request_call(headers, params, data, json)
 
 		###################################################################################
 		headers = {**@headers, **headers}
 
-		p "#{method} #{url}"
-		
 		uri = URI.parse(url)
 
 		# start session
@@ -208,8 +207,20 @@ class HTTPClient < BaseHTTPClient
 				if content
 					req.body = content
 				end
+				
+			when 'PUT'
+				
+				#p content
+				#raise
+				
+				req = Net::HTTP::Put.new uri
+				if content
+					req.body = content
+				end
+				
 			when 'GET'
 				req = Net::HTTP::Get.new uri
+			
 			else
 				raise "METHOD #{method}"
 			end

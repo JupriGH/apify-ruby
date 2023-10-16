@@ -1,4 +1,5 @@
 require_relative '../base/resource_client'
+require_relative '../utils'
 
 module Apify
 
@@ -195,8 +196,9 @@ class KeyValueStoreClient < ResourceClient
         finally:
             if response:
                 response.close()
+=end
 
-    def set_record(self, key: str, value: Any, content_type: Optional[str] = None) -> None:
+    def set_record key, value=nil, content_type=nil
         """Set a value to the given record in the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/put-record
@@ -206,18 +208,15 @@ class KeyValueStoreClient < ResourceClient
             value (Any): The value to save into the record
             content_type (str, optional): The content type of the saved value
         """
-        value, content_type = _encode_key_value_store_record_value(value, content_type)
+        value, content_type = Utils::_encode_key_value_store_record_value value, content_type
 
-        headers = {'content-type': content_type}
-
-        self.http_client.call(
-            url=self._url(f'records/{key}'),
-            method='PUT',
-            params=self._params(),
-            data=value,
-            headers=headers,
-        )
-
+		headers = content_type ? {'Content-Type': content_type} : nil
+		
+        @http_client.call \
+			url: _url(path: "records/#{key}"), method: 'PUT', params: _params, data: value, headers: headers
+	end
+	
+=begin
     def delete_record(self, key: str) -> None:
         """Delete the specified record from the key-value store.
 
