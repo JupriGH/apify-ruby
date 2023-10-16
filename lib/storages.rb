@@ -599,7 +599,7 @@ class Dataset < BaseStorage
     def self._get_storage_collection_client client
         client.datasets
 	end
-	
+=begin
     def self.push_data data
         """Store an object or an array of objects to the dataset.
 
@@ -614,7 +614,7 @@ class Dataset < BaseStorage
         dataset = open
         dataset.push_data data
 	end
-
+=end
     def push_data data
 		# Handle singular items
 		if data.class != Array

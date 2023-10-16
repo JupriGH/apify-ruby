@@ -535,77 +535,75 @@ async def _open_request_queue_internal(
 	self._raise_if_not_initialized()
 
 	return await RequestQueue.open(id=id, name=name, force_cloud=force_cloud, config=self._config)
-
-@classmethod
-async def push_data(cls, data: Any) -> None:
-	"""Store an object or a list of objects to the default dataset of the current actor run.
-
-	Args:
-		data (object or list of objects, optional): The data to push to the default dataset.
-	"""
-	return await cls._get_default_instance().push_data(data=data)
-
-async def _push_data_internal(self, data: Any) -> None:
-	self._raise_if_not_initialized()
-
-	if not data:
-		return
-
-	dataset = await self.open_dataset()
-	await dataset.push_data(data)
 =end
 
-###========================================================================================================== get_input
+###========================================================================================================== push_data
+	def self.push_data data
+		"""Store an object or a list of objects to the default dataset of the current actor run.
 
-# async 
-def self.get_input
-	
-	"""Get the actor input value from the default key-value store associated with the current actor run."""
-	_get_default_instance.get_input
-end
-
-# async
-def get_input
-	_raise_if_not_initialized
-		
-	input_secrets_private_key 		= @_config.input_secrets_private_key_file
-	input_secrets_key_passphrase 	= @_config.input_secrets_private_key_passphrase
-
-	input_value 					= get_value(@_config.input_key)
-	
-	if input_secrets_private_key and input_secrets_key_passphrase
-		p """
-		private_key = _load_private_key(
-			input_secrets_private_key,
-			input_secrets_key_passphrase,
-		)
-		input_value = _decrypt_input_secrets(private_key, input_value)
+		Args:
+			data (object or list of objects, optional): The data to push to the default dataset.
 		"""
-		raise "TODO"
+		_get_default_instance.push_data data
 	end
-	return input_value
-end
+
+	def push_data data
+		_raise_if_not_initialized
+
+		if not data:
+			return
+		end 
+		
+		dataset = open_dataset
+		dataset.push_data data
+	end
+
+###========================================================================================================== get_input
+	def self.get_input
+		"""Get the actor input value from the default key-value store associated with the current actor run."""
+		_get_default_instance.get_input
+	end
+
+	# async
+	def get_input
+		_raise_if_not_initialized
+			
+		input_secrets_private_key 		= @_config.input_secrets_private_key_file
+		input_secrets_key_passphrase 	= @_config.input_secrets_private_key_passphrase
+
+		input_value 					= get_value(@_config.input_key)
+		
+		if input_secrets_private_key and input_secrets_key_passphrase
+			p """
+			private_key = _load_private_key(
+				input_secrets_private_key,
+				input_secrets_key_passphrase,
+			)
+			input_value = _decrypt_input_secrets(private_key, input_value)
+			"""
+			raise "TODO"
+		end
+		input_value # return input_value
+	end
 
 ###========================================================================================================== get_value
+	def self.get_value key, default_value=nil
+		"""Get a value from the default key-value store associated with the current actor run.
 
-# async 
-def self.get_value key, default_value=nil
-	"""Get a value from the default key-value store associated with the current actor run.
+		Args:
+			key (str): The key of the record which to retrieve.
+			default_value (Any, optional): Default value returned in case the record does not exist.
+		"""
+		_get_default_instance.get_value(key=key, default_value=default_value)
+	end
 
-	Args:
-		key (str): The key of the record which to retrieve.
-		default_value (Any, optional): Default value returned in case the record does not exist.
-	"""
-	_get_default_instance.get_value(key=key, default_value=default_value)
-end
+	# async 
+	def get_value key, default_value=nil
+		_raise_if_not_initialized
 
-# async 
-def get_value key, default_value=nil
-	_raise_if_not_initialized
-
-	# await
-	open_key_value_store.get_value key, default_value: default_value
-end
+		# await
+		open_key_value_store.get_value key, default_value: default_value
+	end
 
 =begin
 @classmethod
