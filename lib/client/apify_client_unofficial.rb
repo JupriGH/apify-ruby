@@ -108,11 +108,11 @@ class ApifyClient < BaseApifyClient
         DatasetClient.new resource_id: dataset_id, **_options
 	end
 	
-=begin
-    def datasets(self) -> DatasetCollectionClient:
+    def datasets
         """Retrieve the sub-client for manipulating datasets."""
-        return DatasetCollectionClient(**self._options())
-=end
+        DatasetCollectionClient.new **_options
+	end
+	
     def key_value_store key_value_store_id
         """Retrieve the sub-client for manipulating a single key-value store.
 

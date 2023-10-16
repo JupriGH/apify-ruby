@@ -47,4 +47,41 @@ class ResourceClient < BaseClient
 =end
 end
 
+class ResourceCollectionClient < BaseClient
+    """Base class for sub-clients manipulating a resource collection."""
+=begin
+    def _list(self, **kwargs: Any) -> ListPage:
+        response = self.http_client.call(
+            url=self._url(),
+            method='GET',
+            params=self._params(**kwargs),
+        )
+
+        return ListPage(parse_date_fields(_pluck_data(response.json())))
+
+    def _create(self, resource: Dict) -> Dict:
+        response = self.http_client.call(
+            url=self._url(),
+            method='POST',
+            params=self._params(),
+            json=resource,
+        )
+
+        return parse_date_fields(_pluck_data(response.json()))
+=end
+    def _get_or_create name: nil, resource: nil
+        tmp = @http_client.call(
+            url: _url(),
+            method: 'POST',
+            params: _params(name: name),
+            json: resource
+        )
+		
+		tmp.dig(:parsed, "data")
+		# raise "TODO"
+        # return parse_date_fields(_pluck_data(response.json()))
+	end
+
+end
+		
 end

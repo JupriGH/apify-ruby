@@ -1,7 +1,7 @@
 require 'net/http'
 require 'json'
 #require 'stringio'
-require 'brotli'
+#require 'brotli-libs'
 require 'rbconfig'
 
 module Apify
@@ -23,7 +23,7 @@ class BaseHTTPClient
 		
         is_at_home 		= ENV.include? 'APIFY_IS_AT_HOME'
         python_version 	= RUBY_VERSION  # '3.11.5' # '.'.join([str(x) for x in sys.version_info[:3]])
-        client_version 	= "1.1.5" # metadata.version('apify-client')
+        client_version 	= "1.4.1" # metadata.version('apify-client')
 		platform 		= RbConfig::CONFIG['host_os'] # 'linux' # sys.platform
         
 		@headers['User-Agent'] = "ApifyClient/#{client_version} (#{platform}; Ruby/#{python_version}); isAtHome/#{is_at_home}"
@@ -45,15 +45,12 @@ class BaseHTTPClient
 		# COMPRESSION
 		case response['content-encoding']
 		when "gzip"
-			# res.body = Brotli.inflate(res.body)
-			res.body = Zlib::Inflate.new(31).inflate(res.body) # gzip
-			
+			response.body = Zlib::Inflate.new(31).inflate(response.body) # gzip
 			#sio 	= StringIO.new response.body
 			#gz 		= Zlib::GzipReader.new sio
 			#response.body = gz.read
-			
 		when "deflate"
-			res.body = Zlib::Inflate.new(-15).inflate(res.body) # deflate		
+			response.body = Zlib::Inflate.new(-15).inflate(response.body) # deflate		
 		when "br"
 			response.body = Brotli.inflate(response.body)
 		end
@@ -185,7 +182,7 @@ class HTTPClient < BaseHTTPClient
 		Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == 'https') do |http|
 
 			if params && params.length > 0
-				raise "TODO: params"
+				uri.query = URI.encode_www_form params
 			end
 			
 			if stream
@@ -195,14 +192,16 @@ class HTTPClient < BaseHTTPClient
 			#post 	= { query: { site: 'stackoverflow', page: 1 } }
 		
 			# Create the request
-			if method == 'POST'
-				raise "TODO: POST"
+			case method
+			when 'POST'
 				req = Net::HTTP::Post.new uri
 				if content
 					req.body = content
 				end
-			else
+			when 'GET'
 				req = Net::HTTP::Get.new uri
+			else
+				raise "METHOD #{method}"
 			end
 
 			# headers

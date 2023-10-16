@@ -456,8 +456,9 @@ class DatasetClient < ResourceClient
         finally:
             if response:
                 response.close()
+=end
 
-    def push_items(self, items: JSONSerializable) -> None:
+    def push_items items
         """Push items to the dataset.
 
         https://docs.apify.com/api/v2#/reference/datasets/item-collection/put-items
@@ -465,25 +466,82 @@ class DatasetClient < ResourceClient
         Args:
             items: The items which to push in the dataset. Either a stringified JSON, a dictionary, or a list of strings or dictionaries.
         """
-        data = None
-        json = None
+		
+        data = nil
+        json = nil
 
-        if isinstance(items, str):
+        if items.class == String
             data = items
-        else:
+        else
             json = items
-
-        self.http_client.call(
-            url=self._url('items'),
-            method='POST',
-            headers={'content-type': 'application/json; charset=utf-8'},
-            params=self._params(),
-            data=data,
-            json=json,
+		end
+		
+        @http_client.call(
+            url: _url(path: 'items'),
+            method: 'POST',
+            headers: {'content-type': 'application/json; charset=utf-8'},
+            params: _params(),
+            data: data,
+            json: json
         )
+	end
+	
+end
 
 
+class DatasetCollectionClient < ResourceCollectionClient
+    """Sub-client for manipulating datasets."""
+
+    def initialize **kwargs # (self, *args: Any, **kwargs: Any) -> None:
+        """Initialize the DatasetCollectionClient with the passed arguments."""
+        # resource_path = kwargs.pop('resource_path', 'datasets')
+        # super().__init__(*args, resource_path=resource_path, **kwargs)
+		
+		kwargs[:resource_path] ||= 'datasets'
+		super **kwargs
+	end 
+
+=begin
+    def list(
+        self,
+        *,
+        unnamed: Optional[bool] = None,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+        desc: Optional[bool] = None,
+    ) -> ListPage[Dict]:
+        """List the available datasets.
+
+        https://docs.apify.com/api/v2#/reference/datasets/dataset-collection/get-list-of-datasets
+
+        Args:
+            unnamed (bool, optional): Whether to include unnamed datasets in the list
+            limit (int, optional): How many datasets to retrieve
+            offset (int, optional): What dataset to include as first when retrieving the list
+            desc (bool, optional): Whether to sort the datasets in descending order based on their modification date
+
+        Returns:
+            ListPage: The list of available datasets matching the specified filters.
+        """
+        return self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
 =end
+
+    def get_or_create name: nil, schema: nil
+        """Retrieve a named dataset, or create a new one when it doesn't exist.
+
+        https://docs.apify.com/api/v2#/reference/datasets/dataset-collection/create-dataset
+
+        Args:
+            name (str, optional): The name of the dataset to retrieve or create.
+            schema (Dict, optional): The schema of the dataset
+
+        Returns:
+            dict: The retrieved or newly-created dataset.
+        """
+		p "TODO: filter_out_none_values_recursively"
+		
+        _get_or_create name: name #, resource: filter_out_none_values_recursively({'schema': schema}))
+	end
 
 end
 

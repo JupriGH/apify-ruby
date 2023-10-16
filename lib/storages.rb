@@ -1,5 +1,64 @@
 require_relative 'config'
 
+require 'json'
+
+############################################################################################
+# 9MB
+MAX_PAYLOAD_SIZE_BYTES = 9437184
+
+SAFETY_BUFFER_PERCENT = 0.01 / 100
+EFFECTIVE_LIMIT_BYTES = MAX_PAYLOAD_SIZE_BYTES - (MAX_PAYLOAD_SIZE_BYTES * SAFETY_BUFFER_PERCENT).ceil
+
+def _check_and_serialize item: nil, index: nil
+    """Accept a JSON serializable object as an input, validate its serializability and its serialized size against `EFFECTIVE_LIMIT_BYTES`."""
+    s = index ? " at index #{index} " : " "
+
+    #try:
+        payload = item.to_json
+    #except Exception as e:
+    #    raise ValueError(f'Data item{s}is not serializable to JSON.') from e
+
+    length_bytes = payload.length # len(payload.encode('utf-8'))
+    if length_bytes > EFFECTIVE_LIMIT_BYTES
+        raise "Data item#{s}is too large (size: #{length_bytes} bytes, limit: #{EFFECTIVE_LIMIT_BYTES} bytes)" # ValueError
+	end
+	
+    return payload
+end
+
+=begin
+def _chunk_by_size items
+    """Take an array of JSONs, produce iterator of chunked JSON arrays respecting `EFFECTIVE_LIMIT_BYTES`.
+
+    Takes an array of JSONs (payloads) as input and produces an iterator of JSON strings
+    where each string is a JSON array of payloads with a maximum size of `EFFECTIVE_LIMIT_BYTES` per one
+    JSON array. Fits as many payloads as possible into a single JSON array and then moves
+    on to the next, preserving item order.
+
+    The function assumes that none of the items is larger than `EFFECTIVE_LIMIT_BYTES` and does not validate.
+    """
+	"""
+    last_chunk_bytes = 2  # Add 2 bytes for [] wrapper.
+    current_chunk = []
+
+    for payload in items:
+        length_bytes = len(payload.encode('utf-8'))
+
+        if last_chunk_bytes + length_bytes <= EFFECTIVE_LIMIT_BYTES:
+            current_chunk.append(payload)
+            last_chunk_bytes += length_bytes + 1  # Add 1 byte for ',' separator.
+        else:
+            yield f'[{",".join(current_chunk)}]'
+            current_chunk = [payload]
+            last_chunk_bytes = length_bytes + 2  # Add 2 bytes for [] wrapper.
+
+    yield f'[{",".join(current_chunk)}]'
+	"""
+end
+=end
+
+############################################################################################
+
 module Apify
 
 class StorageClientManager
@@ -116,11 +175,11 @@ class BaseStorage # (ABC, Generic[BaseResourceClientType, BaseResourceCollection
     def self._get_single_storage_client id, client
         raise 'You must override this method in the subclass!' # NotImplementedError
 	end
-	
+	"""
     def self._get_storage_collection_client client
         raise 'You must override this method in the subclass!' # NotImplementedError
 	end
-	"""
+	
 	###=================================================================================
 
     def self._ensure_class_initialized
@@ -200,7 +259,7 @@ class BaseStorage # (ABC, Generic[BaseResourceClientType, BaseResourceCollection
         #async with cls._storage_creating_lock:
             
 			# Create the storage
-            if true # id and not is_default_storage_on_local
+            if id and not is_default_storage_on_local
 
                 single_storage_client 	= _get_single_storage_client(id, used_client)				
                 storage_info 			= single_storage_client.get() # await 
@@ -211,14 +270,14 @@ class BaseStorage # (ABC, Generic[BaseResourceClientType, BaseResourceCollection
 
             elsif is_default_storage_on_local
 
-				raise "TODO"
+				raise "TODO 1"
                 #storage_collection_client = cls._get_storage_collection_client(used_client)
                 #storage_info = await storage_collection_client.get_or_create(name=name, _id=id)
 
             else
-				raise "TODO"
-                #storage_collection_client = cls._get_storage_collection_client(used_client)
-                #storage_info = await storage_collection_client.get_or_create(name=name)
+				
+                storage_collection_client = _get_storage_collection_client(used_client)
+                storage_info = storage_collection_client.get_or_create(name: name)
 			end
 										
             storage = new id: storage_info['id'], name: storage_info['name'], client: used_client, config: used_config
@@ -322,10 +381,11 @@ class KeyValueStore < BaseStorage
     def self._get_single_storage_client id, client # Union[ApifyClientAsync, MemoryStorageClient],
         client.key_value_store id
 	end
-	
+	"""
     def self._get_storage_collection_client client # Union[ApifyClientAsync, MemoryStorageClient],
         client.key_value_stores
 	end
+	"""
 	
 =begin
     @overload
@@ -535,14 +595,12 @@ class Dataset < BaseStorage
     def self._get_single_storage_client id, client
         client.dataset id
 	end
-=begin
-    @classmethod
-    def _get_storage_collection_client(
-        cls,
-        client: Union[ApifyClientAsync, MemoryStorageClient],
-    ) -> Union[DatasetCollectionClientAsync, DatasetCollectionClient]:
-        return client.datasets()
 
+    def self._get_storage_collection_client client
+        client.datasets
+	end
+	
+=begin
     @classmethod
     async def push_data(cls, data: JSONSerializable) -> None:
         """Store an object or an array of objects to the dataset.
@@ -557,20 +615,53 @@ class Dataset < BaseStorage
         """
         dataset = await cls.open()
         return await dataset.push_data(data)
+=end
 
-    async def _push_data_internal(self, data: JSONSerializable) -> None:
-        # Handle singular items
-        if not isinstance(data, list):
-            payload = _check_and_serialize(data)
-            return await self._dataset_client.push_items(payload)
-
+    def push_data data
+		# Handle singular items
+		if data.class != Array
+			payload = _check_and_serialize(item: data)
+            return @_dataset_client.push_items(payload)
+		end
+		
         # Handle lists
+		"""
         payloads_generator = (_check_and_serialize(item, index) for index, item in enumerate(data))
 
         # Invoke client in series to preserve the order of data
         for chunk in _chunk_by_size(payloads_generator):
             await self._dataset_client.push_items(chunk)
+		"""
+				
+		part, size = "[", 2		
+		
+		data.each_with_index do |item, index|
+			item = _check_and_serialize(item: item, index: index)
+			
+			if (size + 1 + item.length) > EFFECTIVE_LIMIT_BYTES			
+				# SEND
+				part << "]"
+				@_dataset_client.push_items(part)
+				
+				# RESET
+				part, size = "[", 2
+			end
 
+			if size > 2
+				part << ","
+			end	
+			
+			part << item
+			size += 1 + item.length
+		end
+		# LAST
+		if size > 2
+			part << "]"
+			@_dataset_client.push_items(part)
+		end		
+	end
+	
+=begin
     @classmethod
     async def get_data(
         cls,
