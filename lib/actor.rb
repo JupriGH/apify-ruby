@@ -571,8 +571,9 @@ async def _open_request_queue_internal(
 		input_value 					= get_value(@_config.input_key)
 		
 		if input_secrets_private_key and input_secrets_key_passphrase
-			private_key = _load_private_key( input_secrets_private_key, input_secrets_key_passphrase )
-			input_value = _decrypt_input_secrets( private_key, input_value )
+			p "TODO: _load_private_key"
+			#private_key = _load_private_key( input_secrets_private_key, input_secrets_key_passphrase )
+			#input_value = _decrypt_input_secrets( private_key, input_value )
 		end
 		input_value # return input_value
 	end
