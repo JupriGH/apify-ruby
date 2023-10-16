@@ -143,10 +143,6 @@ class ProxyConfiguration
         _actor_config: nil,
         _apify_client: nil
 	)
-		p APIFY_PROXY_VALUE_REGEX
-	
-
-	
         """Create a ProxyConfiguration instance. It is highly recommended to use `Actor.create_proxy_configuration()` instead of this.
 
         Args:
