@@ -133,7 +133,7 @@ class BaseHTTPClient
 		end
 		
 		if data.class == String
-			data = Zlib::Deflate.deflate.new(31).deflate(data, Zlib::BEST_COMPRESSION)
+			data = Zlib::Deflate.new(31).deflate(data, Zlib::BEST_COMPRESSION)
 			headers['Content-Encoding'] = 'gzip'
 		end
 		
