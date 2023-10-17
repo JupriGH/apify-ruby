@@ -107,7 +107,6 @@ class ApifyClient < BaseApifyClient
         """
         DatasetClient.new resource_id: dataset_id, **_options
 	end
-	
     def datasets
         """Retrieve the sub-client for manipulating datasets."""
         DatasetCollectionClient.new **_options
@@ -121,10 +120,12 @@ class ApifyClient < BaseApifyClient
         """
         KeyValueStoreClient.new resource_id: key_value_store_id, **_options
 	end
-=begin
-    def key_value_stores(self) -> KeyValueStoreCollectionClient:
+    def key_value_stores
         """Retrieve the sub-client for manipulating key-value stores."""
-        return KeyValueStoreCollectionClient(**self._options())
+        KeyValueStoreCollectionClient.new **_options
+	end
+	
+=begin
 
     def request_queue(self, request_queue_id: str, *, client_key: Optional[str] = None) -> RequestQueueClient:
         """Retrieve the sub-client for manipulating a single request queue.

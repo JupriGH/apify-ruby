@@ -43,18 +43,28 @@ class BaseHTTPClient
 		end
 
 		# COMPRESSION
-		case response['content-encoding']
+		c = response.body.length
+		e = response['content-encoding']
+		
+		case e
+		when nil
 		when "gzip"
 			response.body = Zlib::Inflate.new(31).inflate(response.body) # gzip
 			#sio 	= StringIO.new response.body
 			#gz 		= Zlib::GzipReader.new sio
 			#response.body = gz.read
+			
+			p "decompressed: #{c} => #{response.body.length}"
 		when "deflate"
-			response.body = Zlib::Inflate.new(-15).inflate(response.body) # deflate		
+			response.body = Zlib::Inflate.new(-15).inflate(response.body) # deflate	
+			p "decompressed: #{c} => #{response.body.length}"
 		when "br"
 			response.body = Brotli.inflate(response.body)
+			p "decompressed: #{c} => #{response.body.length}"
+		else
+			raise "ENCODING => #{e}"
 		end
-
+		
 		content_type = nil		
 		t = response["Content-Type"]
 		if t
@@ -97,7 +107,7 @@ class BaseHTTPClient
 		"""
 
 		def is_empty val
-			val == false || val == 0 || val == "" || val.nil? || val.empty? 
+			(val.class == String) ? (val.empty?) :  (val == false || val == 0 || val == "" || val.nil?)  
 		end
 
 		params.each do |key, val|
@@ -174,7 +184,7 @@ class HTTPClient < BaseHTTPClient
         # log_context.method.set(method)
         # log_context.url.set(url)
 
-        if stream and parse_response
+        if stream && parse_response
             raise 'Cannot stream response and parse it at the same time!' # ValueError
 		end
 
@@ -209,10 +219,6 @@ class HTTPClient < BaseHTTPClient
 				end
 				
 			when 'PUT'
-				
-				#p content
-				#raise
-				
 				req = Net::HTTP::Put.new uri
 				if content
 					req.body = content
@@ -258,7 +264,7 @@ class HTTPClient < BaseHTTPClient
 				return nil
 			end
 		end
-
+		###################################################################################
 =begin
         httpx_client = self.httpx_client
 

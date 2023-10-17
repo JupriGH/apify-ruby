@@ -1,3 +1,7 @@
+require 'json'
+
+require_relative '../shared/utils'
+
 module Apify
 
 =begin
@@ -23,14 +27,16 @@ T = TypeVar('T')
 StopRetryingType = Callable[[], None]
 =end
 
-class Utils
 
-def self._to_safe_id id
-    # Identificators of resources in the API are either in the format `resource_id` or `username/resource_id`.
-    # Since the `/` character has a special meaning in URL paths,
-    # we replace it with `~` for proper route parsing on the API, where after parsing the URL it's replaced back to `/`.
-    id.gsub('/', '~')
-end
+module Utils
+
+	def self._to_safe_id id
+		# Identificators of resources in the API are either in the format `resource_id` or `username/resource_id`.
+		# Since the `/` character has a special meaning in URL paths,
+		# we replace it with `~` for proper route parsing on the API, where after parsing the URL it's replaced back to `/`.
+		id.gsub('/', '~')
+	end
+
 
 =begin
 def _pluck_data(parsed_response: Any) -> Dict:
@@ -140,25 +146,27 @@ def _encode_webhook_list_to_base64(webhooks: List[Dict]) -> str:
 
 =end
 
-def self._encode_key_value_store_record_value value, content_type
-	p "TODO: _encode_key_value_store_record_value"
-=begin
-    if not content_type
-	
-        #if is_file_or_bytes(value):
-        #    content_type = 'application/octet-stream'
-        #elif isinstance(value, str):
-        #    content_type = 'text/plain; charset=utf-8'
-        #else:
-        #    content_type = 'application/json; charset=utf-8'
+	def self._encode_key_value_store_record_value value, content_type
+		if !content_type
+			if is_file_or_bytes value
+				content_type = 'application/octet-stream'
+			elsif value.class == String
+				content_type = 'text/plain; charset=utf-8'
+			else
+				content_type = 'application/json; charset=utf-8'
+			end
+		end
+		
+		if content_type.include?('application/json') && !is_file_or_bytes(value) && (value.class != String)
+			#value = json.dumps(value, ensure_ascii=False, indent=2, allow_nan=False, default=str).encode('utf-8')
+			value = value.to_json
+		end
+		
+		[ value, content_type ]
 	end
-	
-    if 'application/json' in content_type and not is_file_or_bytes(value) and not isinstance(value, str):
-        value = json.dumps(value, ensure_ascii=False, indent=2, allow_nan=False, default=str).encode('utf-8')
-=end
-    [ value, content_type ]
-end
 
 end
+
+
 
 end

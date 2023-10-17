@@ -47,6 +47,7 @@ class ResourceClient < BaseClient
 =end
 end
 
+################################################################################################################################
 class ResourceCollectionClient < BaseClient
     """Base class for sub-clients manipulating a resource collection."""
 =begin
@@ -69,7 +70,9 @@ class ResourceCollectionClient < BaseClient
 
         return parse_date_fields(_pluck_data(response.json()))
 =end
-    def _get_or_create name: nil, resource: nil
+    
+	def _get_or_create name: nil, resource: nil
+	
         tmp = @http_client.call(
             url: _url(),
             method: 'POST',

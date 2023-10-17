@@ -1,6 +1,7 @@
-require_relative 'config'
-
 require 'json'
+require 'csv'
+
+require_relative 'config'
 
 ############################################################################################
 # 9MB
@@ -70,7 +71,7 @@ class StorageClientManager
 		:_local_client,
 		:_cloud_client
 
-    @@_default_instance = nil
+    @_default_instance = nil
 
     def initialize
         """Create a `StorageClientManager` instance."""
@@ -87,7 +88,7 @@ class StorageClientManager
 	end
 	
 
-    def self.get_storage_client force_cloud: false # Union[ApifyClientAsync, MemoryStorageClient]:
+    def self.get_storage_client force_cloud=false # Union[ApifyClientAsync, MemoryStorageClient]:
         """Get the current storage client instance.
 
         Returns:
@@ -123,7 +124,7 @@ class StorageClientManager
 	end
 	
     def self._get_default_instance
-        @@_default_instance ||= new
+        @_default_instance ||= new
 	end
 end
 
@@ -137,8 +138,8 @@ class BaseStorage # (ABC, Generic[BaseResourceClientType, BaseResourceCollection
     @_storage_client
     @_config
 
-    @@_cache_by_id
-    @@_cache_by_name
+    @_cache_by_id
+    @_cache_by_name
     
 	# _storage_creating_lock: Optional[asyncio.Lock] = None
 
@@ -157,34 +158,33 @@ class BaseStorage # (ABC, Generic[BaseResourceClientType, BaseResourceCollection
         @_name = name
         @_storage_client = client
         @_config = config
-	
 	end
 	
 	###================================================================================= ABSTRACTS
+	#@human_friendly_label = "HUMAN_FRIENDLY_LABEL"
 	"""
     def self._get_human_friendly_label
         raise 'You must override this method in the subclass!' # NotImplementedError
 	end
 	"""
-	
+=begin	
     def self._get_default_id config
         raise 'You must override this method in the subclass!' # NotImplementedError
 	end
 	
-	"""
     def self._get_single_storage_client id, client
         raise 'You must override this method in the subclass!' # NotImplementedError
 	end
-	"""
+
     def self._get_storage_collection_client client
         raise 'You must override this method in the subclass!' # NotImplementedError
 	end
-	
-	###=================================================================================
+=end
 
+	###=================================================================================
     def self._ensure_class_initialized
-        @@_cache_by_id 		||= {}
-        @@_cache_by_name 	||= {}
+        @_cache_by_id 		||= {}
+        @_cache_by_name 	||= {}
 
         #if cls._storage_creating_lock is None:
         #    cls._storage_creating_lock = asyncio.Lock()
@@ -213,33 +213,29 @@ class BaseStorage # (ABC, Generic[BaseResourceClientType, BaseResourceCollection
         """
 
         _ensure_class_initialized
+        raise if !@_cache_by_id
+		raise if !@_cache_by_name
+
+		raise if (id && name)
 		
-		# assert cls._cache_by_id is not None
-        raise unless @@_cache_by_id
-		# assert cls._cache_by_name is not None
-		raise unless @@_cache_by_name
-	
-        # assert not (id and name)
-		raise unless not (id and name)
-		
-        used_config = config or Configuration.get_global_configuration
-        used_client = StorageClientManager.get_storage_client(force_cloud: force_cloud)
+        used_config = config || Configuration.get_global_configuration
+        used_client = StorageClientManager.get_storage_client(force_cloud)
 
 		# Fetch default ID if no ID or name was passed
         is_default_storage_on_local = false
         
-        if not (id or name)
+        if ! (id || name)
             #if isinstance(used_client, MemoryStorageClient):
             #    is_default_storage_on_local = True
-            id = _get_default_id(used_config)
+            id = _get_default_id used_config
 		end
 		
         # Try to get the storage instance from cache		
 		cached_storage = nil
         if id
-            cached_storage = @@_cache_by_id[id]
+            cached_storage = @_cache_by_id[id]
         elsif name
-            cached_storage = @@_cache_by_name[name]
+            cached_storage = @_cache_by_name[name]
 		end
 		
         if cached_storage
@@ -258,14 +254,12 @@ class BaseStorage # (ABC, Generic[BaseResourceClientType, BaseResourceCollection
         #async with cls._storage_creating_lock:
             
 			# Create the storage
-            if id and not is_default_storage_on_local
-
-                single_storage_client 	= _get_single_storage_client(id, used_client)				
-                storage_info 			= single_storage_client.get() # await 
+            if id && !is_default_storage_on_local
 				
-                if not storage_info
-                    raise "#{@human_friendly_label} with id \"#{id}\" does not exist!" # RuntimeError
-				end
+                single_storage_client 	= _get_single_storage_client id, used_client				
+                storage_info 			= single_storage_client.get 
+
+				raise "#{@human_friendly_label} with id \"#{id}\" does not exist!" if !storage_info # RuntimeError
 
             elsif is_default_storage_on_local
 
@@ -275,16 +269,16 @@ class BaseStorage # (ABC, Generic[BaseResourceClientType, BaseResourceCollection
 
             else
 				
-                storage_collection_client = _get_storage_collection_client(used_client)
-                storage_info = storage_collection_client.get_or_create(name: name)
+                storage_collection_client = _get_storage_collection_client used_client
+                storage_info = storage_collection_client.get_or_create name: name
 			end
 										
             storage = new id: storage_info['id'], name: storage_info['name'], client: used_client, config: used_config
 			
             # Cache by id and name
-            @@_cache_by_id[storage._id] = storage
+            @_cache_by_id[storage._id] = storage
             if storage._name
-                @@_cache_by_name[storage._name] = storage
+                @_cache_by_name[storage._name] = storage
 			end
 	
         return storage
@@ -368,10 +362,9 @@ class KeyValueStore < BaseStorage
 	end
 
 	@human_friendly_label = 'Key-value store'
-
-    # def self._get_human_friendly_label
+    #def self._get_human_friendly_label
     #    'Key-value store'
-	# end
+	#end
 
     def self._get_default_id config
         config.default_key_value_store_id
@@ -380,11 +373,10 @@ class KeyValueStore < BaseStorage
     def self._get_single_storage_client id, client # Union[ApifyClientAsync, MemoryStorageClient],
         client.key_value_store id
 	end
-	"""
+	
     def self._get_storage_collection_client client # Union[ApifyClientAsync, MemoryStorageClient],
         client.key_value_stores
 	end
-	"""
 	
 =begin
     @overload
@@ -416,7 +408,6 @@ class KeyValueStore < BaseStorage
 
         open.get_value(key, default_value)
 	end
-	
     def get_value key, default_value
         record = @_key_value_store_client.get_record(key)
 		record ? record[:value] : default_value
@@ -443,6 +434,7 @@ class KeyValueStore < BaseStorage
                 break
             exclusive_start_key = list_keys['nextExclusiveStartKey']
 =end
+
     def self.set_value key, value=nil, content_type=nil
         """Set or delete a value in the key-value store.
 
@@ -453,7 +445,6 @@ class KeyValueStore < BaseStorage
         """
         open.set_value key, value, content_type
 	end
-	
     def set_value key, value=nil, content_type=nil
         if value.nil?
 			raise "TODO"
@@ -474,24 +465,22 @@ class KeyValueStore < BaseStorage
         store = await cls.open()
         return await store.get_public_url(key)
 
-    async def _get_public_url_internal(self, key: str) -> str:
-        if not isinstance(self._key_value_store_client, KeyValueStoreClientAsync):
-            raise RuntimeError('Cannot generate a public URL for this key-value store as it is not on the Apify Platform!')
+=end
+    def get_public_url key
+        # if not isinstance(self._key_value_store_client, KeyValueStoreClientAsync):
+        #    raise RuntimeError('Cannot generate a public URL for this key-value store as it is not on the Apify Platform!')
 
-        public_api_url = self._config.api_public_base_url
-
-        return f'{public_api_url}/v2/key-value-stores/{self._id}/records/{key}'
-
+        "#{@_config.api_public_base_url}/v2/key-value-stores/#{@_id}/records/#{key}"
+	end
+	
+=begin
     async def drop(self) -> None:
         """Remove the key-value store either from the Apify cloud storage or from the local directory."""
         await self._key_value_store_client.delete()
         self._remove_from_cache()
-=end
-
-
 
 	# async
-=begin
+
     def self.open id: nil, name: nil, force_cloud: false, config: nil
         """Open a key-value store.
 
@@ -518,9 +507,6 @@ class KeyValueStore < BaseStorage
 		p "@@@ KeyValueStore.open ... "
         superclass.open( id:id, name:name, force_cloud:force_cloud, config:config )
 		raise "@@@ KeyValueStore.open =>"
-		
-		
-		
 		
 		p ret
 		return ret
@@ -629,7 +615,7 @@ class Dataset < BaseStorage
         for chunk in _chunk_by_size(payloads_generator):
             await self._dataset_client.push_items(chunk)
 		"""
-				
+
 		part, size = "[", 2		
 		
 		data.each_with_index do |item, index|
@@ -748,15 +734,7 @@ class Dataset < BaseStorage
         )
 	end
 	
-=begin
-    async def export_to(
-        self,
-        key: str,
-        *,
-        to_key_value_store_id: Optional[str] = None,
-        to_key_value_store_name: Optional[str] = None,
-        content_type: Optional[str] = None,
-    ) -> None:
+    def export_to key, to_key_value_store_id: nil, to_key_value_store_name: nil, content_type: nil
         """Save the entirety of the dataset's contents into one file within a key-value store.
 
         Args:
@@ -767,32 +745,50 @@ class Dataset < BaseStorage
                 If you omit both, it uses the default key-value store.
             content_type (str, optional): Either 'text/csv' or 'application/json'. Defaults to JSON.
         """
-        key_value_store = await KeyValueStore.open(id=to_key_value_store_id, name=to_key_value_store_name)
-        items: List[Dict] = []
-        limit = 1000
-        offset = 0
-        while True:
-            list_items = await self._dataset_client.list_items(limit=limit, offset=offset)
-            items.extend(list_items.items)
-            if list_items.total <= offset + list_items.count:
-                break
-            offset += list_items.count
+        key_value_store = KeyValueStore.open id: to_key_value_store_id, name: to_key_value_store_name
 
-        if len(items) == 0:
-            raise ValueError('Cannot export an empty dataset')
+        items, offset, limit = [], 0, 1000
 
-        if content_type == 'text/csv':
-            output = io.StringIO()
-            writer = csv.writer(output, quoting=csv.QUOTE_MINIMAL)
-            writer.writerows([items[0].keys(), *[item.values() for item in items]])
-            value = output.getvalue()
-            return await key_value_store.set_value(key, value, content_type)
+        while true
+            list_items = @_dataset_client.list_items limit: limit, offset: offset			
+			items.push *list_items[:items]
+            
+			o = offset + list_items[:count]
+			break if list_items[:total] <= o
+			
+            offset = o
+		end
+		
+        raise 'Cannot export an empty dataset' if items.empty? # ValueError
 
-        if content_type == 'application/json':
-            return await key_value_store.set_value(key, items)
+        if content_type == 'text/csv'
 
-        raise ValueError(f'Unsupported content type: {content_type}')
+            #output = io.StringIO()
+            #writer = csv.writer(output, quoting=csv.QUOTE_MINIMAL)
+            #writer.writerows([items[0].keys(), *[item.values() for item in items]])
+            #value = output.getvalue()
+            #return await key_value_store.set_value(key, value, content_type)
 
+			p "TODO: csv check columns orders!"
+			
+			csv_string = CSV.generate do |csv|
+				csv << items[0].keys
+				items.each { |row| csv << row.values }
+			end
+			p csv_string
+			
+			return key_value_store.set_value key, csv_string, content_type
+		end
+		
+        if content_type == 'application/json'
+            return key_value_store.set_value key, items, content_type
+		end
+		
+        raise "Unsupported content type: #{content_type}" # ValueError
+	end
+
+	###---------------------------------------------------------------------------------------------------------------- export_to_json
+=begin
     @classmethod
     async def export_to_json(
         cls,
@@ -818,23 +814,20 @@ class Dataset < BaseStorage
         """
         dataset = await cls.open(id=from_dataset_id, name=from_dataset_name)
         await dataset.export_to_json(key, to_key_value_store_id=to_key_value_store_id, to_key_value_store_name=to_key_value_store_name)
-
-    async def _export_to_json_internal(
-        self,
-        key: str,
-        *,
-        from_dataset_id: Optional[str] = None,  # noqa: U100
-        from_dataset_name: Optional[str] = None,  # noqa: U100
-        to_key_value_store_id: Optional[str] = None,
-        to_key_value_store_name: Optional[str] = None,
-    ) -> None:
-        await self.export_to(
-            key,
-            to_key_value_store_id=to_key_value_store_id,
-            to_key_value_store_name=to_key_value_store_name,
-            content_type='application/json',
-        )
-
+=end
+    def export_to_json(
+        key,
+        #from_dataset_id: Optional[str] = None,  # noqa: U100
+        #from_dataset_name: Optional[str] = None,  # noqa: U100
+        to_key_value_store_id: nil,
+        to_key_value_store_name: nil
+    )
+        export_to \
+			key, to_key_value_store_id: to_key_value_store_id, to_key_value_store_name: to_key_value_store_name, content_type: 'application/json'
+	end
+	
+	###---------------------------------------------------------------------------------------------------------------- export_to_csv
+=begin
     @classmethod
     async def export_to_csv(
         cls,
@@ -860,24 +853,18 @@ class Dataset < BaseStorage
         """
         dataset = await cls.open(id=from_dataset_id, name=from_dataset_name)
         await dataset.export_to_csv(key, to_key_value_store_id=to_key_value_store_id, to_key_value_store_name=to_key_value_store_name)
-
-    async def _export_to_csv_internal(
-        self,
-        key: str,
-        *,
-        from_dataset_id: Optional[str] = None,  # noqa: U100
-        from_dataset_name: Optional[str] = None,  # noqa: U100
-        to_key_value_store_id: Optional[str] = None,
-        to_key_value_store_name: Optional[str] = None,
-    ) -> None:
-        await self.export_to(
-            key,
-            to_key_value_store_id=to_key_value_store_id,
-            to_key_value_store_name=to_key_value_store_name,
-            content_type='text/csv',
-        )
 =end
-
+    def export_to_csv(
+        key,
+        #from_dataset_id: Optional[str] = None,  # noqa: U100
+        #from_dataset_name: Optional[str] = None,  # noqa: U100
+        to_key_value_store_id: nil,
+        to_key_value_store_name: nil
+    )
+        export_to \
+			key, to_key_value_store_id: to_key_value_store_id, to_key_value_store_name: to_key_value_store_name, content_type: 'text/csv'
+	end
+	
     def get_info
         """Get an object containing general information about the dataset.
 
@@ -887,6 +874,7 @@ class Dataset < BaseStorage
         @_dataset_client.get
 	end
 
+	
 =begin
     def iterate_items(
         self,

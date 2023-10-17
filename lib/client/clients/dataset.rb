@@ -104,12 +104,12 @@ class DatasetClient < ResourceClient
 
         # ListPage.new \
 		{
-            items: (data ? data : []), # data,
-            total: response['x-apify-pagination-total'],  # int
-            offset: response['x-apify-pagination-offset'], # int
+            items: data || [], # data,
+            total: response['x-apify-pagination-total'].to_i,  # int
+            offset: response['x-apify-pagination-offset'].to_i, # int
             count: (data ? data.length : 0),  # because x-apify-pagination-count returns invalid values when hidden/empty items are skipped
             limit: response['x-apify-pagination-limit'], # int  # API returns 999999999999 when no limit is used
-            desc: response['x-apify-pagination-desc']
+            desc: response['x-apify-pagination-desc'] == 'true'
 		}
 	end
 	
@@ -488,7 +488,7 @@ class DatasetClient < ResourceClient
 	
 end
 
-
+################################################################################################################################
 class DatasetCollectionClient < ResourceCollectionClient
     """Sub-client for manipulating datasets."""
 
@@ -538,9 +538,9 @@ class DatasetCollectionClient < ResourceCollectionClient
         Returns:
             dict: The retrieved or newly-created dataset.
         """
-		p "TODO: filter_out_none_values_recursively"
+		raise "TODO: filter_out_none_values_recursively" if schema
 		
-        _get_or_create name: name #, resource: filter_out_none_values_recursively({'schema': schema}))
+        _get_or_create name:name #, resource: filter_out_none_values_recursively({'schema': schema}))
 	end
 
 end
