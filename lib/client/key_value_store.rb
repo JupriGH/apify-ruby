@@ -1,5 +1,5 @@
-require_relative '../base/resource_client'
-require_relative '../utils'
+require_relative 'base/resource_client'
+require_relative 'utils'
 
 module Apify
 

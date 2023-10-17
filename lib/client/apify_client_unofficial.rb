@@ -1,7 +1,7 @@
 require_relative 'http_client'
-require_relative 'clients/dataset'
-require_relative 'clients/key_value_store'
-require_relative 'clients/user'
+require_relative 'dataset'
+require_relative 'key_value_store'
+require_relative 'user'
 
 module Apify
 
@@ -21,16 +21,13 @@ class BaseApifyClient
             min_delay_between_retries_millis (int, optional): How long will the client wait between retrying requests
                 (increases exponentially from this value)
             timeout_secs (int, optional): The socket timeout of the HTTP requests sent to the Apify API
-        """
-        
-		# TODO: ruby 0 == true
-		
+        """		
 		@token = token
-        @api_url = (api_url or DEFAULT_API_URL).sub(/\/+$/, '') # .rstrip('/')
+        @api_url = (api_url || DEFAULT_API_URL).sub(/\/+$/, '') # .rstrip('/')
         @base_url = "#{api_url}/#{API_VERSION}"
-        @max_retries = max_retries or 8
-        @min_delay_between_retries_millis = min_delay_between_retries_millis or 500
-        @timeout_secs = timeout_secs or 360
+        @max_retries = max_retries || 8
+        @min_delay_between_retries_millis = min_delay_between_retries_millis || 500
+        @timeout_secs = timeout_secs || 360
 	end
 	
     def _options
@@ -62,43 +59,49 @@ class ApifyClient < BaseApifyClient
             token: token, max_retries: @max_retries, min_delay_between_retries_millis: @min_delay_between_retries_millis, timeout_secs: @timeout_secs
 	end
 	
-=begin
-    def actor(self, actor_id: str) -> ActorClient:
+	###---------------------------------------------------------------------------------------------------- actor
+    def actor actor_id
         """Retrieve the sub-client for manipulating a single actor.
 
         Args:
             actor_id (str): ID of the actor to be manipulated
         """
-        return ActorClient(resource_id=actor_id, **self._options())
-
-    def actors(self) -> ActorCollectionClient:
+        ActorClient.new resource_id: actor_id, **_options
+	end
+    def actors
         """Retrieve the sub-client for manipulating actors."""
-        return ActorCollectionClient(**self._options())
-
-    def build(self, build_id: str) -> BuildClient:
+        ActorCollectionClient.new **_options
+	end
+	
+	###---------------------------------------------------------------------------------------------------- build
+    def build build_id
         """Retrieve the sub-client for manipulating a single actor build.
 
         Args:
             build_id (str): ID of the actor build to be manipulated
         """
-        return BuildClient(resource_id=build_id, **self._options())
-
-    def builds(self) -> BuildCollectionClient:
+        BuildClient.new resource_id: build_id, **_options
+	end
+    def builds
         """Retrieve the sub-client for querying multiple builds of a user."""
-        return BuildCollectionClient(**self._options())
-
-    def run(self, run_id: str) -> RunClient:
+        BuildCollectionClient.new **_options
+	end
+	
+	###---------------------------------------------------------------------------------------------------- run
+    def run run_id
         """Retrieve the sub-client for manipulating a single actor run.
 
         Args:
             run_id (str): ID of the actor run to be manipulated
         """
-        return RunClient(resource_id=run_id, **self._options())
-
-    def runs(self) -> RunCollectionClient:
+        RunClient resource_id: run_id, **_options
+	end
+    def runs
         """Retrieve the sub-client for querying multiple actor runs of a user."""
-        return RunCollectionClient(**self._options())
-=end
+        RunCollectionClient.new **_options
+	end
+	
+	###---------------------------------------------------------------------------------------------------- dataset
     def dataset dataset_id
         """Retrieve the sub-client for manipulating a single dataset.
 
@@ -112,6 +115,7 @@ class ApifyClient < BaseApifyClient
         DatasetCollectionClient.new **_options
 	end
 	
+	###---------------------------------------------------------------------------------------------------- key_value_store
     def key_value_store key_value_store_id
         """Retrieve the sub-client for manipulating a single key-value store.
 
@@ -197,6 +201,7 @@ class ApifyClient < BaseApifyClient
         return TaskCollectionClient(**self._options())
 =end
 
+	###---------------------------------------------------------------------------------------------------- user
     def user user_id: nil
         """Retrieve the sub-client for querying users.
 
@@ -206,12 +211,11 @@ class ApifyClient < BaseApifyClient
         UserClient.new resource_id: user_id, **_options
 	end
 
-=begin
-    def store(self) -> StoreCollectionClient:
+	###---------------------------------------------------------------------------------------------------- store
+    def store
         """Retrieve the sub-client for Apify store."""
-        return StoreCollectionClient(**self._options())
+        StoreCollectionClient **_options
 	end
-=end
 
 end
 
