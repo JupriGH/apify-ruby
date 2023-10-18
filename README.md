@@ -1,3 +1,4 @@
+
 # Apify Ruby SDK Unofficial
 
 ![dont be sad readme is here](https://raw.githubusercontent.com/JupriGH/resources/main/cats/catframe.png)<img src="https://upload.wikimedia.org/wikipedia/commons/7/73/Ruby_logo.svg" width="80" height="80">
@@ -11,14 +12,21 @@
 Apify Ruby SDK Unofficial Unstable Unsupported Under Maintenance.
 Insipired by [Apify Python SDK](https://docs.apify.com/sdk/python/)
 
+> **Disclaimer :** This library is community library and not supported by Apify
+
 **Included :**
-- apify_sdk (unofficial)
-- apify_client (unofficial)
+- Apify SDK (unofficial)
+- Apify Client (unofficial)
 
 **Source Code :**
 
 [Github](https://github.com/JupriGH/apify-ruby-sdk)
 
-**Important Notes :**
+**Important Notes (for Ruby beginner like me) :**
 
-- On ruby all evaluated to `true` except for `false` and `nil`.
+- On ruby all evaluated to `true` except for: `false` and `nil`.
+- Function will return value from last expression.
+
+**Developer Notes**
+
+- Some method is conflicting with Ruby internal method such as: `.initialize`, `.exit`, `.fail`, etc. Renamed to:  `.initialize_`, `.exit_`, `.fail_` etc.
