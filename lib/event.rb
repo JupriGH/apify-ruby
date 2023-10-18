@@ -1,8 +1,6 @@
-require 'async'
-require 'async/io/stream'
-require 'async/websocket/client'
-
-require_relative 'log'
+#require 'async'
+#require 'async/io/stream'
+#require 'async/websocent'
 
 =begin
 import asyncio
