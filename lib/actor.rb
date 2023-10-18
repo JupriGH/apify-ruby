@@ -1,12 +1,3 @@
-require_relative 'config'
-require_relative 'event'
-require_relative 'storages'
-require_relative 'crypto'
-require_relative 'proxy'
-
-#require 'apify_client_unofficial'
-require_relative 'client/apify_client_unofficial'
-
 module Apify
 
 class Actor

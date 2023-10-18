@@ -1,8 +1,6 @@
 require 'json'
 require 'csv'
 
-require_relative 'config'
-
 ############################################################################################
 # 9MB
 MAX_PAYLOAD_SIZE_BYTES = 9437184
