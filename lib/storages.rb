@@ -94,7 +94,7 @@ class StorageClientManager
         """
         default_instance = _get_default_instance
 		
-        if not default_instance._local_client
+        if !default_instance._local_client
 			p "### TODO: if not default_instance._local_client"
 			# default_instance._local_client = MemoryStorageClient.new(
 			#	persist_storage=default_instance._config.persist_storage, write_metadata=true
@@ -102,11 +102,9 @@ class StorageClientManager
 		end
 		
         if true # default_instance._config.is_at_home or force_cloud
-
 			# assert default_instance._cloud_client is not None
             raise unless !default_instance._cloud_client.nil?
 			return default_instance._cloud_client
-			
 		end
 		
         default_instance._local_client

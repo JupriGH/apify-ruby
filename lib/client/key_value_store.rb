@@ -3,7 +3,7 @@ module Apify
 class KeyValueStoreClient < ResourceClient
     """Sub-client for manipulating a single key-value store."""
 
-    def initialize **kwargs # *args: Any, **kwargs: Any
+    def initialize **kwargs
 		"""Initialize the KeyValueStoreClient."""
 		super resource_path: 'key-value-stores', **kwargs
 	end
@@ -18,8 +18,8 @@ class KeyValueStoreClient < ResourceClient
         """
         _get
 	end
-=begin
-    def update(self, *, name: Optional[str] = None) -> Dict:
+
+    def update name: nil, title: nil
         """Update the key-value store with specified fields.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-object/update-store
@@ -30,19 +30,19 @@ class KeyValueStoreClient < ResourceClient
         Returns:
             dict: The updated key-value store
         """
-        updated_fields = {
-            'name': name,
-        }
-
-        return self._update(filter_out_none_values_recursively(updated_fields))
-
-    def delete(self) -> None:
+        updated_fields = Utils::filter_out_none_values_recursively({ name: name, title: title })
+		
+        _update updated_fields
+	end
+	
+    def delete
         """Delete the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-object/delete-store
         """
-        return self._delete()
-=end
+        _delete
+	end
+	
     def list_keys limit: nil, exclusive_start_key: nil
         """List the keys in the key-value store.
 

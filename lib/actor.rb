@@ -446,8 +446,9 @@ async def _main_internal(self, main_actor_function: Callable[[], MainReturnType]
 			token, 
 			api_url: api_url,
 			max_retries: max_retries, 
-			min_delay_between_retries_millis: 
-			min_delay_between_retries_millis, timeout_secs: timeout_secs )
+			min_delay_between_retries_millis: min_delay_between_retries_millis, 
+			timeout_secs: timeout_secs 
+		)
 	end
 
 

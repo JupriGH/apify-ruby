@@ -25,34 +25,32 @@ module Apify
 
 module Utils
 	
-=begin
-@ignore_docs
-def filter_out_none_values_recursively(dictionary: Dict) -> Dict:
+def self.filter_out_none_values_recursively dictionary
     """Return copy of the dictionary, recursively omitting all keys for which values are None."""
-    return cast(dict, _filter_out_none_values_recursively_internal(dictionary))
+    # return cast(dict, _filter_out_none_values_recursively_internal(dictionary))
+	_filter_out_none_values_recursively_internal dictionary
+end
 
-
-@ignore_docs
-def _filter_out_none_values_recursively_internal(
-    dictionary: Dict,
-    remove_empty_dicts: Optional[bool] = None,
-) -> Optional[Dict]:
+def self._filter_out_none_values_recursively_internal dictionary, remove_empty_dicts: false
     """Recursively filters out None values from a dictionary.
 
     Unfortunately, it's necessary to have an internal function for the correct result typing,
     without having to create complicated overloads
     """
     result = {}
-    for k, v in dictionary.items():
-        if isinstance(v, dict):
-            v = _filter_out_none_values_recursively_internal(v, remove_empty_dicts is True or remove_empty_dicts is None)
-        if v is not None:
-            result[k] = v
-    if not result and remove_empty_dicts:
-        return None
-    return result
 
+	dictionary.each { |k,v|
+		if v.class == Hash
+			v = _filter_out_none_values_recursively_internal(v, remove_empty_dicts != false)
+		end
+		result[k] = v if v
+	}
+	
+	return nil if (result.length == 0) && remove_empty_dicts
+	return result
+end
 
+=begin
 @ignore_docs
 def is_content_type_json(content_type: str) -> bool:
     """Check if the given content type is JSON."""
