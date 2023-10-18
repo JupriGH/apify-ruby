@@ -1,6 +1,3 @@
-require_relative 'base/resource_client'
-require_relative 'utils'
-
 =begin
 
 from typing import Any, Dict, List, Optional

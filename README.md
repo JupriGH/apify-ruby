@@ -4,8 +4,6 @@
 
 ## About  Ruby (programming language)
 
-
-
 **Ruby** is an [interpreted](https://en.wikipedia.org/wiki/Interpreted_language "Interpreted language"), [high-level](https://en.wikipedia.org/wiki/High-level_programming_language "High-level programming language"), [general-purpose programming language](https://en.wikipedia.org/wiki/General-purpose_programming_language "General-purpose programming language") which supports multiple [programming paradigms](https://en.wikipedia.org/wiki/Programming_paradigm "Programming paradigm"). It was designed with an emphasis on programming productivity and simplicity. In Ruby, everything is an object, including [primitive data types](https://en.wikipedia.org/wiki/Primitive_data_type "Primitive data type"). It was developed in the mid-1990s by [Yukihiro "Matz" Matsumoto](https://en.wikipedia.org/wiki/Yukihiro_Matsumoto "Yukihiro Matsumoto") in [Japan](https://en.wikipedia.org/wiki/Japan "Japan").
 
 ## About This Actor

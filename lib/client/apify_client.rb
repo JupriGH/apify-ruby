@@ -1,11 +1,24 @@
+require_relative 'base/base_client'
+require_relative 'base/resource_client'
+require_relative 'base/actor_job_base_client'
+
 require_relative 'http_client'
 require_relative 'actor'
+require_relative 'build'
 require_relative 'run'
 require_relative 'dataset'
 require_relative 'key_value_store'
+#require_relative 'request_queue'
+#require_relative 'webhook'
+#require_relative 'webhook_dispatch'
 require_relative 'schedule'
-require_relative 'user'
 require_relative 'log'
+require_relative 'user'
+#require_relative 'task'
+require_relative 'store'
+
+require_relative '../shared/utils'
+require_relative 'utils'
 
 module Apify
 
@@ -154,45 +167,50 @@ class ApifyClient ## < BaseApifyClient
         KeyValueStoreCollectionClient.new **_options
 	end
 	
-=begin
-
-    def request_queue(self, request_queue_id: str, *, client_key: Optional[str] = None) -> RequestQueueClient:
+	###---------------------------------------------------------------------------------------------------- request_queue
+    def request_queue request_queue_id, client_key: nil
         """Retrieve the sub-client for manipulating a single request queue.
 
         Args:
             request_queue_id (str): ID of the request queue to be manipulated
             client_key (str): A unique identifier of the client accessing the request queue
         """
-        return RequestQueueClient(resource_id=request_queue_id, client_key=client_key, **self._options())
-
-    def request_queues(self) -> RequestQueueCollectionClient:
+        RequestQueueClient.new resource_id: request_queue_id, client_key: client_key, **_options
+	end
+    def request_queues
         """Retrieve the sub-client for manipulating request queues."""
-        return RequestQueueCollectionClient(**self._options())
+        RequestQueueCollectionClient.new **options
+	end
+	
+	###---------------------------------------------------------------------------------------------------- webhook
 
-    def webhook(self, webhook_id: str) -> WebhookClient:
+    def webhook webhook_id
         """Retrieve the sub-client for manipulating a single webhook.
 
         Args:
             webhook_id (str): ID of the webhook to be manipulated
         """
-        return WebhookClient(resource_id=webhook_id, **self._options())
-
-    def webhooks(self) -> WebhookCollectionClient:
+        WebhookClient.new resource_id: webhook_id, **_options
+	end
+    def webhooks
         """Retrieve the sub-client for querying multiple webhooks of a user."""
-        return WebhookCollectionClient(**self._options())
-
-    def webhook_dispatch(self, webhook_dispatch_id: str) -> WebhookDispatchClient:
+        WebhookCollectionClient.new **_options
+	end
+	
+	###---------------------------------------------------------------------------------------------------- webhook_dispatch
+    def webhook_dispatch webhook_dispatch_id
         """Retrieve the sub-client for accessing a single webhook dispatch.
 
         Args:
             webhook_dispatch_id (str): ID of the webhook dispatch to access
         """
-        return WebhookDispatchClient(resource_id=webhook_dispatch_id, **self._options())
-
-    def webhook_dispatches(self) -> WebhookDispatchCollectionClient:
+        WebhookDispatchClient.new resource_id: webhook_dispatch_id, **_options
+	end
+    def webhook_dispatches
         """Retrieve the sub-client for querying multiple webhook dispatches of a user."""
-        return WebhookDispatchCollectionClient(**self._options())
-=end
+        WebhookDispatchCollectionClient.new **_options
+	end
+	
 	###---------------------------------------------------------------------------------------------------- schedule
     def schedule schedule_id
         """Retrieve the sub-client for manipulating a single schedule.
@@ -244,9 +262,8 @@ class ApifyClient ## < BaseApifyClient
 	###---------------------------------------------------------------------------------------------------- store
     def store
         """Retrieve the sub-client for Apify store."""
-        StoreCollectionClient **_options
+        StoreCollectionClient.new **_options
 	end
-
 end
 
 end

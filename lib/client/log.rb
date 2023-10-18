@@ -1,6 +1,5 @@
 =begin
 from contextlib import asynccontextmanager, contextmanager
-from typing import Any, AsyncIterator, Iterator, Optional
 
 import httpx
 

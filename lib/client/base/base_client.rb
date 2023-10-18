@@ -1,5 +1,3 @@
-require_relative '../utils'
-
 module Apify
 
 class BaseBaseClient # (metaclass=_WithLogDetailsClient):

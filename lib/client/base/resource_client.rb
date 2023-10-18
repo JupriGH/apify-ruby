@@ -1,5 +1,3 @@
-require_relative 'base_client'
-
 module Apify
 
 class ResourceClient < BaseClient

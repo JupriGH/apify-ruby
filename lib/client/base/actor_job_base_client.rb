@@ -1,5 +1,3 @@
-require_relative 'resource_client'
-
 =begin
 import asyncio
 import math

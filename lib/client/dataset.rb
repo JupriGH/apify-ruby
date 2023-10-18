@@ -1,5 +1,3 @@
-require_relative 'base/resource_client'
-
 module Apify
 
 module Models # apify-shared
