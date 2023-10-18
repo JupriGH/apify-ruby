@@ -126,7 +126,7 @@ class StorageClientManager
 	end
 end
 
-#################################################################################################################
+############################################################################################# BaseStorage
 
 class BaseStorage # (ABC, Generic[BaseResourceClientType, BaseResourceCollectionClientType]):
     """A class for managing storages."""
@@ -294,7 +294,7 @@ class BaseStorage # (ABC, Generic[BaseResourceClientType, BaseResourceCollection
 
 end
 
-#################################################################################################################
+############################################################################################# KeyValueStore
 
 class KeyValueStore < BaseStorage
 
@@ -513,7 +513,7 @@ class KeyValueStore < BaseStorage
 
 end
 
-#################################################################################################################
+############################################################################################# Dataset
 
 class Dataset < BaseStorage
     """The `Dataset` class represents a store for structured data where each object stored has the same attributes.
@@ -969,5 +969,6 @@ class Dataset < BaseStorage
         return await super().open(id=id, name=name, force_cloud=force_cloud, config=config)
 =end
 end
+
 
 end

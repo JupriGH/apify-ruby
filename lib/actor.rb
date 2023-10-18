@@ -118,18 +118,17 @@ async def __aexit__(
 	def apify_client
 		@_apify_client
 	end
-	
-	
 
+	### @dualproperty
+	def self.config
+		"""The Configuration instance the Actor instance uses."""
+		_get_default_instance.config
+	end
+	def config 
+		@_config
+	end
+	
 =begin
-@dualproperty
-def config(self_or_cls) -> Configuration:  # noqa: N805
-	"""The Configuration instance the Actor instance uses."""  # noqa: D401
-	if isinstance(self_or_cls, type):
-		return self_or_cls._get_default_instance()._config
-	else:
-		return self_or_cls._config
-
 @dualproperty
 def event_manager(self_or_cls) -> EventManager:  # noqa: N805
 	"""The EventManager instance the Actor instance uses."""  # noqa: D401
@@ -149,7 +148,7 @@ def log(_self_or_cls) -> logging.Logger:  # noqa: N805
 		raise 'The actor was not initialized!' unless @_is_initialized # RuntimeError()
 	end
 
-	###========================================================================================================== init
+	###---------------------------------------------------------------------------------------------------------- init
 	def self.init
 		"""Initialize the actor instance.
 
@@ -411,7 +410,7 @@ async def _main_internal(self, main_actor_function: Callable[[], MainReturnType]
 	return None
 =end
 
-	###========================================================================================================== new_client
+	###---------------------------------------------------------------------------------------------------------- new_client
 	def self.new_client token=nil, api_url: nil, max_retries: nil, min_delay_between_retries_millis: nil, timeout_secs: nil
 		"""Return a new instance of the Apify API client.
 
@@ -459,7 +458,7 @@ def _get_storage_client(self, force_cloud: bool) -> Optional[ApifyClientAsync]:
 
 =end
 
-	###========================================================================================================== open_dataset
+	###---------------------------------------------------------------------------------------------------------- open_dataset
 	def self.open_dataset id: nil, name: nil, force_cloud: false
 		"""Open a dataset.
 
@@ -488,7 +487,7 @@ def _get_storage_client(self, force_cloud: bool) -> Optional[ApifyClientAsync]:
 		Dataset.open id: id, name: name, force_cloud: force_cloud, config: @_config
 	end
 
-	###========================================================================================================== open_key_value_store
+	###---------------------------------------------------------------------------------------------------------- open_key_value_store
 	def self.open_key_value_store id: nil, name: nil, force_cloud: false
 		"""Open a key-value store.
 
@@ -518,42 +517,35 @@ def _get_storage_client(self, force_cloud: bool) -> Optional[ApifyClientAsync]:
 		KeyValueStore.open id: id, name: name, force_cloud: force_cloud, config: @_config
 	end
 
-=begin
-@classmethod
-async def open_request_queue(cls, *, id: Optional[str] = None, name: Optional[str] = None, force_cloud: bool = False) -> RequestQueue:
-	"""Open a request queue.
+	###---------------------------------------------------------------------------------------------------------- open_key_value_store
+	def self.open_request_queue id: nil, name: nil, force_cloud: nil
+		"""Open a request queue.
 
-	Request queue represents a queue of URLs to crawl, which is stored either on local filesystem or in the Apify cloud.
-	The queue is used for deep crawling of websites, where you start with several URLs and then
-	recursively follow links to other pages. The data structure supports both breadth-first
-	and depth-first crawling orders.
+		Request queue represents a queue of URLs to crawl, which is stored either on local filesystem or in the Apify cloud.
+		The queue is used for deep crawling of websites, where you start with several URLs and then
+		recursively follow links to other pages. The data structure supports both breadth-first
+		and depth-first crawling orders.
 
-	Args:
-		id (str, optional): ID of the request queue to be opened.
-			If neither `id` nor `name` are provided, the method returns the default request queue associated with the actor run.
-		name (str, optional): Name of the request queue to be opened.
-			If neither `id` nor `name` are provided, the method returns the default request queue associated with the actor run.
-		force_cloud (bool, optional): If set to `True` then the Apify cloud storage is always used.
-			This way it is possible to combine local and cloud storage.
+		Args:
+			id (str, optional): ID of the request queue to be opened.
+				If neither `id` nor `name` are provided, the method returns the default request queue associated with the actor run.
+			name (str, optional): Name of the request queue to be opened.
+				If neither `id` nor `name` are provided, the method returns the default request queue associated with the actor run.
+			force_cloud (bool, optional): If set to `True` then the Apify cloud storage is always used.
+				This way it is possible to combine local and cloud storage.
 
-	Returns:
-		RequestQueue: An instance of the `RequestQueue` class for the given ID or name.
-	"""
-	return await cls._get_default_instance().open_request_queue(id=id, name=name, force_cloud=force_cloud)
+		Returns:
+			RequestQueue: An instance of the `RequestQueue` class for the given ID or name.
+		"""
+		_get_default_instance.open_request_queue id: id, name: name, force_cloud: force_cloud
+	end
+	def open_request_queue id: nil, name: nil, force_cloud: nil
+		_raise_if_not_initialized
 
-async def _open_request_queue_internal(
-	self,
-	*,
-	id: Optional[str] = None,
-	name: Optional[str] = None,
-	force_cloud: bool = False,
-) -> RequestQueue:
-	self._raise_if_not_initialized()
+		RequestQueue.open id: id, name: name, force_cloud: force_cloud, config: @_config
+	end
 
-	return await RequestQueue.open(id=id, name=name, force_cloud=force_cloud, config=self._config)
-=end
-
-	###========================================================================================================== push_data
+	###---------------------------------------------------------------------------------------------------------- push_data
 	def self.push_data data
 		"""Store an object or a list of objects to the default dataset of the current actor run.
 
@@ -569,7 +561,7 @@ async def _open_request_queue_internal(
 		data && open_dataset.push_data( data )
 	end
 
-	###========================================================================================================== get_input
+	###---------------------------------------------------------------------------------------------------------- get_input
 	def self.get_input
 		"""Get the actor input value from the default key-value store associated with the current actor run."""
 		_get_default_instance.get_input
@@ -590,7 +582,7 @@ async def _open_request_queue_internal(
 		input_value # return input_value
 	end
 
-	###========================================================================================================== get_value
+	###---------------------------------------------------------------------------------------------------------- get_value
 	def self.get_value key, default_value=nil
 		"""Get a value from the default key-value store associated with the current actor run.
 
@@ -609,7 +601,7 @@ async def _open_request_queue_internal(
 		open_key_value_store.get_value key, default_value: default_value
 	end
 
-	###========================================================================================================== set_value
+	###---------------------------------------------------------------------------------------------------------- set_value
 	def self.set_value key, value=nil, content_type=nil
 		"""Set or delete a value in the default key-value store associated with the current actor run.
 

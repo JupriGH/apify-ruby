@@ -59,7 +59,7 @@ class BaseHTTPClient
 			response.body = Brotli.inflate(response.body)
 			p "decompressed: brotli #{c} => #{response.body.length}"
 		else
-			raise "ENCODING => #{e}"
+			raise "UNSUPPORTED_ENCODING => #{e}"
 		end
 	end
 	
@@ -131,7 +131,7 @@ class BaseHTTPClient
             raise 'Cannot pass both "json" and "data" parameters at the same time!' # ValueError
 		end
 		
-        if not headers
+        if !headers
             headers = {}
 		end
 		
@@ -201,7 +201,8 @@ class HTTPClient < BaseHTTPClient
 
 		# start session
 		Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == 'https') do |http|
-
+			
+			# params
 			if params && params.length > 0
 				uri.query = URI.encode_www_form params
 			end
@@ -209,36 +210,25 @@ class HTTPClient < BaseHTTPClient
 			if stream
 				raise "TODO: stream"
 			end	
-			
-			#post 	= { query: { site: 'stackoverflow', page: 1 } }
-		
-			# Create the request
+					
+			# create the request
 			case method
 			when 'POST'
 				req = Net::HTTP::Post.new uri
-				if content
-					req.body = content
-				end
-				
+				req.body = content if content
 			when 'PUT'
 				req = Net::HTTP::Put.new uri
-				if content
-					req.body = content
-				end
-				
+				req.body = content if content				
 			when 'GET'
-				req = Net::HTTP::Get.new uri
-			
+				req = Net::HTTP::Get.new uri			
 			else
-				raise "METHOD #{method}"
+				raise "UNSUPPORTED_METHOD #{method}"
 			end
 
 			# headers
-			headers.each do |key, val|
-				req[key] = val
-			end
+			headers.each { |key, val| req[key] = val }
 
-			# Perform the request
+			# perform the request
 			res = http.request(req)
 			
 			# decompress
@@ -253,7 +243,6 @@ class HTTPClient < BaseHTTPClient
 								
 				_maybe_parsed_body = nil
 				if not stream
-					
 					if parse_response
 						_maybe_parsed_body = _maybe_parse_response res
 					else
@@ -261,16 +250,16 @@ class HTTPClient < BaseHTTPClient
 					end
 					# setattr(response, '_maybe_parsed_body', _maybe_parsed_body)  # noqa: B010
 				end
-				
 				return { response: res, parsed: _maybe_parsed_body }
-			
+		
 			else
-				# TODO: handle errors/retries
-				
-				raise "HTTP Error: #{res.code}: #{res.body}"
-				return nil
+				# TODO: handle errors/retries		
+				#raise "HTTP Error: #{res.code}: #{res.body}"
+				raise ApifyApiError.new res, 1 #, attempt)
 			end
 		end
+
+		
 		###################################################################################
 =begin
         httpx_client = self.httpx_client

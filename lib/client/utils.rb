@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 PARSE_DATE_FIELDS_MAX_DEPTH = 3
 PARSE_DATE_FIELDS_KEY_SUFFIX = 'At'
 
-RECORD_NOT_FOUND_EXCEPTION_TYPES = ['record-not-found', 'record-or-token-not-found']
+
 
 T = TypeVar('T')
 StopRetryingType = Callable[[], None]
@@ -31,6 +31,8 @@ StopRetryingType = Callable[[], None]
 
 
 module Utils
+
+	RECORD_NOT_FOUND_EXCEPTION_TYPES = ['record-not-found', 'record-or-token-not-found']
 
 	def self._to_safe_id id
 		# Identificators of resources in the API are either in the format `resource_id` or `username/resource_id`.
@@ -121,17 +123,17 @@ async def _retry_with_exp_backoff_async(
         await asyncio.sleep(sleep_time_secs)
 
     return await async_func(stop_retrying, max_retries + 1)
+=end
 
+	def self._catch_not_found_or_throw exc # 'ApifyApiError'		
+		is_not_found_status = (exc.status_code == '404') # HTTPStatus.NOT_FOUND
+		is_not_found_type 	= RECORD_NOT_FOUND_EXCEPTION_TYPES.include?(exc.type)
+		
+		raise exc unless (is_not_found_status && is_not_found_type)
+		nil
+	end
 
-def _catch_not_found_or_throw(exc: 'ApifyApiError') -> None:
-    is_not_found_status = (exc.status_code == HTTPStatus.NOT_FOUND)
-    is_not_found_type = (exc.type in RECORD_NOT_FOUND_EXCEPTION_TYPES)
-    if not (is_not_found_status and is_not_found_type):
-        raise exc
-
-    return None
-
-
+=begin
 def _encode_webhook_list_to_base64(webhooks: List[Dict]) -> str:
     """Encode a list of dictionaries representing webhooks to their base64-encoded representation for the API."""
     data = []

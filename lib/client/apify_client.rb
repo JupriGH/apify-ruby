@@ -17,6 +17,7 @@ require_relative 'user'
 require_relative 'task'
 require_relative 'store'
 
+require_relative 'errors'
 require_relative '../shared/utils'
 require_relative 'utils'
 

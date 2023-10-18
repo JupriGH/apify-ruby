@@ -4,12 +4,14 @@ class ResourceClient < BaseClient
     """Base class for sub-clients manipulating a single resource."""
 
     def _get		
-		#try:
+		begin
 			res = @http_client.call url: @url, method: 'GET', params: _params
-			res && res.dig(:parsed, "data")
+			return res && res.dig(:parsed, "data")
 			#return parse_date_fields(_pluck_data(response.json()))
-        #except ApifyApiError as exc:
-        #    _catch_not_found_or_throw(exc)
+        rescue ApifyApiError => exc
+			Utils::_catch_not_found_or_throw exc
+		end
+		nil
 	end
 	
     def _update updated_fields

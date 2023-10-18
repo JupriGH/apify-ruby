@@ -10,7 +10,7 @@
 ## About This Actor
 
 Apify Ruby SDK Unofficial Unstable Unsupported Under Maintenance.
-Insipired by [Apify Python SDK](https://docs.apify.com/sdk/python/)
+Inspired by [Apify Python SDK](https://docs.apify.com/sdk/python/)
 
 > **Disclaimer :** This library is community library and not supported by Apify
 
