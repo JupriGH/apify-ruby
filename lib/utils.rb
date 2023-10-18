@@ -1,3 +1,5 @@
+### APIFY_UTILS
+
 =begin
 import asyncio
 import base64
@@ -46,6 +48,8 @@ T = TypeVar('T')
 =end
 
 module Apify
+
+module Utils
 
 =begin
 def _get_system_info() -> Dict:
@@ -395,5 +399,7 @@ PARSE_DATE_FIELDS_MAX_DEPTH = 3
 PARSE_DATE_FIELDS_KEY_SUFFIX = 'At'
 ListOrDictOrAny = TypeVar('ListOrDictOrAny', List, Dict, Any)
 =end 
+
+end
 
 end

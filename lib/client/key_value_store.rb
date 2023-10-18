@@ -8,11 +8,7 @@ class KeyValueStoreClient < ResourceClient
 
     def initialize **kwargs # *args: Any, **kwargs: Any
 		"""Initialize the KeyValueStoreClient."""
-        #resource_path = kwargs.pop('resource_path', 'key-value-stores')
-        #super().__init__(*args, resource_path=resource_path, **kwargs)
-		
-		kwargs[:resource_path] ||= 'key-value-stores'
-		super **kwargs
+		super resource_path: 'key-value-stores', **kwargs
 	end
 	
     def get
@@ -49,8 +45,8 @@ class KeyValueStoreClient < ResourceClient
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-object/delete-store
         """
         return self._delete()
-
-    def list_keys(self, *, limit: Optional[int] = None, exclusive_start_key: Optional[str] = None) -> Dict:
+=end
+    def list_keys limit: nil, exclusive_start_key: nil
         """List the keys in the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/key-collection/get-list-of-keys
@@ -62,21 +58,15 @@ class KeyValueStoreClient < ResourceClient
         Returns:
             dict: The list of keys in the key-value store matching the given arguments
         """
-        request_params = self._params(
-            limit=limit,
-            exclusiveStartKey=exclusive_start_key,
-        )
+        request_params = _params limit: limit, exclusiveStartKey: exclusive_start_key
 
-        response = self.http_client.call(
-            url=self._url('keys'),
-            method='GET',
-            params=request_params,
-        )
+        res = @http_client.call url: _url('keys'), method: 'GET', params: request_params
 
-        return parse_date_fields(_pluck_data(response.json()))
-=end
+		res.dig(:parsed, "data")
+        #return parse_date_fields(_pluck_data(response.json()))
+	end
 
-    def get_record key, as_bytes: false, as_file: false
+    def get_record key #, as_bytes: false, as_file: false
         """Retrieve the given record from the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/get-record
@@ -90,10 +80,9 @@ class KeyValueStoreClient < ResourceClient
             dict, optional: The requested record, or None, if the record does not exist
         """
         #try:
-            if as_bytes and as_file
-                raise 'You cannot have both as_bytes and as_file set.' # ValueError
-			end
-			
+=begin            
+			raise 'You cannot have both as_bytes and as_file set.' if as_bytes and as_file # ValueError
+
             if as_bytes
 				raise "TODO"
 				"""
@@ -117,22 +106,22 @@ class KeyValueStoreClient < ResourceClient
                 return self.stream_record(key)  # type: ignore
 				"""
 			end
-			
-            response = @http_client.call url: _url(path: "records/#{key}"), method: 'GET', params: _params
-			
-			v = response && response[:parsed]
-			t = response && response['content-type']
+=end			
+            res = @http_client.call url: _url("records/#{key}"), method: 'GET', params: _params
 
-            return { key: key, value: v, content_type: t }
+            { 
+				key: key, 
+				value: res[:parsed], 
+				content_type: res[:response]['content-type'] 
+			}
 
         # except ApifyApiError as exc:
         #    _catch_not_found_or_throw(exc)
 		
-		return nil
+		#return nil
 	end
-=begin
 
-    def get_record_as_bytes(self, key: str) -> Optional[Dict]:
+    def get_record_as_bytes key
         """Retrieve the given record from the key-value store, without parsing it.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/get-record
@@ -143,25 +132,22 @@ class KeyValueStoreClient < ResourceClient
         Returns:
             dict, optional: The requested record, or None, if the record does not exist
         """
-        try:
-            response = self.http_client.call(
-                url=self._url(f'records/{key}'),
-                method='GET',
-                params=self._params(),
-                parse_response=False,
-            )
+        #try:
+            res = @http_client.call url: _url("records/#{key}"), method: 'GET', params: _params, parse_response: false
 
-            return {
-                'key': key,
-                'value': response.content,
-                'content_type': response.headers['content-type'],
+            {
+                key: key,
+                value: res[:response].body,
+                content_type: res[:response]['content-type']
             }
 
-        except ApifyApiError as exc:
-            _catch_not_found_or_throw(exc)
+        #except ApifyApiError as exc:
+        #    _catch_not_found_or_throw(exc)
 
-        return None
+        #return None
+	end
 
+=begin
     @contextmanager
     def stream_record(self, key: str) -> Iterator[Optional[Dict]]:
         """Retrieve the given record from the key-value store, as a stream.
@@ -239,21 +225,10 @@ class KeyValueStoreCollectionClient < ResourceCollectionClient
 
     def initialize **kwargs
         """Initialize the KeyValueStoreCollectionClient with the passed arguments."""
-        #resource_path = kwargs.pop('resource_path', 'key-value-stores')
-        #super().__init__(*args, resource_path=resource_path, **kwargs)
-		
-		kwargs[:resource_path] ||= 'key-value-stores'
-		super **kwargs
+		super resource_path: 'key-value-stores', **kwargs
 	end
-=begin
-    def list(
-        self,
-        *,
-        unnamed: Optional[bool] = None,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
-        desc: Optional[bool] = None,
-    ) -> ListPage[Dict]:
+
+    def list unnamed: nil, limit: nil, offset: nil, desc: nil
         """List the available key-value stores.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-collection/get-list-of-key-value-stores
@@ -267,9 +242,8 @@ class KeyValueStoreCollectionClient < ResourceCollectionClient
         Returns:
             ListPage: The list of available key-value stores matching the specified filters.
         """
-        return self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
+        _list unnamed: unnamed, limit: limit, offset: offset, desc: desc
 	end
-=end
 
     def get_or_create name: nil, schema: nil
         """Retrieve a named key-value store, or create a new one when it doesn't exist.
@@ -286,7 +260,7 @@ class KeyValueStoreCollectionClient < ResourceCollectionClient
 		## TODO
 		raise "TODO: filter_out_none_values_recursively" if schema
 		
-        _get_or_create name:name #, resource=filter_out_none_values_recursively({'schema': schema}))
+        _get_or_create name: name #, resource=filter_out_none_values_recursively({'schema': schema}))
 	end
 	
 end

@@ -822,8 +822,12 @@ class Dataset < BaseStorage
         to_key_value_store_id: nil,
         to_key_value_store_name: nil
     )
-        export_to \
-			key, to_key_value_store_id: to_key_value_store_id, to_key_value_store_name: to_key_value_store_name, content_type: 'application/json'
+        export_to(
+			key, 
+			to_key_value_store_id: to_key_value_store_id, 
+			to_key_value_store_name: to_key_value_store_name, 
+			content_type: 'application/json'
+		)
 	end
 	
 	###---------------------------------------------------------------------------------------------------------------- export_to_csv
@@ -875,20 +879,17 @@ class Dataset < BaseStorage
 	end
 
 	
-=begin
     def iterate_items(
-        self,
-        *,
-        offset: int = 0,
-        limit: Optional[int] = None,
-        clean: Optional[bool] = None,
-        desc: Optional[bool] = None,
-        fields: Optional[List[str]] = None,
-        omit: Optional[List[str]] = None,
-        unwind: Optional[str] = None,
-        skip_empty: Optional[bool] = None,
-        skip_hidden: Optional[bool] = None,
-    ) -> AsyncIterator[Dict]:
+        offset: 0,
+        limit: nil,
+        clean: nil,
+        desc: nil,
+        fields: nil,
+        omit: nil,
+        unwind: nil,
+        skip_empty: nil,
+        skip_hidden: nil
+    )
         """Iterate over the items in the dataset.
 
         Args:
@@ -916,17 +917,22 @@ class Dataset < BaseStorage
         Yields:
             dict: An item from the dataset
         """
-        return self._dataset_client.iterate_items(
-            offset=offset,
-            limit=limit,
-            clean=clean,
-            desc=desc,
-            fields=fields,
-            omit=omit,
-            unwind=unwind,
-            skip_empty=skip_empty,
-            skip_hidden=skip_hidden,
-        )
+        @_dataset_client.iterate_items(
+            offset: offset,
+            limit: limit,
+            clean: clean,
+            desc: desc,
+            fields: fields,
+            omit: omit,
+            unwind: unwind,
+            skip_empty: skip_empty,
+            skip_hidden: skip_hidden
+        ) do |item|
+			yield item
+		end
+	end
+	
+=begin
 
     async def drop(self) -> None:
         """Remove the dataset either from the Apify cloud storage or from the local directory."""

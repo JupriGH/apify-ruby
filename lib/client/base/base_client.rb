@@ -3,15 +3,14 @@ require_relative '../utils'
 module Apify
 
 class BaseBaseClient # (metaclass=_WithLogDetailsClient):
+
     @resource_id
     @url
     @params
     @http_client
     @root_client
 
-	@safe_id # added by Jupri
-
-    def _url path: nil
+    def _url path=nil
         path ? "#{@url}/#{path}" : @url
 	end
 	
@@ -62,7 +61,7 @@ class BaseClient < BaseBaseClient
 		@url = "#{@base_url}/#{@resource_path}"
         
 		if resource_id
-            safe_id = Utils._to_safe_id(resource_id)
+            safe_id = Utils::_to_safe_id(resource_id)
             @url = "#{@url}/#{safe_id}"
 		end
 	end

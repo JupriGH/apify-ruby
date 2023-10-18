@@ -7,16 +7,8 @@ class UserClient < ResourceClient
 
     def initialize **kwargs
         """Initialize the UserClient."""
-
-        #resource_id = kwargs.pop('resource_id', None)
-        #if resource_id is None:
-        #    resource_id = 'me'
-        #resource_path = kwargs.pop('resource_path', 'users')
-        #super().__init__(*args, resource_id=resource_id, resource_path=resource_path, **kwargs)
-
-		kwargs[:resource_id] 	||= 'me'
-		kwargs[:resource_path] 	||= 'users'
-		super **kwargs
+		kwargs[:resource_id] ||= 'me'
+		super resource_path: 'users', **kwargs 
 		
     end
 	

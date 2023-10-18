@@ -35,14 +35,11 @@ class BaseHTTPClient
 		# self.httpx_client = httpx.Client(headers=headers, follow_redirects=True, timeout=timeout_secs)
         # self.httpx_async_client = httpx.AsyncClient(headers=headers, follow_redirects=True, timeout=timeout_secs)
 	end
-
-    def _maybe_parse_response response # Net::HTTPResponse
-		# 204 NO_CONTENT
-		if response.body.nil? || response.code == 204 # NO_CONTENT
-			return 
-		end
-
+	
+	def _decompress response
 		# COMPRESSION
+		return if response.body.nil?
+		
 		c = response.body.length
 		e = response['content-encoding']
 		
@@ -54,17 +51,22 @@ class BaseHTTPClient
 			#gz 		= Zlib::GzipReader.new sio
 			#response.body = gz.read
 			
-			p "decompressed: #{c} => #{response.body.length}"
+			p "decompressed: gzip #{c} => #{response.body.length}"
 		when "deflate"
 			response.body = Zlib::Inflate.new(-15).inflate(response.body) # deflate	
-			p "decompressed: #{c} => #{response.body.length}"
+			p "decompressed: deflate #{c} => #{response.body.length}"
 		when "br"
 			response.body = Brotli.inflate(response.body)
-			p "decompressed: #{c} => #{response.body.length}"
+			p "decompressed: brotli #{c} => #{response.body.length}"
 		else
 			raise "ENCODING => #{e}"
 		end
-		
+	end
+	
+    def _maybe_parse_response response # Net::HTTPResponse
+		# 204 NO_CONTENT
+		return if response.body.nil? || response.code == 204 # NO_CONTENT
+
 		content_type = nil		
 		t = response["Content-Type"]
 		if t
@@ -238,7 +240,10 @@ class HTTPClient < BaseHTTPClient
 
 			# Perform the request
 			res = http.request(req)
-
+			
+			# decompress
+			_decompress res
+			
 			# Handle the response
 			if res.is_a?(Net::HTTPSuccess)
 
@@ -248,6 +253,7 @@ class HTTPClient < BaseHTTPClient
 								
 				_maybe_parsed_body = nil
 				if not stream
+					
 					if parse_response
 						_maybe_parsed_body = _maybe_parse_response res
 					else
@@ -260,7 +266,8 @@ class HTTPClient < BaseHTTPClient
 			
 			else
 				# TODO: handle errors/retries
-				raise "HTTP Error: #{res.code}"
+				
+				raise "HTTP Error: #{res.code}: #{res.body}"
 				return nil
 			end
 		end

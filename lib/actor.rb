@@ -1,4 +1,5 @@
 require_relative 'config'
+require_relative 'event'
 require_relative 'storages'
 require_relative 'crypto'
 require_relative 'proxy'
@@ -20,7 +21,7 @@ class Actor
 	#_event_manager: EventManager
 	#_send_system_info_interval_task: Optional[asyncio.Task] = None
 	#_send_persist_state_interval_task: Optional[asyncio.Task] = None
-	#_is_exiting = False
+	@_is_exiting = false
 	#_was_final_persist_state_emitted = False
 
 	def initialize config: nil
@@ -70,9 +71,9 @@ class Actor
 		self.set_status_message = _wrap_internal(self._set_status_message_internal, self.set_status_message)  # type: ignore
 		self.create_proxy_configuration = _wrap_internal(self._create_proxy_configuration_internal, self.create_proxy_configuration)  # type: ignore
 		"""
-		@_config 		= config or Configuration.new
+		@_config 		= config || Configuration.new		
 		@_apify_client 	= new_client
-		#self._event_manager = EventManager(config=self._config)
+		#@_event_manager = EventManager.new @_config
 
 		@_is_initialized = false
 	end
@@ -115,7 +116,7 @@ async def __aexit__(
 =end
 
 	def self._get_default_instance
-		@@_default_instance ||= new(config: Configuration.get_global_configuration())
+		@@_default_instance ||= new(config: Configuration.get_global_configuration)
 	end
 	
 	### @dualproperty
@@ -151,6 +152,7 @@ def log(_self_or_cls) -> logging.Logger:  # noqa: N805
 	"""The logging.Logger instance the Actor uses."""  # noqa: D401
 	return logger
 =end
+
 
 	def _raise_if_not_initialized
 		raise 'The actor was not initialized!' unless @_is_initialized # RuntimeError()
@@ -190,9 +192,12 @@ def log(_self_or_cls) -> logging.Logger:  # noqa: N805
 			StorageClientManager.set_cloud_client(@_apify_client)
 		end
 		
-		"""
-		await self._event_manager.init()
+		
+		### EVENT MANAGER
+		
+		#@_event_manager.init
 
+=begin
 		self._send_persist_state_interval_task = asyncio.create_task(
 			_run_func_at_interval_async(
 				lambda: self._event_manager.emit(ActorEventTypes.PERSIST_STATE, {'isMigrating': False}),
@@ -209,7 +214,7 @@ def log(_self_or_cls) -> logging.Logger:  # noqa: N805
 			)
 
 		self._event_manager.on(ActorEventTypes.MIGRATING, self._respond_to_migrating_event)
-		"""
+=end
 		
 		"""
 		# The CPU usage is calculated as an average between two last calls to psutil
@@ -255,75 +260,80 @@ async def _cancel_event_emitting_intervals(self) -> None:
 		self._send_system_info_interval_task.cancel()
 		with contextlib.suppress(asyncio.CancelledError):
 			await self._send_system_info_interval_task
+=end
 
-@classmethod
-async def exit(
-	cls,
-	*,
-	exit_code: int = 0,
-	event_listeners_timeout_secs: Optional[float] = EVENT_LISTENERS_TIMEOUT_SECS,
-	status_message: Optional[str] = None,
-) -> None:
-	"""Exit the actor instance.
-
-	This stops the Actor instance.
-	It cancels all the intervals for regularly sending `PERSIST_STATE` events,
-	sends a final `PERSIST_STATE` event,
-	waits for all the event listeners to finish,
-	and stops the event manager.
-
-	Args:
-		exit_code (int, optional): The exit code with which the actor should fail (defaults to `0`).
-		event_listeners_timeout_secs (float, optional): How long should the actor wait for actor event listeners to finish before exiting.
-		status_message (str, optional): The final status message that the actor should display.
-	"""
-	return await cls._get_default_instance().exit(
-		exit_code=exit_code,
-		event_listeners_timeout_secs=event_listeners_timeout_secs,
-		status_message=status_message,
+	### rename this: exit_
+	
+	def self.exit_ (
+		exit_code = 0, 
+		#event_listeners_timeout_secs: EVENT_LISTENERS_TIMEOUT_SECS, 
+		status_message: nil
 	)
+		"""Exit the actor instance.
 
-async def _exit_internal(
-	self,
-	*,
-	exit_code: int = 0,
-	event_listeners_timeout_secs: Optional[float] = EVENT_LISTENERS_TIMEOUT_SECS,
-	status_message: Optional[str] = None,
-) -> None:
-	self._raise_if_not_initialized()
+		This stops the Actor instance.
+		It cancels all the intervals for regularly sending `PERSIST_STATE` events,
+		sends a final `PERSIST_STATE` event,
+		waits for all the event listeners to finish,
+		and stops the event manager.
 
-	self._is_exiting = True
+		Args:
+			exit_code (int, optional): The exit code with which the actor should fail (defaults to `0`).
+			event_listeners_timeout_secs (float, optional): How long should the actor wait for actor event listeners to finish before exiting.
+			status_message (str, optional): The final status message that the actor should display.
+		"""
+		_get_default_instance.exit_( 
+			exit_code, 
+			#event_listeners_timeout_secs: event_listeners_timeout_secs,
+			status_message: status_message
+		)
+	end
+	def exit_ (
+		exit_code = 0, 
+		#event_listeners_timeout_secs: EVENT_LISTENERS_TIMEOUT_SECS, 
+		status_message: nil
+	)
+		_raise_if_not_initialized
 
-	exit_code = maybe_extract_enum_member_value(exit_code)
+		@_is_exiting = true
 
-	self.log.info('Exiting actor', extra={'exit_code': exit_code})
+		"""
+		exit_code = maybe_extract_enum_member_value(exit_code)
 
-	await self._cancel_event_emitting_intervals()
+		self.log.info('Exiting actor', extra={'exit_code': exit_code})
 
-	# Send final persist state event
-	if not self._was_final_persist_state_emitted:
-		self._event_manager.emit(ActorEventTypes.PERSIST_STATE, {'isMigrating': False})
-		self._was_final_persist_state_emitted = True
+		await self._cancel_event_emitting_intervals()
 
-	if status_message is not None:
-		await self.set_status_message(status_message, is_terminal=True)
+		# Send final persist state event
+		if not self._was_final_persist_state_emitted:
+			self._event_manager.emit(ActorEventTypes.PERSIST_STATE, {'isMigrating': False})
+			self._was_final_persist_state_emitted = True
 
-	# Sleep for a bit so that the listeners have a chance to trigger
-	await asyncio.sleep(0.1)
+		if status_message is not None:
+			await self.set_status_message(status_message, is_terminal=True)
 
-	await self._event_manager.close(event_listeners_timeout_secs=event_listeners_timeout_secs)
+		# Sleep for a bit so that the listeners have a chance to trigger
+		await asyncio.sleep(0.1)
 
-	self._is_initialized = False
+		await self._event_manager.close(event_listeners_timeout_secs=event_listeners_timeout_secs)
+		"""
+		
+		@_is_initialized = false
 
-	if _is_running_in_ipython():
-		self.log.debug(f'Not calling sys.exit({exit_code}) because actor is running in IPython')
-	elif os.getenv('PYTEST_CURRENT_TEST', False):
-		self.log.debug(f'Not calling sys.exit({exit_code}) because actor is running in an unit test')
-	elif hasattr(asyncio, '_nest_patched'):
-		self.log.debug(f'Not calling sys.exit({exit_code}) because actor is running in a nested event loop')
-	else:
-		sys.exit(exit_code)
+		"""
+		if _is_running_in_ipython():
+			self.log.debug(f'Not calling sys.exit({exit_code}) because actor is running in IPython')
+		elif os.getenv('PYTEST_CURRENT_TEST', False):
+			self.log.debug(f'Not calling sys.exit({exit_code}) because actor is running in an unit test')
+		elif hasattr(asyncio, '_nest_patched'):
+			self.log.debug(f'Not calling sys.exit({exit_code}) because actor is running in a nested event loop')
+		else:
+			sys.exit(exit_code)
+		"""
+		nil
+	end
 
+=begin
 @classmethod
 async def fail(
 	cls,
@@ -411,7 +421,7 @@ async def _main_internal(self, main_actor_function: Callable[[], MainReturnType]
 =end
 
 	###========================================================================================================== new_client
-	def self.new_client token: nil, api_url: nil, max_retries: nil, min_delay_between_retries_millis: nil, timeout_secs: nil
+	def self.new_client token=nil, api_url: nil, max_retries: nil, min_delay_between_retries_millis: nil, timeout_secs: nil
 		"""Return a new instance of the Apify API client.
 
 		The `ApifyClientAsync` class is provided by the [apify-client](https://github.com/apify/apify-client-python) package,
@@ -429,17 +439,25 @@ async def _main_internal(self, main_actor_function: Callable[[], MainReturnType]
 			timeout_secs (int, optional): The socket timeout of the HTTP requests sent to the Apify API
 		"""
 
-		_get_default_instance.new_client \
-			token: token, api_url: api_url, max_retries: max_retries, in_delay_between_retries_millis: min_delay_between_retries_millis, timeout_secs: timeout_secs
+		_get_default_instance.new_client(
+			token, 
+			api_url: api_url, 
+			max_retries: max_retries, 
+			in_delay_between_retries_millis: 
+			min_delay_between_retries_millis, 
+			timeout_secs: timeout_secs )
 	end
 
-	def new_client token: nil, api_url: nil, max_retries: nil, min_delay_between_retries_millis: nil, timeout_secs: nil
+	def new_client token=nil, api_url: nil, max_retries: nil, min_delay_between_retries_millis: nil, timeout_secs: nil
 		token 	||= @_config.token
 		api_url ||= @_config.api_base_url
 
-		#ApifyClientAsync.new \
-		ApifyClient.new \
-			token: token, api_url: api_url,max_retries: max_retries, min_delay_between_retries_millis: min_delay_between_retries_millis, timeout_secs: timeout_secs
+		ApifyClient.new(
+			token, 
+			api_url: api_url,
+			max_retries: max_retries, 
+			min_delay_between_retries_millis: 
+			min_delay_between_retries_millis, timeout_secs: timeout_secs )
 	end
 
 
@@ -544,7 +562,7 @@ async def _open_request_queue_internal(
 	return await RequestQueue.open(id=id, name=name, force_cloud=force_cloud, config=self._config)
 =end
 
-###========================================================================================================== push_data
+	###========================================================================================================== push_data
 	def self.push_data data
 		"""Store an object or a list of objects to the default dataset of the current actor run.
 
@@ -557,13 +575,10 @@ async def _open_request_queue_internal(
 	def push_data data
 		_raise_if_not_initialized
 		
-		data || return
-		
-		dataset = open_dataset
-		dataset.push_data data
+		data && open_dataset.push_data( data )
 	end
 
-###========================================================================================================== get_input
+	###========================================================================================================== get_input
 	def self.get_input
 		"""Get the actor input value from the default key-value store associated with the current actor run."""
 		_get_default_instance.get_input
@@ -584,7 +599,7 @@ async def _open_request_queue_internal(
 		input_value # return input_value
 	end
 
-###========================================================================================================== get_value
+	###========================================================================================================== get_value
 	def self.get_value key, default_value=nil
 		"""Get a value from the default key-value store associated with the current actor run.
 
@@ -603,23 +618,23 @@ async def _open_request_queue_internal(
 		open_key_value_store.get_value key, default_value: default_value
 	end
 
-###========================================================================================================== set_value
-def self.set_value key, value=nil, content_type=nil
-	"""Set or delete a value in the default key-value store associated with the current actor run.
+	###========================================================================================================== set_value
+	def self.set_value key, value=nil, content_type=nil
+		"""Set or delete a value in the default key-value store associated with the current actor run.
 
-	Args:
-		key (str): The key of the record which to set.
-		value (any): The value of the record which to set, or None, if the record should be deleted.
-		content_type (str, optional): The content type which should be set to the value.
-	"""
-	_get_default_instance.set_value key, value, content_type
-end
+		Args:
+			key (str): The key of the record which to set.
+			value (any): The value of the record which to set, or None, if the record should be deleted.
+			content_type (str, optional): The content type which should be set to the value.
+		"""
+		_get_default_instance.set_value key, value, content_type
+	end
 
-def set_value key, value=nil, content_type=nil
-	_raise_if_not_initialized
+	def set_value key, value=nil, content_type=nil
+		_raise_if_not_initialized
 
-	open_key_value_store.set_value key, value, content_type
-end
+		open_key_value_store.set_value key, value, content_type
+	end
 
 =begin
 
@@ -696,92 +711,92 @@ def _get_env_internal(self) -> Dict:
 	return {
 		env_var.name.lower(): _fetch_and_parse_env_var(env_var) for env_var in [*ActorEnvVars, *ApifyEnvVars]
 	}
+=end
 
-@classmethod
-async def start(
-	cls,
-	actor_id: str,
-	run_input: Optional[Any] = None,
-	*,
-	token: Optional[str] = None,
-	content_type: Optional[str] = None,
-	build: Optional[str] = None,
-	memory_mbytes: Optional[int] = None,
-	timeout_secs: Optional[int] = None,
-	wait_for_finish: Optional[int] = None,
-	webhooks: Optional[List[Dict]] = None,
-) -> Dict:
-	"""Run an actor on the Apify platform.
-
-	Unlike `Actor.call`, this method just starts the run without waiting for finish.
-
-	Args:
-		actor_id (str): The ID of the actor to be run.
-		run_input (Any, optional): The input to pass to the actor run.
-		token (str, optional): The Apify API token to use for this request (defaults to the `APIFY_TOKEN` environment variable).
-		content_type (str, optional): The content type of the input.
-		build (str, optional): Specifies the actor build to run. It can be either a build tag or build number.
-							   By default, the run uses the build specified in the default run configuration for the actor (typically latest).
-		memory_mbytes (int, optional): Memory limit for the run, in megabytes.
-									   By default, the run uses a memory limit specified in the default run configuration for the actor.
-		timeout_secs (int, optional): Optional timeout for the run, in seconds.
-									  By default, the run uses timeout specified in the default run configuration for the actor.
-		wait_for_finish (int, optional): The maximum number of seconds the server waits for the run to finish.
-										   By default, it is 0, the maximum value is 300.
-		webhooks (list of dict, optional): Optional ad-hoc webhooks (https://docs.apify.com/webhooks/ad-hoc-webhooks)
-										   associated with the actor run which can be used to receive a notification,
-										   e.g. when the actor finished or failed.
-										   If you already have a webhook set up for the actor or task, you do not have to add it again here.
-										   Each webhook is represented by a dictionary containing these items:
-										   * ``event_types``: list of ``WebhookEventType`` values which trigger the webhook
-										   * ``request_url``: URL to which to send the webhook HTTP request
-										   * ``payload_template`` (optional): Optional template for the request payload
-
-	Returns:
-		dict: Info about the started actor run
-	"""
-	return await cls._get_default_instance().start(
-		actor_id=actor_id,
-		run_input=run_input,
-		token=token,
-		content_type=content_type,
-		build=build,
-		memory_mbytes=memory_mbytes,
-		timeout_secs=timeout_secs,
-		wait_for_finish=wait_for_finish,
-		webhooks=webhooks,
+	def self.start(
+		actor_id,
+		run_input = nil,
+		token:  			nil,
+		content_type: 		nil,
+		build:  			nil,
+		memory_mbytes:  	nil,
+		timeout_secs:  		nil,
+		wait_for_finish:  	nil,
+		webhooks:  			nil
 	)
+		"""Run an actor on the Apify platform.
 
-async def _start_internal(
-	self,
-	actor_id: str,
-	run_input: Optional[Any] = None,
-	*,
-	token: Optional[str] = None,
-	content_type: Optional[str] = None,
-	build: Optional[str] = None,
-	memory_mbytes: Optional[int] = None,
-	timeout_secs: Optional[int] = None,
-	wait_for_finish: Optional[int] = None,
-	webhooks: Optional[List[Dict]] = None,
-) -> Dict:
-	self._raise_if_not_initialized()
+		Unlike `Actor.call`, this method just starts the run without waiting for finish.
 
-	if token:
-		client = self.new_client(token=token)
-	else:
-		client = self._apify_client
+		Args:
+			actor_id (str): The ID of the actor to be run.
+			run_input (Any, optional): The input to pass to the actor run.
+			token (str, optional): The Apify API token to use for this request (defaults to the `APIFY_TOKEN` environment variable).
+			content_type (str, optional): The content type of the input.
+			build (str, optional): Specifies the actor build to run. It can be either a build tag or build number.
+								   By default, the run uses the build specified in the default run configuration for the actor (typically latest).
+			memory_mbytes (int, optional): Memory limit for the run, in megabytes.
+										   By default, the run uses a memory limit specified in the default run configuration for the actor.
+			timeout_secs (int, optional): Optional timeout for the run, in seconds.
+										  By default, the run uses timeout specified in the default run configuration for the actor.
+			wait_for_finish (int, optional): The maximum number of seconds the server waits for the run to finish.
+											   By default, it is 0, the maximum value is 300.
+			webhooks (list of dict, optional): Optional ad-hoc webhooks (https://docs.apify.com/webhooks/ad-hoc-webhooks)
+											   associated with the actor run which can be used to receive a notification,
+											   e.g. when the actor finished or failed.
+											   If you already have a webhook set up for the actor or task, you do not have to add it again here.
+											   Each webhook is represented by a dictionary containing these items:
+											   * ``event_types``: list of ``WebhookEventType`` values which trigger the webhook
+											   * ``request_url``: URL to which to send the webhook HTTP request
+											   * ``payload_template`` (optional): Optional template for the request payload
 
-	return await client.actor(actor_id).start(
-		run_input=run_input,
-		content_type=content_type,
-		build=build,
-		memory_mbytes=memory_mbytes,
-		timeout_secs=timeout_secs,
-		wait_for_finish=wait_for_finish,
-		webhooks=webhooks,
+		Returns:
+			dict: Info about the started actor run
+		"""
+		_get_default_instance.start(
+			actor_id,
+			run_input,
+			token:				token,
+			content_type:		content_type,
+			build:				build,
+			memory_mbytes:		memory_mbytes,
+			timeout_secs:		timeout_secs,
+			wait_for_finish:	wait_for_finish,
+			webhooks:			webhooks
+		)
+	end
+	
+	def start(
+		actor_id,
+		run_input = nil,
+		token:  			nil,
+		content_type: 		nil,
+		build:  			nil,
+		memory_mbytes:  	nil,
+		timeout_secs:  		nil,
+		wait_for_finish:  	nil,
+		webhooks:  			nil
 	)
+		_raise_if_not_initialized
 
+		if token
+			client = new_client(token: token)
+		else
+			client = @_apify_client
+		end
+
+		client.actor(actor_id).start(
+			run_input,
+			content_type: 		content_type,
+			build: 				build,
+			memory_mbytes: 		memory_mbytes,
+			timeout_secs: 		timeout_secs,
+			wait_for_finish:	wait_for_finish,
+			webhooks: 			webhooks,
+		)
+	end
+
+=begin
 @classmethod
 async def abort(
 	cls,
@@ -1238,9 +1253,7 @@ async def _set_status_message_internal(self, status_message: str, *, is_terminal
 		new_url_function: nil # Optional[Union[Callable[[Optional[str]], str], Callable[[Optional[str]], Awaitable[str]]]] = None,
 	)
 		_raise_if_not_initialized
-		
-		p :create_proxy_configuration, actor_proxy_input
-		
+
 		if actor_proxy_input
 			if actor_proxy_input['useApifyProxy'] # bool
 				country_code 	||= actor_proxy_input['apifyProxyCountry']
@@ -1266,7 +1279,7 @@ async def _set_status_message_internal(self, status_message: str, *, is_terminal
 		# NOTE: "initialize" is Ruby class constructor
 		proxy_configuration.__initialize
 
-		return proxy_configuration
+		proxy_configuration
 	end
 end
 

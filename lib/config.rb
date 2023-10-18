@@ -60,7 +60,7 @@ class Configuration
 		
 		@actor_build_id 				= getenv(ActorEnvVars::BUILD_ID)
 		@actor_build_number 			= getenv(ActorEnvVars::BUILD_NUMBER)
-		#@actor_events_ws_url = getenv(ActorEnvVars::EVENTS_WEBSOCKET_URL)
+		@actor_events_ws_url 			= getenv(ActorEnvVars::EVENTS_WEBSOCKET_URL)
 		@actor_id 						= getenv(ActorEnvVars::ID)
 		@actor_run_id 					= getenv(ActorEnvVars::RUN_ID)
 		@actor_task_id 					= getenv(ActorEnvVars::TASK_ID)

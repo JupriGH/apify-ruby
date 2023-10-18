@@ -1,17 +1,22 @@
 require_relative 'http_client'
+require_relative 'actor'
+require_relative 'run'
 require_relative 'dataset'
 require_relative 'key_value_store'
+require_relative 'schedule'
 require_relative 'user'
+require_relative 'log'
 
 module Apify
 
 DEFAULT_API_URL = 'https://api.apify.com'
 API_VERSION = 'v2'
 
-class BaseApifyClient
+=begin
+class BaseApifyClient ### Base for Sync and Async client
     @http_client
 
-    def initialize token: nil, api_url: nil, max_retries: 8, min_delay_between_retries_millis: 500, timeout_secs: 360
+    def initialize token=nil, api_url: nil, max_retries: 8, min_delay_between_retries_millis: 500, timeout_secs: 360
         """Initialize the Apify API Client.
 
         Args:
@@ -23,7 +28,7 @@ class BaseApifyClient
             timeout_secs (int, optional): The socket timeout of the HTTP requests sent to the Apify API
         """		
 		@token = token
-        @api_url = (api_url || DEFAULT_API_URL).sub(/\/+$/, '') # .rstrip('/')
+        api_url = (api_url || DEFAULT_API_URL).sub(/\/+$/, '') # .rstrip('/')
         @base_url = "#{api_url}/#{API_VERSION}"
         @max_retries = max_retries || 8
         @min_delay_between_retries_millis = min_delay_between_retries_millis || 500
@@ -33,15 +38,15 @@ class BaseApifyClient
     def _options
         { root_client: self, base_url: @base_url, http_client: @http_client }
 	end
-
 end
+=end
 
-class ApifyClient < BaseApifyClient
+class ApifyClient ## < BaseApifyClient
     """The Apify API client."""
 
     @http_client # _HTTPClient
 
-    def initialize token: nil, api_url: nil, max_retries: 8, min_delay_between_retries_millis: 500, timeout_secs: 360
+    def initialize token=nil, api_url: nil, max_retries: 8, min_delay_between_retries_millis: 500, timeout_secs: 360
         """Initialize the ApifyClient.
 
         Args:
@@ -52,11 +57,31 @@ class ApifyClient < BaseApifyClient
                 (increases exponentially from this value)
             timeout_secs (int, optional): The socket timeout of the HTTP requests sent to the Apify API
         """
-        super \
-            token: token, api_url: api_url, max_retries: max_retries, min_delay_between_retries_millis: min_delay_between_retries_millis, timeout_secs: timeout_secs
-      
-        @http_client = HTTPClient.new \
-            token: token, max_retries: @max_retries, min_delay_between_retries_millis: @min_delay_between_retries_millis, timeout_secs: @timeout_secs
+=begin
+        super(
+            token, 
+			api_url: api_url, 
+			max_retries: max_retries, 
+			min_delay_between_retries_millis: min_delay_between_retries_millis, 
+			timeout_secs: timeout_secs
+		)
+=end
+		@token = token
+        api_url = (api_url || DEFAULT_API_URL).sub(/\/+$/, '') # .rstrip('/')
+        @base_url = "#{api_url}/#{API_VERSION}"
+        @max_retries = max_retries || 8
+        @min_delay_between_retries_millis = min_delay_between_retries_millis || 500
+        @timeout_secs = timeout_secs || 360
+		
+        @http_client = HTTPClient.new(
+            token: token, 
+			max_retries: @max_retries, 
+			min_delay_between_retries_millis: @min_delay_between_retries_millis, 
+			timeout_secs: @timeout_secs
+		)
+	end
+    def _options
+        { root_client: self, base_url: @base_url, http_client: @http_client }
 	end
 	
 	###---------------------------------------------------------------------------------------------------- actor
@@ -94,7 +119,7 @@ class ApifyClient < BaseApifyClient
         Args:
             run_id (str): ID of the actor run to be manipulated
         """
-        RunClient resource_id: run_id, **_options
+        RunClient.new resource_id: run_id, **_options
 	end
     def runs
         """Retrieve the sub-client for querying multiple actor runs of a user."""
@@ -167,42 +192,47 @@ class ApifyClient < BaseApifyClient
     def webhook_dispatches(self) -> WebhookDispatchCollectionClient:
         """Retrieve the sub-client for querying multiple webhook dispatches of a user."""
         return WebhookDispatchCollectionClient(**self._options())
-
-    def schedule(self, schedule_id: str) -> ScheduleClient:
+=end
+	###---------------------------------------------------------------------------------------------------- schedule
+    def schedule schedule_id
         """Retrieve the sub-client for manipulating a single schedule.
 
         Args:
             schedule_id (str): ID of the schedule to be manipulated
         """
-        return ScheduleClient(resource_id=schedule_id, **self._options())
-
-    def schedules(self) -> ScheduleCollectionClient:
+        ScheduleClient.new resource_id: schedule_id, **_options
+	end
+    def schedules
         """Retrieve the sub-client for manipulating schedules."""
-        return ScheduleCollectionClient(**self._options())
-
-    def log(self, build_or_run_id: str) -> LogClient:
+        ScheduleCollectionClient.new **_options
+	end
+	
+	###---------------------------------------------------------------------------------------------------- log
+    def log build_or_run_id
         """Retrieve the sub-client for retrieving logs.
 
         Args:
             build_or_run_id (str): ID of the actor build or run for which to access the log
         """
-        return LogClient(resource_id=build_or_run_id, **self._options())
-
-    def task(self, task_id: str) -> TaskClient:
+        LogClient.new resource_id: build_or_run_id, **_options
+	end
+	
+	###---------------------------------------------------------------------------------------------------- task
+    def task task_id
         """Retrieve the sub-client for manipulating a single task.
 
         Args:
             task_id (str): ID of the task to be manipulated
         """
-        return TaskClient(resource_id=task_id, **self._options())
-
-    def tasks(self) -> TaskCollectionClient:
+        TaskClient.new resource_id: task_id, **_options
+	end
+    def tasks
         """Retrieve the sub-client for manipulating tasks."""
-        return TaskCollectionClient(**self._options())
-=end
+        TaskCollectionClient.new **_options
+	end
 
 	###---------------------------------------------------------------------------------------------------- user
-    def user user_id: nil
+    def user user_id=nil
         """Retrieve the sub-client for querying users.
 
         Args:

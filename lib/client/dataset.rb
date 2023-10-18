@@ -2,16 +2,31 @@ require_relative 'base/resource_client'
 
 module Apify
 
+module Models # apify-shared
+
+	class ListPage
+		"""A single page of items returned from a list() method."""
+
+		attr_accessor :items, :count, :offset, :limit, :total, :desc
+
+		def initialize data
+			"""Initialize a ListPage instance from the API response data."""
+			@items 	= data['items'] || []
+			@offset	= data['offset'] || 0
+			@limit 	= data['limit'] || 0
+			@count 	= data['count'] || @items.length
+			@total 	= data['total'] || (@offset + @count)
+			@desc 	= data['desc'] || false
+		end
+	end
+end
+
 class DatasetClient < ResourceClient
     """Sub-client for manipulating a single dataset."""
-
+	
     def initialize **kwargs
         """Initialize the DatasetClient."""
-        #resource_path = kwargs.pop('resource_path', 'datasets')
-        #super().__init__(*args, resource_path=resource_path, **kwargs)
-		
-		kwargs[:resource_path] ||= 'datasets'
-		super **kwargs
+		super resource_path: 'datasets', **kwargs 
 	end
 
     def get
@@ -96,37 +111,32 @@ class DatasetClient < ResourceClient
             view: view
         )
 
-        tmp = @http_client.call url: _url(path: 'items'), method: 'GET', params: request_params
+        res = @http_client.call url: _url('items'), method: 'GET', params: request_params
 		
-		response = tmp[:response] 
-		data = tmp[:parsed]		
-        # data = response.json()
+		response = res[:response]		
+		data = res[:parsed]
 
-        # ListPage.new \
-		{
-            items: data || [], # data,
-            total: response['x-apify-pagination-total'].to_i,  # int
-            offset: response['x-apify-pagination-offset'].to_i, # int
-            count: (data ? data.length : 0),  # because x-apify-pagination-count returns invalid values when hidden/empty items are skipped
-            limit: response['x-apify-pagination-limit'], # int  # API returns 999999999999 when no limit is used
-            desc: response['x-apify-pagination-desc'] == 'true'
-		}
+        Models::ListPage.new({
+            'items' 	=> data, # data,
+            'total'		=> response['x-apify-pagination-total'].to_i,  # int
+            'offset' 	=> response['x-apify-pagination-offset'].to_i, # int
+            'count'		=> (data ? data.length : 0),  # because x-apify-pagination-count returns invalid values when hidden/empty items are skipped
+            'limit' 	=> response['x-apify-pagination-limit'].to_i, # int  # API returns 999999999999 when no limit is used
+            'desc' 		=> response['x-apify-pagination-desc'] == 'true'
+		})
 	end
 	
-=begin
     def iterate_items(
-        self,
-        *,
-        offset: int = 0,
-        limit: Optional[int] = None,
-        clean: Optional[bool] = None,
-        desc: Optional[bool] = None,
-        fields: Optional[List[str]] = None,
-        omit: Optional[List[str]] = None,
-        unwind: Optional[str] = None,
-        skip_empty: Optional[bool] = None,
-        skip_hidden: Optional[bool] = None,
-    ) -> Iterator[Dict]:
+        offset: 0,
+        limit: nil,
+        clean: nil,
+        desc: nil,
+        fields: nil,
+        omit: nil,
+        unwind: nil,
+        skip_empty: nil,
+        skip_hidden: nil
+    )
         """Iterate over the items in the dataset.
 
         https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items
@@ -157,40 +167,46 @@ class DatasetClient < ResourceClient
             dict: An item from the dataset
         """
         cache_size = 1000
-
-        should_finish = False
         read_items = 0
 
         # We can't rely on ListPage.total because that is updated with a delay,
         # so if you try to read the dataset items right after a run finishes, you could miss some.
         # Instead, we just read and read until we reach the limit, or until there are no more items to read.
-        while not should_finish:
+
+		while true #!should_finish
+			
             effective_limit = cache_size
-            if limit is not None:
-                if read_items == limit:
-                    break
-                effective_limit = min(cache_size, limit - read_items)
+			if limit 
+                break if read_items >= limit
+                effective_limit = [cache_size, limit-read_items].min
+			end
+			
+			## p "PAGE: #{offset + read_items} #{effective_limit}"
+			
+            items_page = list_items(
+                offset: 		offset + read_items,
+                limit: 			effective_limit,
+                clean: 			clean,
+                desc: 			desc,
+                fields: 		fields,
+                omit: 			omit,
+                unwind: 		unwind,
+                skip_empty: 	skip_empty,
+                skip_hidden: 	skip_hidden
+            ) 
 
-            current_items_page = self.list_items(
-                offset=offset + read_items,
-                limit=effective_limit,
-                clean=clean,
-                desc=desc,
-                fields=fields,
-                omit=omit,
-                unwind=unwind,
-                skip_empty=skip_empty,
-                skip_hidden=skip_hidden,
-            )
+			items = items_page.items 
+			
+			items.each { |item| yield item }
 
-            yield from current_items_page.items
+            size = items.length
+            read_items += size
 
-            current_page_item_count = len(current_items_page.items)
-            read_items += current_page_item_count
+            break if size < cache_size
+		end
+	end
 
-            if current_page_item_count < cache_size:
-                should_finish = True
-
+=begin
     def download_items(
         self,
         *,
@@ -277,27 +293,26 @@ class DatasetClient < ResourceClient
             xml_row=xml_row,
             flatten=flatten,
         )
+=end
 
     def get_items_as_bytes(
-        self,
-        *,
-        item_format: str = 'json',
-        offset: Optional[int] = None,
-        limit: Optional[int] = None,
-        desc: Optional[bool] = None,
-        clean: Optional[bool] = None,
-        bom: Optional[bool] = None,
-        delimiter: Optional[str] = None,
-        fields: Optional[List[str]] = None,
-        omit: Optional[List[str]] = None,
-        unwind: Optional[str] = None,
-        skip_empty: Optional[bool] = None,
-        skip_header_row: Optional[bool] = None,
-        skip_hidden: Optional[bool] = None,
-        xml_root: Optional[str] = None,
-        xml_row: Optional[str] = None,
-        flatten: Optional[List[str]] = None,
-    ) -> bytes:
+        item_format: 'json',
+        offset: nil,
+        limit: nil,
+        desc: nil,
+        clean: nil,
+        bom: nil,
+        delimiter: nil,
+        fields: nil,
+        omit: nil,
+        unwind: nil,
+        skip_empty: nil,
+        skip_header_row: nil,
+        skip_hidden: nil,
+        xml_root: nil,
+        xml_row: nil,
+        flatten: nil
+    )
         """Get the items in the dataset as raw bytes.
 
         https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items
@@ -338,34 +353,30 @@ class DatasetClient < ResourceClient
         Returns:
             bytes: The dataset items as raw bytes
         """
-        request_params = self._params(
-            format=item_format,
-            offset=offset,
-            limit=limit,
-            desc=desc,
-            clean=clean,
-            bom=bom,
-            delimiter=delimiter,
-            fields=fields,
-            omit=omit,
-            unwind=unwind,
-            skipEmpty=skip_empty,
-            skipHeaderRow=skip_header_row,
-            skipHidden=skip_hidden,
-            xmlRoot=xml_root,
-            xmlRow=xml_row,
-            flatten=flatten,
+        request_params = _params(
+            format: 		item_format,
+            offset: 		offset,
+            limit: 			limit,
+            desc: 			desc,
+            clean: 			clean,
+            bom: 			bom,
+            delimiter: 		delimiter,
+            fields: 		fields,
+            omit: 			omit,
+            unwind: 		unwind,
+            skipEmpty: 		skip_empty,
+            skipHeaderRow: 	skip_header_row,
+            skipHidden: 	skip_hidden,
+            xmlRoot: 		xml_root,
+            xmlRow: 		xml_row,
+            flatten: 		flatten
         )
 
-        response = self.http_client.call(
-            url=self._url('items'),
-            method='GET',
-            params=request_params,
-            parse_response=False,
-        )
-
-        return response.content
-
+        res = @http_client.call url: _url('items'), method: 'GET', params: request_params, parse_response: false		
+        res[:response].body
+	end
+	
+=begin
     @contextmanager
     def stream_items(
         self,
@@ -477,13 +488,13 @@ class DatasetClient < ResourceClient
 		end
 		
         @http_client.call(
-            url: _url(path: 'items'),
+            url: _url('items'),
             method: 'POST',
             headers: {'content-type': 'application/json; charset=utf-8'},
-            params: _params(),
+            params: _params,
             data: data,
             json: json
-        )
+        )[:parsed]
 	end
 	
 end
@@ -492,24 +503,12 @@ end
 class DatasetCollectionClient < ResourceCollectionClient
     """Sub-client for manipulating datasets."""
 
-    def initialize **kwargs # (self, *args: Any, **kwargs: Any) -> None:
+    def initialize **kwargs
         """Initialize the DatasetCollectionClient with the passed arguments."""
-        # resource_path = kwargs.pop('resource_path', 'datasets')
-        # super().__init__(*args, resource_path=resource_path, **kwargs)
-		
-		kwargs[:resource_path] ||= 'datasets'
-		super **kwargs
+		super resource_path: 'datasets', **kwargs
 	end 
 
-=begin
-    def list(
-        self,
-        *,
-        unnamed: Optional[bool] = None,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
-        desc: Optional[bool] = None,
-    ) -> ListPage[Dict]:
+    def list unnamed: nil, limit: nil, offset: nil, desc: nil
         """List the available datasets.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset-collection/get-list-of-datasets
@@ -523,9 +522,9 @@ class DatasetCollectionClient < ResourceCollectionClient
         Returns:
             ListPage: The list of available datasets matching the specified filters.
         """
-        return self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
-=end
-
+        _list unnamed: unnamed, limit: limit, offset: offset, desc: desc
+	end
+	
     def get_or_create name: nil, schema: nil
         """Retrieve a named dataset, or create a new one when it doesn't exist.
 
@@ -538,9 +537,11 @@ class DatasetCollectionClient < ResourceCollectionClient
         Returns:
             dict: The retrieved or newly-created dataset.
         """
-		raise "TODO: filter_out_none_values_recursively" if schema
+		###
+		raise "TODO: filter_out_none_values_recursively" if schema	
+        ###
 		
-        _get_or_create name:name #, resource: filter_out_none_values_recursively({'schema': schema}))
+		_get_or_create name: name #, resource: filter_out_none_values_recursively({'schema': schema}))
 	end
 
 end

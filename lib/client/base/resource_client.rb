@@ -5,86 +5,55 @@ module Apify
 class ResourceClient < BaseClient
     """Base class for sub-clients manipulating a single resource."""
 
-    def _get
-        #try:
-            #response = @http_client.call( url: @url, method: 'GET', params: @_params )
+    def _get		
+		#try:
+			res = @http_client.call url: @url, method: 'GET', params: _params
+			res && res.dig(:parsed, "data")
 			#return parse_date_fields(_pluck_data(response.json()))
-			
-			tmp = @http_client.call( url: @url, method: 'GET', params: @_params )
-			
-			if tmp
-				return tmp.dig(:parsed, "data")
-			end
-
         #except ApifyApiError as exc:
         #    _catch_not_found_or_throw(exc)
-
-        return nil
 	end
 	
-=begin
-    def _update(self, updated_fields: Dict) -> Dict:
-        response = self.http_client.call(
-            url=self._url(),
-            method='PUT',
-            params=self._params(),
-            json=updated_fields,
-        )
+    def _update updated_fields
+        res = @http_client.call url: _url, method: 'PUT', params: _params, json: updated_fields
+        res && res.dig(:parsed, "data")
+		#return parse_date_fields(_pluck_data(response.json()))
+	end
+	
+    def _delete
+        #try:
+            @http_client.call url: _url, method: 'DELETE', params: _params
+        #except ApifyApiError as exc:
+        #    _catch_not_found_or_throw(exc)
+		nil
+	end
 
-        return parse_date_fields(_pluck_data(response.json()))
-
-    def _delete(self) -> None:
-        try:
-            self.http_client.call(
-                url=self._url(),
-                method='DELETE',
-                params=self._params(),
-            )
-
-        except ApifyApiError as exc:
-            _catch_not_found_or_throw(exc)
-
-=end
 end
 
 ################################################################################################################################
 class ResourceCollectionClient < BaseClient
     """Base class for sub-clients manipulating a resource collection."""
-=begin
-    def _list(self, **kwargs: Any) -> ListPage:
-        response = self.http_client.call(
-            url=self._url(),
-            method='GET',
-            params=self._params(**kwargs),
-        )
 
-        return ListPage(parse_date_fields(_pluck_data(response.json())))
+    def _list **kwargs
+        res = @http_client.call url: _url, method:	'GET', params:	_params(**kwargs)		
+		data = res && res.dig(:parsed, "data")
+		# data = Utils::parse_date_fields(data)
 
-    def _create(self, resource: Dict) -> Dict:
-        response = self.http_client.call(
-            url=self._url(),
-            method='POST',
-            params=self._params(),
-            json=resource,
-        )
-
-        return parse_date_fields(_pluck_data(response.json()))
-=end
-    
-	def _get_or_create name: nil, resource: nil
+		Models::ListPage.new data
+        # return ListPage(parse_date_fields(_pluck_data(response.json())))
+	end
 	
-        tmp = @http_client.call(
-            url: _url(),
-            method: 'POST',
-            params: _params(name: name),
-            json: resource
-        )
-		
-		tmp.dig(:parsed, "data")
-		# raise "TODO"
+    def _create resource
+        res = @http_client.call url: _url, method: 'POST', params: _params, json: resource
+		res && res.dig(:parsed, "data")
         # return parse_date_fields(_pluck_data(response.json()))
 	end
-
+    
+	def _get_or_create name:, resource: nil
+        res = @http_client.call url: _url, method: 'POST', params: _params(name: name), json: resource		
+		res && res.dig(:parsed, "data")
+        # return parse_date_fields(_pluck_data(response.json()))
+	end
 end
 		
 end
