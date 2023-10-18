@@ -6,4 +6,4 @@ require_relative 'proxy'
 require_relative 'actor'
 
 #require 'apify_client_unofficial'
-require_relative 'client/apify_client_unofficial'
+require_relative 'client/apify_client'
