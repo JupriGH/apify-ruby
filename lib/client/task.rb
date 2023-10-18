@@ -1,5 +1,4 @@
-from typing import Any, Dict, List, Optional, cast
-
+=begin
 from apify_shared.consts import ActorJobStatus, MetaOrigin
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs, maybe_extract_enum_member_value, parse_date_fields
 
@@ -9,6 +8,7 @@ from ..base import ResourceClient, ResourceClientAsync
 from .run import RunClient, RunClientAsync
 from .run_collection import RunCollectionClient, RunCollectionClientAsync
 from .webhook_collection import WebhookCollectionClient, WebhookCollectionClientAsync
+=end
 
 module Apify 
 
@@ -36,18 +36,17 @@ def _get_task_representation(
         'input': task_input,
         'title': title,
     }
+=end
 
-
-class TaskClient(ResourceClient):
+class TaskClient < ResourceClient
     """Sub-client for manipulating a single task."""
 
-    @ignore_docs
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def initialize **kwargs
         """Initialize the TaskClient."""
-        resource_path = kwargs.pop('resource_path', 'actor-tasks')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
-
-    def get(self) -> Optional[Dict]:
+        super resource_path: 'actor-tasks', **kwargs
+	end
+	
+    def get
         """Retrieve the task.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-object/get-task
@@ -55,8 +54,10 @@ class TaskClient(ResourceClient):
         Returns:
             dict, optional: The retrieved task
         """
-        return self._get()
+        _get
+	end
 
+=begin
     def update(
         self,
         *,
@@ -271,33 +272,27 @@ class TaskClient(ResourceClient):
     def webhooks(self) -> WebhookCollectionClient:
         """Retrieve a client for webhooks associated with this task."""
         return WebhookCollectionClient(**self._sub_resource_init_options())
+=end
 
+end
 
-from typing import Any, Dict, Optional
-
+=begin
 from apify_shared.models import ListPage
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
 
 from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
 from .task import _get_task_representation
+=end
 
-
-class TaskCollectionClient(ResourceCollectionClient):
+class TaskCollectionClient < ResourceCollectionClient
     """Sub-client for manipulating tasks."""
 
-    @ignore_docs
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def initialize **kwargs
         """Initialize the TaskCollectionClient."""
-        resource_path = kwargs.pop('resource_path', 'actor-tasks')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
-
-    def list(
-        self,
-        *,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
-        desc: Optional[bool] = None,
-    ) -> ListPage[Dict]:
+        super resource_path: 'actor-tasks', **kwargs
+	end
+	
+    def list limit: nil, offset: nil, desc: nil
         """List the available tasks.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-collection/get-list-of-tasks
@@ -310,8 +305,10 @@ class TaskCollectionClient(ResourceCollectionClient):
         Returns:
             ListPage: The list of available tasks matching the specified filters.
         """
-        return self._list(limit=limit, offset=offset, desc=desc)
-
+        _list limit: limit, offset: offset, desc: desc
+	end
+	
+=begin
     def create(
         self,
         *,
@@ -358,5 +355,6 @@ class TaskCollectionClient(ResourceCollectionClient):
         return self._create(filter_out_none_values_recursively(task_representation))
 
 =end
+end
 
 end

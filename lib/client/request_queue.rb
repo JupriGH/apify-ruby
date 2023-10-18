@@ -1,30 +1,25 @@
-from typing import Any, Dict, List, Optional
-
+=begin
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs, parse_date_fields
-
 from ..._errors import ApifyApiError
 from ..._utils import _catch_not_found_or_throw, _pluck_data
-from ..base import ResourceClient, ResourceClientAsync
+=end
 
 module Apify
 
-=begin
-
-class RequestQueueClient(ResourceClient):
+class RequestQueueClient < ResourceClient
     """Sub-client for manipulating a single request queue."""
 
-    @ignore_docs
-    def __init__(self, *args: Any, client_key: Optional[str] = None, **kwargs: Any) -> None:
+    def initialize client_key: nil, **kwargs
         """Initialize the RequestQueueClient.
 
         Args:
             client_key (str, optional): A unique identifier of the client accessing the request queue
         """
-        resource_path = kwargs.pop('resource_path', 'request-queues')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
-        self.client_key = client_key
-
-    def get(self) -> Optional[Dict]:
+        super resource_path: 'request-queues', **kwargs
+        @client_key = client_key
+	end
+	
+    def get
         """Retrieve the request queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue/get-request-queue
@@ -32,8 +27,9 @@ class RequestQueueClient(ResourceClient):
         Returns:
             dict, optional: The retrieved request queue, or None, if it does not exist
         """
-        return self._get()
-
+        _get
+	end
+=begin
     def update(self, *, name: Optional[str] = None) -> Dict:
         """Update the request queue with specified fields.
 
@@ -303,32 +299,23 @@ class RequestQueueClient(ResourceClient):
         )
 
         return parse_date_fields(_pluck_data(response.json()))
+=end
 
-from typing import Any, Dict, Optional
+end
 
+=begin
 from apify_shared.models import ListPage
-from apify_shared.utils import ignore_docs
+=end
 
-from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
-
-
-class RequestQueueCollectionClient(ResourceCollectionClient):
+class RequestQueueCollectionClient < ResourceCollectionClient
     """Sub-client for manipulating request queues."""
 
-    @ignore_docs
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def initialize **kwargs
         """Initialize the RequestQueueCollectionClient with the passed arguments."""
-        resource_path = kwargs.pop('resource_path', 'request-queues')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
-
-    def list(
-        self,
-        *,
-        unnamed: Optional[bool] = None,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
-        desc: Optional[bool] = None,
-    ) -> ListPage[Dict]:
+        super resource_path: 'request-queues', **kwargs
+	end
+	
+    def list unnamed: nil, limit: nil, offset: nil, desc: nil
         """List the available request queues.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue-collection/get-list-of-request-queues
@@ -342,9 +329,10 @@ class RequestQueueCollectionClient(ResourceCollectionClient):
         Returns:
             ListPage: The list of available request queues matching the specified filters.
         """
-        return self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
-
-    def get_or_create(self, *, name: Optional[str] = None) -> Dict:
+        _list unnamed: unnamed, limit: limit, offset: offset, desc: desc
+	end
+	
+    def get_or_create name: nil
         """Retrieve a named request queue, or create a new one when it doesn't exist.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue-collection/create-request-queue
@@ -355,8 +343,8 @@ class RequestQueueCollectionClient(ResourceCollectionClient):
         Returns:
             dict: The retrieved or newly-created request queue.
         """
-        return self._get_or_create(name=name)
-
-=end
+        _get_or_create name: name
+	end
+end
 
 end
