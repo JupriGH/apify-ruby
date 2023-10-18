@@ -71,7 +71,7 @@ def is_content_type_text(content_type: str) -> bool:
     return bool(re.search(r'^text/', content_type, flags=re.IGNORECASE))
 =end
 
-	def is_file_or_bytes value
+	def self.is_file_or_bytes value
 		"""Check if the input value is a file-like object or bytes.
 
 		The check for IOBase is not ideal, it would be better to use duck typing,

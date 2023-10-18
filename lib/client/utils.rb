@@ -150,7 +150,7 @@ def _encode_webhook_list_to_base64(webhooks: List[Dict]) -> str:
 
 =end
 
-	def _encode_key_value_store_record_value value, content_type
+	def self._encode_key_value_store_record_value value, content_type
 		if !content_type
 			if is_file_or_bytes value
 				content_type = 'application/octet-stream'

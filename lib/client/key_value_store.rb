@@ -76,7 +76,7 @@ class KeyValueStoreClient < ResourceClient
         Returns:
             dict, optional: The requested record, or None, if the record does not exist
         """
-        #try:
+        begin
 =begin            
 			raise 'You cannot have both as_bytes and as_file set.' if as_bytes and as_file # ValueError
 
@@ -105,17 +105,13 @@ class KeyValueStoreClient < ResourceClient
 			end
 =end			
             res = @http_client.call url: _url("records/#{key}"), method: 'GET', params: _params
-
-            { 
-				key: key, 
-				value: res[:parsed], 
-				content_type: res[:response]['content-type'] 
-			}
-
-        # except ApifyApiError as exc:
-        #    _catch_not_found_or_throw(exc)
+            return { key: key, value: res[:parsed], content_type: res[:response]['content-type'] }
+			
+        rescue ApifyApiError => exc
+			Utils::_catch_not_found_or_throw exc
+		end
 		
-		#return nil
+		nil
 	end
 
     def get_record_as_bytes key
@@ -129,19 +125,15 @@ class KeyValueStoreClient < ResourceClient
         Returns:
             dict, optional: The requested record, or None, if the record does not exist
         """
-        #try:
+        begin
             res = @http_client.call url: _url("records/#{key}"), method: 'GET', params: _params, parse_response: false
-
-            {
-                key: key,
-                value: res[:response].body,
-                content_type: res[:response]['content-type']
-            }
-
-        #except ApifyApiError as exc:
-        #    _catch_not_found_or_throw(exc)
-
-        #return None
+            return { key: key, value: res[:response].body, content_type: res[:response]['content-type'] }
+        
+		rescue ApifyApiError => exc
+            Utils::_catch_not_found_or_throw exc
+		end
+		
+        nil
 	end
 
 =begin
@@ -181,7 +173,7 @@ class KeyValueStoreClient < ResourceClient
                 response.close()
 =end
 
-    def set_record key, value=nil, content_type=nil
+    def set_record key, value, content_type=nil
         """Set a value to the given record in the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/put-record
@@ -195,12 +187,11 @@ class KeyValueStoreClient < ResourceClient
 
 		headers = content_type ? {'Content-Type': content_type} : nil
 		
-        @http_client.call \
-			url: _url(path: "records/#{key}"), method:'PUT', params:_params, data:value, headers:headers
+        @http_client.call url: _url("records/#{key}"), method:'PUT', params: _params, data: value, headers: headers
 	end
 	
-=begin
-    def delete_record(self, key: str) -> None:
+
+    def delete_record key
         """Delete the specified record from the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/delete-record
@@ -208,15 +199,12 @@ class KeyValueStoreClient < ResourceClient
         Args:
             key (str): The key of the record which to delete
         """
-        self.http_client.call(
-            url=self._url(f'records/{key}'),
-            method='DELETE',
-            params=self._params(),
-        )
-=end
+        @http_client.call url: _url("records/#{key}"), method: 'DELETE', params: _params
+	end
 end
 
 ################################################################################################################################
+
 class KeyValueStoreCollectionClient < ResourceCollectionClient
     """Sub-client for manipulating key-value stores."""
 

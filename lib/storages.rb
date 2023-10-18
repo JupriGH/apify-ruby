@@ -375,7 +375,9 @@ class KeyValueStore < BaseStorage
     def self._get_storage_collection_client client # Union[ApifyClientAsync, MemoryStorageClient],
         client.key_value_stores
 	end
-	
+		
+	###------------------------------------------------------------------- get_value
+
 =begin
     @overload
     @classmethod
@@ -393,7 +395,7 @@ class KeyValueStore < BaseStorage
         ...
 =end
 
-    def self.get_value key: nil, default_value: nil
+    def self.get_value key, default_value=nil
         """Get a value from the key-value store.
 
         Args:
@@ -404,10 +406,10 @@ class KeyValueStore < BaseStorage
             Any: The value associated with the given key. `default_value` is used in case the record does not exist.
         """
 
-        open.get_value(key, default_value)
+        open.get_value key, default_value
 	end
-    def get_value key, default_value
-        record = @_key_value_store_client.get_record(key)
+    def get_value key, default_value=nil
+        record = @_key_value_store_client.get_record key
 		record ? record[:value] : default_value
 	end
 	
@@ -433,6 +435,7 @@ class KeyValueStore < BaseStorage
             exclusive_start_key = list_keys['nextExclusiveStartKey']
 =end
 
+	###------------------------------------------------------------------- set_value
     def self.set_value key, value=nil, content_type=nil
         """Set or delete a value in the key-value store.
 
@@ -445,25 +448,21 @@ class KeyValueStore < BaseStorage
 	end
     def set_value key, value=nil, content_type=nil
         if value.nil?
-			raise "TODO"
             @_key_value_store_client.delete_record key
 		else
 			@_key_value_store_client.set_record key, value, content_type
 		end
 	end
 	
-=begin
-    @classmethod
-    async def get_public_url(cls, key: str) -> str:
+	###------------------------------------------------------------------- get_public_url
+    def self.get_public_url key
         """Get a URL for the given key that may be used to publicly access the value in the remote key-value store.
 
         Args:
             key (str): The key for which the URL should be generated.
         """
-        store = await cls.open()
-        return await store.get_public_url(key)
-
-=end
+        open.get_public_url key
+	end
     def get_public_url key
         # if not isinstance(self._key_value_store_client, KeyValueStoreClientAsync):
         #    raise RuntimeError('Cannot generate a public URL for this key-value store as it is not on the Apify Platform!')
