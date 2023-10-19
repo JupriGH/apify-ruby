@@ -1,4 +1,4 @@
-require_relative 'shared/consts'
+require_relative 'consts'
 
 require_relative 'config'
 require_relative 'event'

@@ -18,12 +18,9 @@ module ActorJobStatus
 	ABORTING = "ABORTING"
 	# Actor job aborted by user
 	ABORTED = "ABORTED"
-=begin
-@property
-def _is_terminal(self) -> bool:
+
 	"""Whether this actor job status is terminal."""
-	return self in (ActorJobStatus.SUCCEEDED, ActorJobStatus.FAILED, ActorJobStatus.TIMED_OUT, ActorJobStatus.ABORTED)
-=end
+	def self._is_terminal(status) = [SUCCEEDED, FAILED, TIMED_OUT, ABORTED].include?(status)
 end
 
 module ActorSourceType

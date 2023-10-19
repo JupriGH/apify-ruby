@@ -182,14 +182,10 @@ class ActorClient < ResourceClient
 	"""
     def start(
         run_input = nil,
-        content_type: nil,
-        build: nil,
-        max_items: nil,
-        memory_mbytes: nil,
-        timeout_secs: nil,
-        wait_for_finish: nil,
-        webhooks: nil
+        content_type: nil, build: nil, max_items: nil, memory_mbytes: nil, timeout_secs: nil, wait_for_finish: nil, webhooks: nil
     )
+		raise "TODO: webhooks" if webhooks 
+
         run_input, content_type = Utils::_encode_key_value_store_record_value(run_input, content_type)
 
         request_params = _params(
@@ -202,67 +198,55 @@ class ActorClient < ResourceClient
         )
 
         res = @http_client.call(
-            url: 		_url('runs'),
-            method: 	'POST',
-            headers:	{'content-type': content_type},
-            data:		run_input,
-            params:		request_params
+            url: _url('runs'),
+            method: 'POST',
+            headers: {'content-type': content_type},
+            data: run_input,
+            params: request_params
         )
 
 		res.dig(:parsed, "data")
         # parse_date_fields(_pluck_data(response.json()))
 	end
 	
-=begin
+	"""Start the actor and wait for it to finish before returning the Run object.
+
+	It waits indefinitely, unless the wait_secs argument is provided.
+
+	https://docs.apify.com/api/v2#/reference/actors/run-collection/run-actor
+
+	Args:
+		run_input (Any, optional): The input to pass to the actor run.
+		content_type (str, optional): The content type of the input.
+		build (str, optional): Specifies the actor build to run. It can be either a build tag or build number.
+							   By default, the run uses the build specified in the default run configuration for the actor (typically latest).
+		max_items (int, optional): Maximum number of results that will be returned by this run.
+								   If the Actor is charged per result, you will not be charged for more results than the given limit.
+		memory_mbytes (int, optional): Memory limit for the run, in megabytes.
+									   By default, the run uses a memory limit specified in the default run configuration for the actor.
+		timeout_secs (int, optional): Optional timeout for the run, in seconds.
+									  By default, the run uses timeout specified in the default run configuration for the actor.
+		webhooks (list, optional): Optional webhooks (https://docs.apify.com/webhooks) associated with the actor run,
+								   which can be used to receive a notification, e.g. when the actor finished or failed.
+								   If you already have a webhook set up for the actor, you do not have to add it again here.
+		wait_secs (int, optional): The maximum number of seconds the server waits for the run to finish. If not provided, waits indefinitely.
+
+	Returns:
+		dict: The run object
+	"""
     def call(
-        self,
-        *,
-        run_input: Optional[Any] = None,
-        content_type: Optional[str] = None,
-        build: Optional[str] = None,
-        max_items: Optional[int] = None,
-        memory_mbytes: Optional[int] = None,
-        timeout_secs: Optional[int] = None,
-        webhooks: Optional[List[Dict]] = None,
-        wait_secs: Optional[int] = None,
-    ) -> Optional[Dict]:
-        """Start the actor and wait for it to finish before returning the Run object.
-
-        It waits indefinitely, unless the wait_secs argument is provided.
-
-        https://docs.apify.com/api/v2#/reference/actors/run-collection/run-actor
-
-        Args:
-            run_input (Any, optional): The input to pass to the actor run.
-            content_type (str, optional): The content type of the input.
-            build (str, optional): Specifies the actor build to run. It can be either a build tag or build number.
-                                   By default, the run uses the build specified in the default run configuration for the actor (typically latest).
-            max_items (int, optional): Maximum number of results that will be returned by this run.
-                                       If the Actor is charged per result, you will not be charged for more results than the given limit.
-            memory_mbytes (int, optional): Memory limit for the run, in megabytes.
-                                           By default, the run uses a memory limit specified in the default run configuration for the actor.
-            timeout_secs (int, optional): Optional timeout for the run, in seconds.
-                                          By default, the run uses timeout specified in the default run configuration for the actor.
-            webhooks (list, optional): Optional webhooks (https://docs.apify.com/webhooks) associated with the actor run,
-                                       which can be used to receive a notification, e.g. when the actor finished or failed.
-                                       If you already have a webhook set up for the actor, you do not have to add it again here.
-            wait_secs (int, optional): The maximum number of seconds the server waits for the run to finish. If not provided, waits indefinitely.
-
-        Returns:
-            dict: The run object
-        """
-        started_run = self.start(
-            run_input=run_input,
-            content_type=content_type,
-            build=build,
-            max_items=max_items,
-            memory_mbytes=memory_mbytes,
-            timeout_secs=timeout_secs,
-            webhooks=webhooks,
+        run_input = nil,
+        content_type: nil, build: nil, max_items: nil, memory_mbytes: nil, timeout_secs: nil, webhooks: nil, wait_secs: nil
+    )
+        started_run = start( 
+			run_input,
+            content_type: content_type, build: build, max_items: max_items, memory_mbytes: memory_mbytes, timeout_secs: timeout_secs, webhooks: webhooks
         )
-
-        return self.root_client.run(started_run['id']).wait_for_finish(wait_secs=wait_secs)
-
+		
+        @root_client.run(started_run['id']).wait_for_finish wait_secs
+	end
+	
+=begin
     def build(
         self,
         *,
