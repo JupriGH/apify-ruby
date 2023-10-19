@@ -1,3 +1,5 @@
+require_relative 'shared/consts'
+
 require_relative 'config'
 require_relative 'event'
 require_relative 'storages'

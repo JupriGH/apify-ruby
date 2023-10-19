@@ -20,6 +20,8 @@ class WebhookDispatchClient < ResourceClient
 	end
 end
 
+### WebhookDispatchCollectionClient
+
 class WebhookDispatchCollectionClient < ResourceCollectionClient
     """Sub-client for listing webhook dispatches."""
 

@@ -180,7 +180,7 @@ class ApifyClient ## < BaseApifyClient
 	end
     def request_queues
         """Retrieve the sub-client for manipulating request queues."""
-        RequestQueueCollectionClient.new **options
+        RequestQueueCollectionClient.new **_options
 	end
 	
 	###---------------------------------------------------------------------------------------------------- webhook

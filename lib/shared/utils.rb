@@ -88,16 +88,18 @@ def is_content_type_text(content_type: str) -> bool:
 def json_dumps(obj: Any) -> str:
     """Dump JSON to a string with the correct settings and serializer."""
     return json.dumps(obj, ensure_ascii=False, indent=2, default=str)
+=end
 
+=begin
+	def maybe_extract_enum_member_value maybe_enum_member
+		"""Extract the value of an enumeration member if it is an Enum, otherwise return the original value."""
+		if isinstance(maybe_enum_member, Enum):
+			return maybe_enum_member.value
+		return maybe_enum_member
+	end
+=end
 
-@ignore_docs
-def maybe_extract_enum_member_value(maybe_enum_member: Any) -> Any:
-    """Extract the value of an enumeration member if it is an Enum, otherwise return the original value."""
-    if isinstance(maybe_enum_member, Enum):
-        return maybe_enum_member.value
-    return maybe_enum_member
-
-
+=begin
 	def parse_date_fields data, max_depth: PARSE_DATE_FIELDS_MAX_DEPTH
 		"""Recursively parse date fields in a list or dictionary up to the specified depth."""
 		if max_depth < 0:

@@ -220,7 +220,9 @@ class HTTPClient < BaseHTTPClient
 				req = Net::HTTP::Put.new uri
 				req.body = content if content				
 			when 'GET'
-				req = Net::HTTP::Get.new uri			
+				req = Net::HTTP::Get.new uri
+			when 'DELETE'
+				req = Net::HTTP::Delete.new uri
 			else
 				raise "UNSUPPORTED_METHOD #{method}"
 			end

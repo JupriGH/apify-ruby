@@ -6,30 +6,29 @@ from ..._utils import _catch_not_found_or_throw, _pluck_data_as_list
 
 module Apify
 
-=begin
-
-def _get_schedule_representation(
-    cron_expression: Optional[str] = None,
-    is_enabled: Optional[bool] = None,
-    is_exclusive: Optional[bool] = None,
-    name: Optional[str] = None,
-    actions: Optional[List[Dict]] = None,
-    description: Optional[str] = None,
-    timezone: Optional[str] = None,
-    title: Optional[str] = None,
-) -> Dict:
-    return {
-        'cronExpression': cron_expression,
-        'isEnabled': is_enabled,
-        'isExclusive': is_exclusive,
-        'name': name,
-        'actions': actions,
-        'description': description,
-        'timezone': timezone,
-        'title': title,
-    }
-
-=end
+module Utils
+	def self._get_schedule_representation(
+		cron_expression: nil,
+		is_enabled: nil,
+		is_exclusive: nil,
+		name: nil,
+		actions: nil,
+		description: nil,
+		timezone: nil,
+		title: nil
+	)
+		{
+			'cronExpression' 	=> cron_expression,
+			'isEnabled'			=> is_enabled,
+			'isExclusive'		=> is_exclusive,
+			'name'				=> name,
+			'actions'			=> actions,
+			'description'		=> description,
+			'timezone'			=> timezone,
+			'title'				=> title
+		}
+	end
+end
 
 class ScheduleClient < ResourceClient
     """Sub-client for manipulating a single schedule."""
@@ -50,19 +49,16 @@ class ScheduleClient < ResourceClient
         _get
 	end
 
-=begin
     def update(
-        self,
-        *,
-        cron_expression: Optional[str] = None,
-        is_enabled: Optional[bool] = None,
-        is_exclusive: Optional[bool] = None,
-        name: Optional[str] = None,
-        actions: Optional[List[Dict]] = None,
-        description: Optional[str] = None,
-        timezone: Optional[str] = None,
-        title: Optional[str] = None,
-    ) -> Dict:
+        cron_expression: nil,
+        is_enabled: nil,
+        is_exclusive: nil,
+        name: nil,
+        actions: nil,
+        description: nil,
+        timezone: nil,
+        title: nil
+    )
         """Update the schedule with specified fields.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedule-object/update-schedule
@@ -81,27 +77,28 @@ class ScheduleClient < ResourceClient
         Returns:
             dict: The updated schedule
         """
-        schedule_representation = _get_schedule_representation(
-            cron_expression=cron_expression,
-            is_enabled=is_enabled,
-            is_exclusive=is_exclusive,
-            name=name,
-            actions=actions,
-            description=description,
-            timezone=timezone,
-            title=title,
+        schedule_representation = Utils::filter_out_none_values_recursively Utils::_get_schedule_representation(
+            cron_expression: cron_expression,
+            is_enabled: is_enabled,
+            is_exclusive: is_exclusive,
+            name: name,
+            actions: actions,
+            description: description,
+            timezone: timezone,
+            title: title
         )
-
-        return self._update(filter_out_none_values_recursively(schedule_representation))
-
-    def delete(self) -> None:
+		
+        _update schedule_representation
+	end
+	
+    def delete
         """Delete the schedule.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedule-object/delete-schedule
         """
-        self._delete()
-=end
-
+        _delete
+	end
+	
     def get_log
         """Return log for the given schedule.
 

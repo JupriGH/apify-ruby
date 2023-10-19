@@ -50,6 +50,8 @@ class BuildClient < ActorJobBaseClient
 =end
 end
 
+### BuildCollectionClient
+
 class BuildCollectionClient < ResourceCollectionClient
     """Sub-client for listing actor builds."""
 

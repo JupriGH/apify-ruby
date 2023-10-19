@@ -1,9 +1,6 @@
 require 'net/http'
 require 'json'
 
-require_relative 'consts'
-require_relative 'log'
-
 module Apify
 
 =begin

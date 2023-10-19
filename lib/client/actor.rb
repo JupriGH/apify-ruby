@@ -370,16 +370,9 @@ class ActorClient < ResourceClient
 end
 
 =begin
-
-from typing import Any, Dict, List, Optional
-
-from apify_shared.models import ListPage
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
-
-from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
 from .actor import _get_actor_representation
 =end
-
 
 
 class ActorCollectionClient < ResourceCollectionClient

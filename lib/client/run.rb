@@ -1,11 +1,6 @@
 =begin
-
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs, parse_date_fields
-
 from ..._utils import _encode_key_value_store_record_value, _pluck_data, _to_safe_id
-from ..base import ActorJobBaseClient, ActorJobBaseClientAsync
-from .key_value_store import KeyValueStoreClient, KeyValueStoreClientAsync
-from .log import LogClient, LogClientAsync
 =end
 
 module Apify
@@ -226,15 +221,10 @@ class RunClient < ActorJobBaseClient
 end
 
 =begin
-
-from typing import Any, Dict, Optional
-
-from apify_shared.consts import ActorJobStatus
-from apify_shared.models import ListPage
 from apify_shared.utils import ignore_docs, maybe_extract_enum_member_value
-
-from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
 =end
+
+### RunCollectionClient
 
 class RunCollectionClient < ResourceCollectionClient
     """Sub-client for listing actor runs."""
@@ -244,12 +234,7 @@ class RunCollectionClient < ResourceCollectionClient
         super resource_path: 'actor-runs', **kwargs
 	end
 	
-    def list(
-        limit: nil,
-        offset: nil,
-        desc: nil,
-        status: nil
-    )
+    def list limit: nil, offset: nil, desc: nil, status: nil
         """List all actor runs (either of a single actor, or all user's actors, depending on where this client was initialized from).
 
         https://docs.apify.com/api/v2#/reference/actors/run-collection/get-list-of-runs
@@ -265,7 +250,7 @@ class RunCollectionClient < ResourceCollectionClient
         Returns:
             ListPage: The retrieved actor runs
         """
-        _list limit: limit, offset: offset, desc: desc #, status: maybe_extract_enum_member_value(status)
+        _list limit: limit, offset: offset, desc: desc, status: status # Utils::maybe_extract_enum_member_value(status)
 	end
 end
 

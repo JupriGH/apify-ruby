@@ -29,8 +29,8 @@ class RequestQueueClient < ResourceClient
         """
         _get
 	end
-=begin
-    def update(self, *, name: Optional[str] = None) -> Dict:
+
+    def update name: nil, title: nil
         """Update the request queue with specified fields.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue/update-request-queue
@@ -41,20 +41,20 @@ class RequestQueueClient < ResourceClient
         Returns:
             dict: The updated request queue
         """
-        updated_fields = {
-            'name': name,
-        }
-
-        return self._update(filter_out_none_values_recursively(updated_fields))
-
-    def delete(self) -> None:
+        updated_fields = Utils::filter_out_none_values_recursively({ 'name': name, 'title': title })
+		
+        _update updated_fields
+	end
+	
+    def delete
         """Delete the request queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue/delete-request-queue
         """
-        return self._delete()
+        _delete
+	end
 
-    def list_head(self, *, limit: Optional[int] = None) -> Dict:
+    def list_head limit: nil
         """Retrieve a given number of requests from the beginning of the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue-head/get-head
@@ -65,17 +65,14 @@ class RequestQueueClient < ResourceClient
         Returns:
             dict: The desired number of requests from the beginning of the queue.
         """
-        request_params = self._params(limit=limit, clientKey=self.client_key)
+        request_params = _params limit: limit, clientKey: @client_key
 
-        response = self.http_client.call(
-            url=self._url('head'),
-            method='GET',
-            params=request_params,
-        )
-
-        return parse_date_fields(_pluck_data(response.json()))
-
-    def list_and_lock_head(self, *, lock_secs: int, limit: Optional[int] = None) -> Dict:
+        res = @http_client.call url: _url('head'), method: 'GET', params: request_params
+		res && res.dig(:parsed, 'data')
+        #return parse_date_fields(_pluck_data(response.json()))
+	end
+	
+    def list_and_lock_head lock_secs: nil, limit: nil
         """Retrieve a given number of unlocked requests from the beginning of the queue and lock them for a given time.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue-head-with-locks/get-head-and-lock
@@ -88,17 +85,14 @@ class RequestQueueClient < ResourceClient
         Returns:
             dict: The desired number of locked requests from the beginning of the queue.
         """
-        request_params = self._params(lockSecs=lock_secs, limit=limit, clientKey=self.client_key)
+        request_params = _params lockSecs: lock_secs, limit: limit, clientKey: @client_key
 
-        response = self.http_client.call(
-            url=self._url('head/lock'),
-            method='POST',
-            params=request_params,
-        )
+        res = @http_client.call url: _url('head/lock'), method: 'POST', params: request_params
+        res && res.dig(:parsed, 'data')
+        #return parse_date_fields(_pluck_data(response.json()))
+	end
 
-        return parse_date_fields(_pluck_data(response.json()))
-
-    def add_request(self, request: Dict, *, forefront: Optional[bool] = None) -> Dict:
+    def add_request request, forefront: nil
         """Add a request to the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request-collection/add-request
@@ -110,21 +104,16 @@ class RequestQueueClient < ResourceClient
         Returns:
             dict: The added request.
         """
-        request_params = self._params(
-            forefront=forefront,
-            clientKey=self.client_key,
-        )
+        request_params = _params forefront: forefront, clientKey: @client_key
 
-        response = self.http_client.call(
-            url=self._url('requests'),
-            method='POST',
-            json=request,
-            params=request_params,
-        )
-
-        return parse_date_fields(_pluck_data(response.json()))
-
-    def get_request(self, request_id: str) -> Optional[Dict]:
+        res = @http_client.call url: _url('requests'), method: 'POST', json: request, params: request_params
+		res && res.dig(:parsed, 'data')
+        #return parse_date_fields(_pluck_data(response.json()))
+	end
+	
+	### TODO: def ... rescue ... end
+	
+    def get_request request_id
         """Retrieve a request from the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request/get-request
@@ -135,20 +124,16 @@ class RequestQueueClient < ResourceClient
         Returns:
             dict, optional: The retrieved request, or None, if it did not exist.
         """
-        try:
-            response = self.http_client.call(
-                url=self._url(f'requests/{request_id}'),
-                method='GET',
-                params=self._params(),
-            )
-            return parse_date_fields(_pluck_data(response.json()))
 
-        except ApifyApiError as exc:
-            _catch_not_found_or_throw(exc)
+		res = @http_client.call url: _url("requests/#{request_id}"), method: 'GET', params: _params
+		return res && res.dig(:parsed, 'data')
+		#return parse_date_fields(_pluck_data(response.json()))
+		
+    rescue ApifyApiError => exc
+		Utils::_catch_not_found_or_throw exc
+	end
 
-        return None
-
-    def update_request(self, request: Dict, *, forefront: Optional[bool] = None) -> Dict:
+    def update_request request, forefront: nil
         """Update a request in the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request/update-request
@@ -160,23 +145,16 @@ class RequestQueueClient < ResourceClient
         Returns:
             dict: The updated request
         """
-        request_id = request['id']
+        request_id = request['id'] # maybe nil ?
 
-        request_params = self._params(
-            forefront=forefront,
-            clientKey=self.client_key,
-        )
+        request_params = _params forefront: forefront, clientKey: @client_key
 
-        response = self.http_client.call(
-            url=self._url(f'requests/{request_id}'),
-            method='PUT',
-            json=request,
-            params=request_params,
-        )
-
-        return parse_date_fields(_pluck_data(response.json()))
-
-    def delete_request(self, request_id: str) -> None:
+        res = @http_client.call url: _url("requests/#{request_id}"), method: 'PUT', json: request, params: request_params
+		res && res.dig(:parsed, 'data')
+        #return parse_date_fields(_pluck_data(response.json()))
+	end
+	
+    def delete_request request_id 
         """Delete a request from the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request/delete-request
@@ -184,17 +162,13 @@ class RequestQueueClient < ResourceClient
         Args:
             request_id (str): ID of the request to delete.
         """
-        request_params = self._params(
-            clientKey=self.client_key,
-        )
+        request_params = _params clientKey: @client_key
 
-        self.http_client.call(
-            url=self._url(f'requests/{request_id}'),
-            method='DELETE',
-            params=request_params,
-        )
+        @http_client.call url: _url("requests/#{request_id}"), method: 'DELETE', params: request_params
+		nil
+	end
 
-    def prolong_request_lock(self, request_id: str, *, forefront: Optional[bool] = None, lock_secs: int) -> Dict:
+    def prolong_request_lock request_id, forefront: nil, lock_secs: nil
         """Prolong the lock on a request.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request-lock/prolong-request-lock
@@ -204,21 +178,14 @@ class RequestQueueClient < ResourceClient
             forefront (bool, optional): Whether to put the request in the beginning or the end of the queue after lock expires
             lock_secs (int): By how much to prolong the lock, in seconds
         """
-        request_params = self._params(
-            clientKey=self.client_key,
-            forefront=forefront,
-            lockSecs=lock_secs,
-        )
+        request_params = _params clientKey: @client_key, forefront: forefront, lockSecs: lock_secs
 
-        response = self.http_client.call(
-            url=self._url(f'requests/{request_id}/lock'),
-            method='PUT',
-            params=request_params,
-        )
-
-        return parse_date_fields(_pluck_data(response.json()))
-
-    def delete_request_lock(self, request_id: str, *, forefront: Optional[bool] = None) -> None:
+        res = @http_client.call url: _url("requests/#{request_id}/lock"), method: 'PUT', params: request_params
+		res && res.dig(:parsed, 'data')
+        #return parse_date_fields(_pluck_data(response.json()))
+	end
+	
+    def delete_request_lock request_id, forefront: nil
         """Delete the lock on a request.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request-lock/delete-request-lock
@@ -227,18 +194,13 @@ class RequestQueueClient < ResourceClient
             request_id (str): ID of the request to delete the lock
             forefront (bool, optional): Whether to put the request in the beginning or the end of the queue after the lock is deleted
         """
-        request_params = self._params(
-            clientKey=self.client_key,
-            forefront=forefront,
-        )
+        request_params = _params clientKey: @client_key, forefront: forefront
 
-        self.http_client.call(
-            url=self._url(f'requests/{request_id}/lock'),
-            method='DELETE',
-            params=request_params,
-        )
+        @http_client.call url: _url("requests/#{request_id}/lock"), method: 'DELETE', params: request_params
+		nil
+	end
 
-    def batch_add_requests(self, requests: List[Dict[str, Any]], *, forefront: Optional[bool] = None) -> Dict:
+    def batch_add_requests requests, forefront: nil
         """Add requests to the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/add-requests
@@ -247,20 +209,17 @@ class RequestQueueClient < ResourceClient
             requests (List[Dict[str, Any]]): List of the requests to add
             forefront (bool, optional): Whether to add the requests to the head or the end of the queue
         """
-        request_params = self._params(
-            clientKey=self.client_key,
-            forefront=forefront,
-        )
+        request_params = _params clientKey: @client_key, forefront: forefront
 
-        response = self.http_client.call(
-            url=self._url('requests/batch'),
-            method='POST',
-            params=request_params,
-            json=requests,
-        )
-        return parse_date_fields(_pluck_data(response.json()))
-
-    def batch_delete_requests(self, requests: List[Dict[str, Any]]) -> Dict:
+		# TODO
+		# res = _http_post 'requests/batch', json: requests, params: request_params
+		
+        res = @http_client.call url: _url('requests/batch'), method: 'POST', json: requests, params: request_params
+		res && res.dig(:parsed, 'data')
+        #return parse_date_fields(_pluck_data(response.json()))
+	end
+	
+    def batch_delete_requests requests
         """Delete given requests from the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/delete-requests
@@ -268,20 +227,14 @@ class RequestQueueClient < ResourceClient
         Args:
             requests (List[Dict[str, Any]]): List of the requests to delete
         """
-        request_params = self._params(
-            clientKey=self.client_key,
-        )
+        request_params = _params clientKey: @client_key
 
-        response = self.http_client.call(
-            url=self._url('requests/batch'),
-            method='DELETE',
-            params=request_params,
-            json=requests,
-        )
-
-        return parse_date_fields(_pluck_data(response.json()))
-
-    def list_requests(self, *, limit: Optional[int] = None, exclusive_start_id: Optional[str] = None) -> Dict:
+        res = @http_client.call url: _url('requests/batch'), method: 'DELETE', json: requests, params: request_params
+		res && res.dig(:parsed, 'data')
+        #return parse_date_fields(_pluck_data(response.json()))
+	end
+	
+    def list_requests limit: nil, exclusive_start_id: nil
         """List requests in the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request-collection/list-requests
@@ -290,22 +243,15 @@ class RequestQueueClient < ResourceClient
             limit (int, optional): How many requests to retrieve
             exclusive_start_id (str, optional): All requests up to this one (including) are skipped from the result
         """
-        request_params = self._params(limit=limit, exclusive_start_id=exclusive_start_id, clientKey=self.client_key)
+        request_params = _params limit: limit, exclusive_start_id: exclusive_start_id, clientKey: @client_key
 
-        response = self.http_client.call(
-            url=self._url('requests'),
-            method='GET',
-            params=request_params,
-        )
-
-        return parse_date_fields(_pluck_data(response.json()))
-=end
-
+        res = @http_client.call url: _url('requests'), method: 'GET', params: request_params
+		res && res.dig(:parsed, 'data')
+        #return parse_date_fields(_pluck_data(response.json()))
+	end
 end
 
-=begin
-from apify_shared.models import ListPage
-=end
+### RequestQueueCollectionClient
 
 class RequestQueueCollectionClient < ResourceCollectionClient
     """Sub-client for manipulating request queues."""

@@ -1,5 +1,3 @@
-require_relative 'consts'
-
 def getenv(key, default=nil)
 	val = ENV[key] # string or nil	
 	if val.nil? || val.empty?
