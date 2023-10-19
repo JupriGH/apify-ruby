@@ -32,7 +32,6 @@ class Actor
 		@_config 		= config || Configuration.new		
 		@_apify_client 	= new_client
 		#@_event_manager = EventManager.new @_config
-
 		@_is_initialized = false
 	end
 
@@ -77,12 +76,10 @@ class Actor
 
 	"""The ApifyClientAsync instance the Actor instance uses."""	
 	def self.apify_client = _get_default_instance.apify_client
-	
 	def apify_client = @_apify_client
 
 	"""The Configuration instance the Actor instance uses."""
 	def self.config = _get_default_instance.config
-
 	def config = @_config
 	
 =begin
@@ -128,11 +125,8 @@ class Actor
 
 		# TODO: Print outdated SDK version warning (we need a new env var for this)
 
-		StorageClientManager.set_config(@_config)
-
-		if @_config.token
-			StorageClientManager.set_cloud_client(@_apify_client)
-		end
+		StorageClientManager.set_config(@_config)		
+		StorageClientManager.set_cloud_client(@_apify_client) if @_config.token
 		
 		### EVENT MANAGER
 
@@ -645,7 +639,8 @@ class Actor
 		_get_default_instance.start(
 			actor_id, run_input,
 			token: token,
-			content_type: content_type, build: build, memory_mbytes: memory_mbytes, timeout_secs: timeout_secs, wait_for_finish: wait_for_finish, webhooks: webhooks
+			content_type: content_type, build: build, memory_mbytes: memory_mbytes, timeout_secs: timeout_secs, 
+			wait_for_finish: wait_for_finish, webhooks: webhooks
 		)
 	end
 	
@@ -659,7 +654,8 @@ class Actor
 		client = token ? new_client(token) : @_apify_client
 		client.actor(actor_id).start(
 			run_input,
-			content_type: content_type, build: build, memory_mbytes: memory_mbytes, timeout_secs: timeout_secs, wait_for_finish: wait_for_finish, webhooks: webhooks
+			content_type: content_type, build: build, memory_mbytes: memory_mbytes, timeout_secs: timeout_secs, 
+			wait_for_finish: wait_for_finish, webhooks: webhooks
 		)
 	end
 
