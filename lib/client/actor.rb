@@ -290,57 +290,53 @@ class ActorClient < ResourceClient
         )
 
         return parse_date_fields(_pluck_data(response.json()))
-
-    def builds(self) -> BuildCollectionClient:
-        """Retrieve a client for the builds of this actor."""
-        return BuildCollectionClient(**self._sub_resource_init_options(resource_path='builds'))
-
-    def runs(self) -> RunCollectionClient:
-        """Retrieve a client for the runs of this actor."""
-        return RunCollectionClient(**self._sub_resource_init_options(resource_path='runs'))
-
-    def last_run(self, *, status: Optional[ActorJobStatus] = None, origin: Optional[MetaOrigin] = None) -> RunClient:
-        """Retrieve the client for the last run of this actor.
-
-        Last run is retrieved based on the start time of the runs.
-
-        Args:
-            status (ActorJobStatus, optional): Consider only runs with this status.
-            origin (MetaOrigin, optional): Consider only runs started with this origin.
-
-        Returns:
-            RunClient: The resource client for the last run of this actor.
-        """
-        return RunClient(**self._sub_resource_init_options(
-            resource_id='last',
-            resource_path='runs',
-            params=self._params(
-                status=maybe_extract_enum_member_value(status),
-                origin=maybe_extract_enum_member_value(origin),
-            ),
-        ))
-
-    def versions(self) -> ActorVersionCollectionClient:
-        """Retrieve a client for the versions of this actor."""
-        return ActorVersionCollectionClient(**self._sub_resource_init_options())
-
-    def version(self, version_number: str) -> ActorVersionClient:
-        """Retrieve the client for the specified version of this actor.
-
-        Args:
-            version_number (str): The version number for which to retrieve the resource client.
-
-        Returns:
-            ActorVersionClient: The resource client for the specified actor version.
-        """
-        return ActorVersionClient(**self._sub_resource_init_options(resource_id=version_number))
-
-    def webhooks(self) -> WebhookCollectionClient:
-        """Retrieve a client for webhooks associated with this actor."""
-        return WebhookCollectionClient(**self._sub_resource_init_options())
-
 =end
 
+	"""Retrieve a client for the builds of this actor."""
+    def builds = BuildCollectionClient.new(**_sub_resource_init_options(resource_path: 'builds'))
+	
+	"""Retrieve a client for the runs of this actor."""
+    def runs = RunCollectionClient.new(**_sub_resource_init_options(resource_path: 'runs'))
+
+	"""Retrieve the client for the last run of this actor.
+
+	Last run is retrieved based on the start time of the runs.
+
+	Args:
+		status (ActorJobStatus, optional): Consider only runs with this status.
+		origin (MetaOrigin, optional): Consider only runs started with this origin.
+
+	Returns:
+		RunClient: The resource client for the last run of this actor.
+	"""
+    def last_run status: nil, origin: nil
+        RunClient.new(
+			**_sub_resource_init_options(
+				resource_id: 'last',
+				resource_path: 'runs',
+				params: _params(
+					status: status, # maybe_extract_enum_member_value(status),
+					origin: origin 	# maybe_extract_enum_member_value(origin),
+				),
+			)
+		)
+	end
+
+	"""Retrieve a client for the versions of this actor."""	
+    def versions = ActorVersionCollectionClient.new(**_sub_resource_init_options)
+
+	"""Retrieve the client for the specified version of this actor.
+
+	Args:
+		version_number (str): The version number for which to retrieve the resource client.
+
+	Returns:
+		ActorVersionClient: The resource client for the specified actor version.
+	"""
+    def version(version_number) = ActorVersionClient.new(**_sub_resource_init_options(resource_id: version_number))
+
+	"""Retrieve a client for webhooks associated with this actor."""
+    def webhooks = WebhookCollectionClient.new(**_sub_resource_init_options)
 end
 
 =begin
