@@ -32,6 +32,7 @@ class KeyValueStoreClient < ResourceClient
         """
         updated_fields = Utils::filter_out_none_values_recursively({ name: name, title: title })
 		
+		# if updated_fields.length > 0
         _update updated_fields
 	end
 	
@@ -203,7 +204,7 @@ class KeyValueStoreClient < ResourceClient
 	end
 end
 
-################################################################################################################################
+### KeyValueStoreCollectionClient
 
 class KeyValueStoreCollectionClient < ResourceCollectionClient
     """Sub-client for manipulating key-value stores."""
@@ -242,12 +243,10 @@ class KeyValueStoreCollectionClient < ResourceCollectionClient
         Returns:
             dict: The retrieved or newly-created key-value store.
         """
-		## TODO
-		raise "TODO: filter_out_none_values_recursively" if schema
+		resource = Utils::filter_out_none_values_recursively({'schema': schema})
 		
-        _get_or_create name: name #, resource=filter_out_none_values_recursively({'schema': schema}))
+        _get_or_create name: name, resource: resource
 	end
-	
 end
 
 end

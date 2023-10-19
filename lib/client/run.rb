@@ -1,14 +1,11 @@
 =begin
-from typing import Any, Dict, Optional
 
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs, parse_date_fields
 
 from ..._utils import _encode_key_value_store_record_value, _pluck_data, _to_safe_id
 from ..base import ActorJobBaseClient, ActorJobBaseClientAsync
-from .dataset import DatasetClient, DatasetClientAsync
 from .key_value_store import KeyValueStoreClient, KeyValueStoreClientAsync
 from .log import LogClient, LogClientAsync
-from .request_queue import RequestQueueClient, RequestQueueClientAsync
 =end
 
 module Apify
@@ -31,9 +28,8 @@ class RunClient < ActorJobBaseClient
         """
         _get
 	end
-	
-=begin
-    def update(self, *, status_message: Optional[str] = None, is_status_message_terminal: Optional[bool] = None) -> Dict:
+
+    def update status_message: nil, is_status_message_terminal: nil
         """Update the run with the specified fields.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/run-object/update-run
@@ -45,21 +41,23 @@ class RunClient < ActorJobBaseClient
         Returns:
             dict: The updated run
         """
-        updated_fields = {
+        updated_fields = Utils::filter_out_none_values_recursively({
             'statusMessage': status_message,
-            'isStatusMessageTerminal': is_status_message_terminal,
-        }
+            'isStatusMessageTerminal': is_status_message_terminal
+        })
 
-        return self._update(filter_out_none_values_recursively(updated_fields))
-
-    def delete(self) -> None:
+        _update updated_fields
+	end
+	
+    def delete
         """Delete the run.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/delete-run/delete-run
         """
-        return self._delete()
-
-    def abort(self, *, gracefully: Optional[bool] = None) -> Dict:
+        _delete
+	end
+	
+    def abort gracefully=false
         """Abort the actor run which is starting or currently running and return its details.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/abort-run/abort-run
@@ -72,9 +70,10 @@ class RunClient < ActorJobBaseClient
         Returns:
             dict: The data of the aborted actor run
         """
-        return self._abort(gracefully=gracefully)
-
-    def wait_for_finish(self, *, wait_secs: Optional[int] = None) -> Optional[Dict]:
+        _abort gracefully
+	end
+	
+    def wait_for_finish wait_secs=nil
         """Wait synchronously until the run finishes or the server times out.
 
         Args:
@@ -84,8 +83,9 @@ class RunClient < ActorJobBaseClient
             dict, optional: The actor run data. If the status on the object is not one of the terminal statuses
                 (SUCEEDED, FAILED, TIMED_OUT, ABORTED), then the run has not yet finished.
         """
-        return self._wait_for_finish(wait_secs=wait_secs)
-
+        _wait_for_finish wait_secs
+	end
+=begin
     def metamorph(
         self,
         *,

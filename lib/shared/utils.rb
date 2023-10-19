@@ -31,7 +31,7 @@ def self.filter_out_none_values_recursively dictionary
 	_filter_out_none_values_recursively_internal dictionary
 end
 
-def self._filter_out_none_values_recursively_internal dictionary, remove_empty_dicts: false
+def self._filter_out_none_values_recursively_internal dictionary, remove_empty_dicts=false
     """Recursively filters out None values from a dictionary.
 
     Unfortunately, it's necessary to have an internal function for the correct result typing,

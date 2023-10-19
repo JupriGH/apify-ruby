@@ -37,8 +37,8 @@ class DatasetClient < ResourceClient
         """
         _get
 	end
-=begin
-    def update(self, *, name: Optional[str] = None) -> Dict:
+
+    def update name: nil, title: nil
         """Update the dataset with specified fields.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset/update-dataset
@@ -49,20 +49,20 @@ class DatasetClient < ResourceClient
         Returns:
             dict: The updated dataset
         """
-        updated_fields = {
-            'name': name,
-        }
-
-        return self._update(filter_out_none_values_recursively(updated_fields))
-
-    def delete(self) -> None:
+        updated_fields = Utils::filter_out_none_values_recursively({ 'name': name, 'title': title })
+		
+		# if updated_fields.length > 0
+        _update updated_fields
+	end
+	
+    def delete
         """Delete the dataset.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset/delete-dataset
         """
-        return self._delete()
-=end
-
+        _delete
+	end
+	
     def list_items offset: nil, limit: nil, clean: nil, desc: nil, fields: nil, omit: nil, unwind: nil, skip_empty: nil, skip_hidden: nil, flatten: nil, view: nil
         """List the items of the dataset.
 
@@ -481,7 +481,7 @@ class DatasetClient < ResourceClient
 
         if items.class == String
             data = items
-        else
+        else # Hash/dict
             json = items
 		end
 		
@@ -497,7 +497,8 @@ class DatasetClient < ResourceClient
 	
 end
 
-################################################################################################################################
+### DatasetCollectionClient
+
 class DatasetCollectionClient < ResourceCollectionClient
     """Sub-client for manipulating datasets."""
 
@@ -535,11 +536,9 @@ class DatasetCollectionClient < ResourceCollectionClient
         Returns:
             dict: The retrieved or newly-created dataset.
         """
-		###
-		raise "TODO: filter_out_none_values_recursively" if schema	
-        ###
+		resource = Utils::filter_out_none_values_recursively({'schema': schema})
 		
-		_get_or_create name: name #, resource: filter_out_none_values_recursively({'schema': schema}))
+		_get_or_create name: name, resource: resource
 	end
 
 end
