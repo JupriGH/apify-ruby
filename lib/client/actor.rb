@@ -55,24 +55,22 @@ def _get_actor_representation(
 
 module Apify
 
-=begin
-Sub-client for manipulating a single actor.
-=end
+
+# Sub-client for manipulating a single actor.
+
 class ActorClient < ResourceClient
 
-=begin
-	Initialize the ActorClient.
-=end
+
+	# Initialize the ActorClient.
 	def initialize(**kwargs) = super(resource_path: 'acts', **kwargs)
 
-=begin
-	Retrieve the actor.
 
-	https://docs.apify.com/api/v2#/reference/actors/actor-object/get-actor
-
-	Returns:
-		dict, optional: The retrieved actor
-=end
+	# Retrieve the actor.
+	#
+	# https://docs.apify.com/api/v2#/reference/actors/actor-object/get-actor
+	#
+	# Returns:
+	# 	dict, optional: The retrieved actor
     def get = _get
 
 
@@ -155,36 +153,36 @@ class ActorClient < ResourceClient
         return self._delete()
 =end
 
-	"""
-	Start the actor and immediately return the Run object.
 
-	https://docs.apify.com/api/v2#/reference/actors/run-collection/run-actor
+	# Start the actor and immediately return the Run object.
+	# 
+	# https://docs.apify.com/api/v2#/reference/actors/run-collection/run-actor
+	# 
+	# Args:
+	# 	run_input (Any, optional): The input to pass to the actor run.
+	# 	content_type (str, optional): The content type of the input.
+	# 	build (str, optional): Specifies the actor build to run. It can be either a build tag or build number.
+	# 						   By default, the run uses the build specified in the default run configuration for the actor (typically latest).
+	# 	max_items (int, optional): Maximum number of results that will be returned by this run.
+	# 							   If the Actor is charged per result, you will not be charged for more results than the given limit.
+	# 	memory_mbytes (int, optional): Memory limit for the run, in megabytes.
+	# 								   By default, the run uses a memory limit specified in the default run configuration for the actor.
+	# 	timeout_secs (int, optional): Optional timeout for the run, in seconds.
+	# 								  By default, the run uses timeout specified in the default run configuration for the actor.
+	# 	wait_for_finish (int, optional): The maximum number of seconds the server waits for the run to finish.
+	# 									   By default, it is 0, the maximum value is 60.
+	# 	webhooks (list of dict, optional): Optional ad-hoc webhooks (https://docs.apify.com/webhooks/ad-hoc-webhooks)
+	# 									   associated with the actor run which can be used to receive a notification,
+	# 									   e.g. when the actor finished or failed.
+	# 									   If you already have a webhook set up for the actor or task, you do not have to add it again here.
+	# 									   Each webhook is represented by a dictionary containing these items:
+	# 									   * ``event_types``: list of ``WebhookEventType`` values which trigger the webhook
+	# 									   * ``request_url``: URL to which to send the webhook HTTP request
+	# 									   * ``payload_template`` (optional): Optional template for the request payload
+	# 
+	# Returns:
+	# 	dict: The run object
 
-	Args:
-		run_input (Any, optional): The input to pass to the actor run.
-		content_type (str, optional): The content type of the input.
-		build (str, optional): Specifies the actor build to run. It can be either a build tag or build number.
-							   By default, the run uses the build specified in the default run configuration for the actor (typically latest).
-		max_items (int, optional): Maximum number of results that will be returned by this run.
-								   If the Actor is charged per result, you will not be charged for more results than the given limit.
-		memory_mbytes (int, optional): Memory limit for the run, in megabytes.
-									   By default, the run uses a memory limit specified in the default run configuration for the actor.
-		timeout_secs (int, optional): Optional timeout for the run, in seconds.
-									  By default, the run uses timeout specified in the default run configuration for the actor.
-		wait_for_finish (int, optional): The maximum number of seconds the server waits for the run to finish.
-										   By default, it is 0, the maximum value is 60.
-		webhooks (list of dict, optional): Optional ad-hoc webhooks (https://docs.apify.com/webhooks/ad-hoc-webhooks)
-										   associated with the actor run which can be used to receive a notification,
-										   e.g. when the actor finished or failed.
-										   If you already have a webhook set up for the actor or task, you do not have to add it again here.
-										   Each webhook is represented by a dictionary containing these items:
-										   * ``event_types``: list of ``WebhookEventType`` values which trigger the webhook
-										   * ``request_url``: URL to which to send the webhook HTTP request
-										   * ``payload_template`` (optional): Optional template for the request payload
-
-	Returns:
-		dict: The run object
-	"""
     def start(
         run_input = nil,
         content_type: nil,
