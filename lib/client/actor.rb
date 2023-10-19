@@ -55,24 +55,24 @@ def _get_actor_representation(
 
 module Apify
 
-"""
+=begin
 Sub-client for manipulating a single actor.
-"""
+=end
 class ActorClient < ResourceClient
 
-	"""
+=begin
 	Initialize the ActorClient.
-	"""
+=end
 	def initialize(**kwargs) = super(resource_path: 'acts', **kwargs)
 
-	"""
+=begin
 	Retrieve the actor.
 
 	https://docs.apify.com/api/v2#/reference/actors/actor-object/get-actor
 
 	Returns:
 		dict, optional: The retrieved actor
-	"""
+=end
     def get = _get
 
 
