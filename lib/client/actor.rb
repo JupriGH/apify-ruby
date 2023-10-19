@@ -55,14 +55,18 @@ def _get_actor_representation(
 
 module Apify
 
-"""Sub-client for manipulating a single actor."""
+"""
+Sub-client for manipulating a single actor.
+"""
 class ActorClient < ResourceClient
 
-	"""Initialize the ActorClient."""
+	"""
+	Initialize the ActorClient.
+	"""
 	def initialize(**kwargs) = super(resource_path: 'acts', **kwargs)
 
-
-	"""Retrieve the actor.
+	"""
+	Retrieve the actor.
 
 	https://docs.apify.com/api/v2#/reference/actors/actor-object/get-actor
 
@@ -151,7 +155,8 @@ class ActorClient < ResourceClient
         return self._delete()
 =end
 
-	"""Start the actor and immediately return the Run object.
+	"""
+	Start the actor and immediately return the Run object.
 
 	https://docs.apify.com/api/v2#/reference/actors/run-collection/run-actor
 
@@ -365,13 +370,18 @@ from .actor import _get_actor_representation
 =end
 
 
-"""Sub-client for manipulating actors."""
+"""
+Sub-client for manipulating actors.
+"""
 class ActorCollectionClient < ResourceCollectionClient
 
-    """Initialize the ActorCollectionClient."""
+    """
+	Initialize the ActorCollectionClient.
+	"""
     def initialize(**kwargs) = super(resource_path: 'acts', **kwargs) 
 
-	"""List the actors the user has created or used.
+	"""
+	List the actors the user has created or used.
 
 	https://docs.apify.com/api/v2#/reference/actors/actor-collection/get-list-of-actors
 
