@@ -55,22 +55,22 @@ class BaseApifyClient ### Base for Sync and Async client
 end
 =end
 
+"""The Apify API client."""
 class ApifyClient ## < BaseApifyClient
-    """The Apify API client."""
-
+    
     @http_client # _HTTPClient
 
-    def initialize token=nil, api_url: nil, max_retries: 8, min_delay_between_retries_millis: 500, timeout_secs: 360
-        """Initialize the ApifyClient.
+	"""Initialize the ApifyClient.
 
-        Args:
-            token (str, optional): The Apify API token
-            api_url (str, optional): The URL of the Apify API server to which to connect to. Defaults to https://api.apify.com
-            max_retries (int, optional): How many times to retry a failed request at most
-            min_delay_between_retries_millis (int, optional): How long will the client wait between retrying requests
-                (increases exponentially from this value)
-            timeout_secs (int, optional): The socket timeout of the HTTP requests sent to the Apify API
-        """
+	Args:
+		token (str, optional): The Apify API token
+		api_url (str, optional): The URL of the Apify API server to which to connect to. Defaults to https://api.apify.com
+		max_retries (int, optional): How many times to retry a failed request at most
+		min_delay_between_retries_millis (int, optional): How long will the client wait between retrying requests
+			(increases exponentially from this value)
+		timeout_secs (int, optional): The socket timeout of the HTTP requests sent to the Apify API
+	"""
+    def initialize token=nil, api_url: nil, max_retries: 8, min_delay_between_retries_millis: 500, timeout_secs: 360
 =begin
         super(
             token, 
@@ -99,170 +99,179 @@ class ApifyClient ## < BaseApifyClient
 	end
 	
 	###---------------------------------------------------------------------------------------------------- actor
-    def actor actor_id
-        """Retrieve the sub-client for manipulating a single actor.
+	"""Retrieve the sub-client for manipulating a single actor.
 
-        Args:
-            actor_id (str): ID of the actor to be manipulated
-        """
+	Args:
+		actor_id (str): ID of the actor to be manipulated
+	"""
+    def actor actor_id
         ActorClient.new resource_id: actor_id, **_options
 	end
+	
+	"""Retrieve the sub-client for manipulating actors."""
     def actors
-        """Retrieve the sub-client for manipulating actors."""
         ActorCollectionClient.new **_options
 	end
 	
 	###---------------------------------------------------------------------------------------------------- build
-    def build build_id
-        """Retrieve the sub-client for manipulating a single actor build.
+	"""Retrieve the sub-client for manipulating a single actor build.
 
-        Args:
-            build_id (str): ID of the actor build to be manipulated
-        """
+	Args:
+		build_id (str): ID of the actor build to be manipulated
+	"""
+    def build build_id
         BuildClient.new resource_id: build_id, **_options
 	end
+	
+    """Retrieve the sub-client for querying multiple builds of a user."""
     def builds
-        """Retrieve the sub-client for querying multiple builds of a user."""
         BuildCollectionClient.new **_options
 	end
 	
 	###---------------------------------------------------------------------------------------------------- run
-    def run run_id
-        """Retrieve the sub-client for manipulating a single actor run.
+	"""Retrieve the sub-client for manipulating a single actor run.
 
-        Args:
-            run_id (str): ID of the actor run to be manipulated
-        """
+	Args:
+		run_id (str): ID of the actor run to be manipulated
+	"""
+    def run run_id
         RunClient.new resource_id: run_id, **_options
 	end
+	
+	"""Retrieve the sub-client for querying multiple actor runs of a user."""
     def runs
-        """Retrieve the sub-client for querying multiple actor runs of a user."""
         RunCollectionClient.new **_options
 	end
 	
 	###---------------------------------------------------------------------------------------------------- dataset
-    def dataset dataset_id
-        """Retrieve the sub-client for manipulating a single dataset.
+	"""Retrieve the sub-client for manipulating a single dataset.
 
-        Args:
-            dataset_id (str): ID of the dataset to be manipulated
-        """
+	Args:
+		dataset_id (str): ID of the dataset to be manipulated
+	"""
+    def dataset dataset_id
         DatasetClient.new resource_id: dataset_id, **_options
 	end
-    def datasets
-        """Retrieve the sub-client for manipulating datasets."""
+
+	"""Retrieve the sub-client for manipulating datasets."""
+	def datasets
         DatasetCollectionClient.new **_options
 	end
 	
 	###---------------------------------------------------------------------------------------------------- key_value_store
-    def key_value_store key_value_store_id
-        """Retrieve the sub-client for manipulating a single key-value store.
+	"""Retrieve the sub-client for manipulating a single key-value store.
 
-        Args:
-            key_value_store_id (str): ID of the key-value store to be manipulated
-        """
+	Args:
+		key_value_store_id (str): ID of the key-value store to be manipulated
+	"""
+    def key_value_store key_value_store_id
         KeyValueStoreClient.new resource_id: key_value_store_id, **_options
 	end
+	
+    """Retrieve the sub-client for manipulating key-value stores."""
     def key_value_stores
-        """Retrieve the sub-client for manipulating key-value stores."""
         KeyValueStoreCollectionClient.new **_options
 	end
 	
 	###---------------------------------------------------------------------------------------------------- request_queue
-    def request_queue request_queue_id, client_key: nil
-        """Retrieve the sub-client for manipulating a single request queue.
+	"""Retrieve the sub-client for manipulating a single request queue.
 
-        Args:
-            request_queue_id (str): ID of the request queue to be manipulated
-            client_key (str): A unique identifier of the client accessing the request queue
-        """
+	Args:
+		request_queue_id (str): ID of the request queue to be manipulated
+		client_key (str): A unique identifier of the client accessing the request queue
+	"""
+    def request_queue request_queue_id, client_key: nil
         RequestQueueClient.new resource_id: request_queue_id, client_key: client_key, **_options
 	end
+
+	"""Retrieve the sub-client for manipulating request queues."""
     def request_queues
-        """Retrieve the sub-client for manipulating request queues."""
         RequestQueueCollectionClient.new **_options
 	end
 	
 	###---------------------------------------------------------------------------------------------------- webhook
 
-    def webhook webhook_id
-        """Retrieve the sub-client for manipulating a single webhook.
+	"""Retrieve the sub-client for manipulating a single webhook.
 
-        Args:
-            webhook_id (str): ID of the webhook to be manipulated
-        """
+	Args:
+		webhook_id (str): ID of the webhook to be manipulated
+	"""
+    def webhook webhook_id
         WebhookClient.new resource_id: webhook_id, **_options
 	end
+    
+	"""Retrieve the sub-client for querying multiple webhooks of a user."""
     def webhooks
-        """Retrieve the sub-client for querying multiple webhooks of a user."""
         WebhookCollectionClient.new **_options
 	end
 	
 	###---------------------------------------------------------------------------------------------------- webhook_dispatch
-    def webhook_dispatch webhook_dispatch_id
-        """Retrieve the sub-client for accessing a single webhook dispatch.
+	"""Retrieve the sub-client for accessing a single webhook dispatch.
 
-        Args:
-            webhook_dispatch_id (str): ID of the webhook dispatch to access
-        """
+	Args:
+		webhook_dispatch_id (str): ID of the webhook dispatch to access
+	"""
+    def webhook_dispatch webhook_dispatch_id
         WebhookDispatchClient.new resource_id: webhook_dispatch_id, **_options
 	end
+	
+	"""Retrieve the sub-client for querying multiple webhook dispatches of a user."""
     def webhook_dispatches
-        """Retrieve the sub-client for querying multiple webhook dispatches of a user."""
         WebhookDispatchCollectionClient.new **_options
 	end
 	
 	###---------------------------------------------------------------------------------------------------- schedule
-    def schedule schedule_id
-        """Retrieve the sub-client for manipulating a single schedule.
+	"""Retrieve the sub-client for manipulating a single schedule.
 
-        Args:
-            schedule_id (str): ID of the schedule to be manipulated
-        """
+	Args:
+		schedule_id (str): ID of the schedule to be manipulated
+	"""
+    def schedule schedule_id
         ScheduleClient.new resource_id: schedule_id, **_options
 	end
+	
+	"""Retrieve the sub-client for manipulating schedules."""
     def schedules
-        """Retrieve the sub-client for manipulating schedules."""
         ScheduleCollectionClient.new **_options
 	end
 	
 	###---------------------------------------------------------------------------------------------------- log
-    def log build_or_run_id
-        """Retrieve the sub-client for retrieving logs.
+	"""Retrieve the sub-client for retrieving logs.
 
-        Args:
-            build_or_run_id (str): ID of the actor build or run for which to access the log
-        """
+	Args:
+		build_or_run_id (str): ID of the actor build or run for which to access the log
+	"""
+    def log build_or_run_id
         LogClient.new resource_id: build_or_run_id, **_options
 	end
 	
 	###---------------------------------------------------------------------------------------------------- task
-    def task task_id
-        """Retrieve the sub-client for manipulating a single task.
+	"""Retrieve the sub-client for manipulating a single task.
 
-        Args:
-            task_id (str): ID of the task to be manipulated
-        """
+	Args:
+		task_id (str): ID of the task to be manipulated
+	"""
+    def task task_id
         TaskClient.new resource_id: task_id, **_options
 	end
+	"""Retrieve the sub-client for manipulating tasks."""
     def tasks
-        """Retrieve the sub-client for manipulating tasks."""
         TaskCollectionClient.new **_options
 	end
 
 	###---------------------------------------------------------------------------------------------------- user
-    def user user_id=nil
-        """Retrieve the sub-client for querying users.
+	"""Retrieve the sub-client for querying users.
 
-        Args:
-            user_id (str, optional): ID of user to be queried. If None, queries the user belonging to the token supplied to the client
-        """
+	Args:
+		user_id (str, optional): ID of user to be queried. If None, queries the user belonging to the token supplied to the client
+	"""
+    def user user_id=nil
         UserClient.new resource_id: user_id, **_options
 	end
 
 	###---------------------------------------------------------------------------------------------------- store
+	"""Retrieve the sub-client for Apify store."""
     def store
-        """Retrieve the sub-client for Apify store."""
         StoreCollectionClient.new **_options
 	end
 end
