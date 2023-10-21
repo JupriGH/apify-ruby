@@ -1,4 +1,7 @@
-#require 'async'
+require 'async'
+require 'async/io/stream'
+require 'async/http/endpoint'
+require 'async/websocket/client'
 #require 'async/io/stream'
 #require 'async/websocent'
 
@@ -53,6 +56,9 @@ module Apify
 			@_initialized = false
 			#@_listener_tasks = set()
 			#@_listeners_to_wrappers = defaultdict(lambda: defaultdict(list))
+
+			##
+			@_connected_to_platform_websocket = false
 		end
 
 		"""Initialize the event manager.
@@ -61,25 +67,27 @@ module Apify
 		send by the platform to the events websocket and emitting them as events
 		that can be listened to by the `Actor.on()` method.
 		"""
-		def init			
-			_process_platform_messages
-			return
-			
-			raise 'EventManager was already initialized!' if @_initialized # RuntimeError
+		def init
+			Async {
+				p "EventManager.init"
+				sleep 2
+				raise 'EventManager was already initialized!' if @_initialized # RuntimeError
 
-			# Run tasks but don't await them
-			if @_config.actor_events_ws_url
-				#self._connected_to_platform_websocket = asyncio.Future()
-				#self._process_platform_messages_task = asyncio.create_task(self._process_platform_messages())
-				#is_connected = await self._connected_to_platform_websocket
-				raise 'Error connecting to platform events websocket!' unless is_connected # RuntimeError
-			else
-				Log.debug 'APIFY_ACTOR_EVENTS_WS_URL env var not set, no events from Apify platform will be emitted.'
-			end
-			
-			@_initialized = true
-			
-			raise
+				# Run tasks but don't await them
+				if true # @_config.actor_events_ws_url
+					#self._connected_to_platform_websocket = asyncio.Future()
+					#self._process_platform_messages_task = asyncio.create_task(self._process_platform_messages())
+
+					_process_platform_messages.wait
+					
+					is_connected = @_connected_to_platform_websocket
+					raise 'Error connecting to platform events websocket!' unless is_connected # RuntimeError
+				else
+					Log.debug 'APIFY_ACTOR_EVENTS_WS_URL env var not set, no events from Apify platform will be emitted.'
+				end
+				
+				@_initialized = true
+			}
 		end
 
 		"""Initialize the event manager.
@@ -229,6 +237,35 @@ module Apify
 				await _wait_for_listeners()
 =end
 		def _process_platform_messages
+			return Async {
+				url = @_config.actor_events_ws_url
+				#url = 'ws://127.0.0.1:9999'
+				
+				endpoint = Async::HTTP::Endpoint.parse(url)
+				
+				#sleep 3
+				begin
+					Async::WebSocket::Client.connect(endpoint) do |connection|	
+						p "WS CONNECTED"
+						@_connected_to_platform_websocket = true
+
+						Async {
+							while message = connection.read
+								p message.buffer
+								#msg = JSON.parse(message.buffer, symbolize_names: true)
+								#p msg[:name]
+							end
+						}
+					end.wait
+				rescue Exception => exc
+					p "WS ERROR:"
+					p exc
+				end
+				p "RETURN ..."
+			}
+			###################################################################################################
+			return
+		
 			# This should be called only on the platform, where we have the ACTOR_EVENTS_WS_URL configured
 
 			#Async do
@@ -245,7 +282,15 @@ module Apify
 				#client.write("Hello, WebSocket!")
 
 				client.read do |message|
-					puts "Received response: #{message}"
+					parsed_message = JSON.parse(message.buffer, symbolize_names: true)
+					assert isinstance(parsed_message, dict)
+					
+					#parsed_message = parse_date_fields(parsed_message)
+					event_name = parsed_message[:name]
+					event_data = parsed_message[:data]  # 'data' can be missing
+					
+					_event_emitter.emit(event_name, event_data)
+					
 					client.close
 				end
 

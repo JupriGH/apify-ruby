@@ -29,9 +29,9 @@ module Apify
 		# while copying the annotations, types and so on.
 
 		def initialize config: nil
-			@_config 		= config || Configuration.new		
-			@_apify_client 	= new_client
-			#@_event_manager = EventManager.new @_config
+			@_config = config || Configuration.new		
+			@_apify_client = new_client
+			@_event_manager = EventManager.new @_config
 			@_is_initialized = false
 		end
 
@@ -112,8 +112,70 @@ module Apify
 		and it should be called only once.
 		"""
 
+		#################################################### ASYNC
+		def self.init_async			
+			Async {
+				p "self.init_async"
+				#sleep 2
+				_get_default_instance.init_async.wait
+			}
+		end
+		
+		def init_async 
+			Async {			
+				p "init_async"
+				#sleep 2
+				
+				raise 'The actor was already initialized!' if @_is_initialized # RuntimeError
+				
+				@_is_exiting = false
+				@_was_final_persist_state_emitted = false
+
+				Log.info 'Initializing actor...'
+				Log.info 'System info', extra: Utils::_get_system_info
+
+				# TODO: Print outdated SDK version warning (we need a new env var for this)
+
+				StorageClientManager.set_config(@_config)		
+				StorageClientManager.set_cloud_client(@_apify_client) if @_config.token
+				
+				### EVENT MANAGER
+				
+				@_event_manager.init.wait
+=begin
+				self._send_persist_state_interval_task = asyncio.create_task(
+					_run_func_at_interval_async(
+						lambda: self._event_manager.emit(ActorEventTypes.PERSIST_STATE, {'isMigrating': False}),
+						self._config.persist_state_interval_millis / 1000,
+					),
+				)
+
+				if not self.is_at_home():
+					self._send_system_info_interval_task = asyncio.create_task(
+						_run_func_at_interval_async(
+							lambda: self._event_manager.emit(ActorEventTypes.SYSTEM_INFO, self._get_system_info()),
+							self._config.system_info_interval_millis / 1000,
+						),
+					)
+
+				self._event_manager.on(ActorEventTypes.MIGRATING, self._respond_to_migrating_event)
+=end
+				
+				"""
+				# The CPU usage is calculated as an average between two last calls to psutil
+				# We need to make a first, dummy call, so the next calls have something to compare itself agains
+				_get_cpu_usage_percent
+				"""
+				
+				@_is_initialized = true
+				Log.debug "Actor INIT: OK"
+			} 
+		end
+		
+		####################################################
+		
 		def self.init = _get_default_instance.init
-	 
+
 		def init
 			raise 'The actor was already initialized!' if @_is_initialized # RuntimeError
 			
@@ -131,7 +193,6 @@ module Apify
 			### EVENT MANAGER
 
 			#@_event_manager.init
-
 =begin
 			self._send_persist_state_interval_task = asyncio.create_task(
 				_run_func_at_interval_async(
