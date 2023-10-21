@@ -176,8 +176,8 @@ class dualproperty(Generic[DualPropertyType]):  # noqa: N801
 		return val.to_i if
 			INTEGER_ENV_VARS.include?(env_var)
 
-		#return DateTime.iso8601(val, '%Y-%m-%dT%H:%M:%S.%fZ').to_time.localtime if # Local time
-		return DateTime.iso8601(val, '%Y-%m-%dT%H:%M:%S.%fZ').to_time if # UTC time
+		#return DateTime.iso8601(val).to_time.localtime if # Local time
+		return DateTime.iso8601(val).to_time if # UTC time
 			DATETIME_ENV_VARS.include?(env_var)
 		
 		return val # String
