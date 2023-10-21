@@ -1,15 +1,14 @@
 module Apify
 
-class UserClient < ResourceClient
-    """Sub-client for querying user data."""
+	"""Sub-client for querying user data."""
+	class UserClient < ResourceClient
 
-	def initialize **kwargs
 		"""Initialize the UserClient."""
-		kwargs[:resource_id] ||= 'me'
-		super resource_path: 'users', **kwargs 
-	end
+		def initialize **kwargs
+			kwargs[:resource_id] ||= 'me'
+			super resource_path: 'users', **kwargs 
+		end
 
-	def get
 		"""Return information about user account.
 
 		You receive all or only public info based on your token permissions.
@@ -19,8 +18,7 @@ class UserClient < ResourceClient
 		Returns:
 			dict, optional: The retrieved user data, or None if the user does not exist.
 		"""
-		_get
+		def get = _get
 	end
-end
 
 end

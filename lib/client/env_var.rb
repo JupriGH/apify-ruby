@@ -41,7 +41,7 @@ module Apify
 			dict: The updated actor environment variable
 		"""
 		def update name, value, is_secret=nil 
-			actor_env_var_representation = Utils:: filter_out_none_values_recursively(
+			actor_env_var_representation = Utils::filter_out_none_values_recursively(
 				_get_actor_env_var_representation(
 					is_secret: is_secret,
 					name: name,
