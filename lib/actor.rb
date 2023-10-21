@@ -138,7 +138,7 @@ module Apify
 			
 			### EVENT MANAGER
 			
-			@_event_manager.init.wait
+			@_event_manager.init
 =begin
 			self._send_persist_state_interval_task = asyncio.create_task(
 				_run_func_at_interval_async(
