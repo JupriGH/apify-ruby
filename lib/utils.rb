@@ -183,11 +183,12 @@ class dualproperty(Generic[DualPropertyType]):  # noqa: N801
 		return default
 	end
 
+	def self._get_cpu_usage_percent
+		#return psutil.cpu_percent()
+		Sys::ProcTable.ps(pid: Process.pid).pctcpu
+	end
+
 =begin
-def _get_cpu_usage_percent() -> float:
-    return psutil.cpu_percent()
-
-
 def _get_memory_usage_bytes() -> int:
     current_process = psutil.Process(os.getpid())
     mem = int(current_process.memory_info().rss or 0)

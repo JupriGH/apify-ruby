@@ -156,15 +156,13 @@ module Apify
 						self._config.system_info_interval_millis / 1000,
 					),
 				)
-
-			self._event_manager.on(ActorEventTypes.MIGRATING, self._respond_to_migrating_event)
 =end
+			@_event_manager.on ActorEventTypes::MIGRATING, method(:_respond_to_migrating_event)
 			
-			"""
 			# The CPU usage is calculated as an average between two last calls to psutil
 			# We need to make a first, dummy call, so the next calls have something to compare itself agains
-			_get_cpu_usage_percent
-			"""
+			
+			# Utils::_get_cpu_usage_percent
 			
 			@_is_initialized = true
 			Log.debug "Actor INIT: OK"
@@ -236,9 +234,11 @@ module Apify
 		end
 =end
 		
+
+		# Don't emit any more regular persist state events		
+		def _respond_to_migrating_event _event_data
+			Log.debug "TODO: _respond_to_migrating_event()"
 =begin
-		async def _respond_to_migrating_event(self, _event_data: Any) -> None:
-			# Don't emit any more regular persist state events
 			if self._send_persist_state_interval_task and not self._send_persist_state_interval_task.cancelled():
 				self._send_persist_state_interval_task.cancel()
 				with contextlib.suppress(asyncio.CancelledError):
@@ -246,8 +246,12 @@ module Apify
 
 			self._event_manager.emit(ActorEventTypes.PERSIST_STATE, {'isMigrating': True})
 			self._was_final_persist_state_emitted = True
-
-		async def _cancel_event_emitting_intervals(self) -> None:
+=end
+		end
+		
+		def _cancel_event_emitting_intervals
+			Log.debug "TODO: _cancel_event_emitting_intervals()"
+=begin
 			if self._send_persist_state_interval_task and not self._send_persist_state_interval_task.cancelled():
 				self._send_persist_state_interval_task.cancel()
 				with contextlib.suppress(asyncio.CancelledError):
@@ -258,7 +262,8 @@ module Apify
 				with contextlib.suppress(asyncio.CancelledError):
 					await self._send_system_info_interval_task
 =end
-
+		end
+		
 		"""Exit the actor instance.
 
 		This stops the Actor instance.
@@ -417,9 +422,10 @@ module Apify
 				exit_
 				
 				return res
-			rescue
-				p "FAILED"
-				#fail_
+			#rescue Exception => exc
+			#	p exc
+			#	p "FAILED"
+			#	#fail_
 			end
 		end
 
@@ -642,12 +648,11 @@ module Apify
 		def on(cls, event_name: ActorEventTypes, listener: Callable) -> Callable:
 
 			return cls._get_default_instance().on(event_name, listener)
-
-		def _on_internal(self, event_name: ActorEventTypes, listener: Callable) -> Callable:
-			self._raise_if_not_initialized()
-
-			return self._event_manager.on(event_name, listener)
 =end
+		def on event_name, listener
+			_raise_if_not_initialized
+			@_event_manager.on event_name, listener
+		end
 
 		"""Remove a listener, or all listeners, from an actor event.
 

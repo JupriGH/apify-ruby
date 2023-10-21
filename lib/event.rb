@@ -25,6 +25,34 @@ from .log import logger
 ListenerType = Union[Callable[[], None], Callable[[Any], None], Callable[[], Coroutine[Any, Any, None]], Callable[[Any], Coroutine[Any, Any, None]]]
 =end
 
+class EventEmitter
+	def initialize
+		@subscribers = {}
+	end
+
+	# Subscribe a callback to an event	
+	def add_listener event, callback
+		@subscribers[event] ||= []
+		@subscribers[event] << callback
+	end
+	
+	# Remove a specific callback from an event
+	def off event, callback
+		#@subscribers[event]&.delete(callback)
+	end
+
+	# Emit an event and trigger subscribed callbacks
+	def emit event, *args
+		if @subscribers[event]
+			@subscribers[event].each { |callback| callback.call(*args) }
+		end
+	end
+
+	# Remove all callbacks from an event
+	#def off_all event
+	#	@subscribers[event] = []
+	#end
+end
 
 module Apify
 
@@ -52,7 +80,7 @@ module Apify
 		"""
 		def initialize config
 			@_config = config
-			#@_event_emitter = AsyncIOEventEmitter()
+			@_event_emitter = EventEmitter.new  # AsyncIOEventEmitter()
 			@_initialized = false
 			#@_listener_tasks = set()
 			#@_listeners_to_wrappers = defaultdict(lambda: defaultdict(list))
@@ -73,7 +101,7 @@ module Apify
 			raise 'EventManager was already initialized!' if @_initialized # RuntimeError
 
 			# Run tasks but don't await them
-			if true # @_config.actor_events_ws_url
+			if @_config.actor_events_ws_url
 				#self._connected_to_platform_websocket = asyncio.Future()
 				#self._process_platform_messages_task = asyncio.create_task(self._process_platform_messages())
 
@@ -123,11 +151,12 @@ module Apify
 			listener (Callable): The function which is to be called when the event is emitted (can be async).
 				Must accept either zero or one arguments (the first argument will be the event data).
 		"""
-=begin
-		def on(self, event_name: ActorEventTypes, listener: ListenerType) -> Callable:
-			if not self._initialized:
-				raise RuntimeError('EventManager was not initialized!')
 
+		def on event_name, listener
+			raise 'EventManager was not initialized!' if !@_initialized # RuntimeError
+
+			@_event_emitter.add_listener event_name, listener
+=begin			
 			# Detect whether the listener will accept the event_data argument
 			try:
 				signature = inspect.signature(listener)
@@ -178,6 +207,7 @@ module Apify
 
 			return self._event_emitter.add_listener(event_name, outer_wrapper)
 =end
+		end
 
 		"""Remove a listener, or all listeners, from an actor event.
 
@@ -268,11 +298,15 @@ module Apify
 					@_connected_to_platform_websocket = true
 					p "WS CONNECTED"
 					Async {
-					
-						while message = connection.read
-							Log.debug "WS Message:", message.buffer
-							#msg = JSON.parse(message.buffer, symbolize_names: true)
-							#p msg[:name]
+						while message = connection.read							
+							parsed_message = JSON.parse(message.buffer) # , symbolize_names: true)
+							#assert isinstance(parsed_message, dict)
+							#parsed_message = parse_date_fields(parsed_message)
+							event_name = parsed_message['name']
+							event_data = parsed_message['data']  # 'data' can be missing
+
+							Log.debug "WS:", event_name, extra: event_data
+							@_event_emitter.emit(event_name, event_data)
 						end
 					}
 					
