@@ -437,3 +437,58 @@ module Apify
 	end
 
 end
+
+
+### Helpers
+
+MAX_PAYLOAD_SIZE_BYTES = Apify::MAX_PAYLOAD_SIZE_BYTES
+SAFETY_BUFFER_PERCENT = 0.01 / 100
+EFFECTIVE_LIMIT_BYTES = MAX_PAYLOAD_SIZE_BYTES - (MAX_PAYLOAD_SIZE_BYTES * SAFETY_BUFFER_PERCENT).ceil
+
+"""Accept a JSON serializable object as an input, validate its serializability and its serialized size against `EFFECTIVE_LIMIT_BYTES`."""
+def _check_and_serialize item: nil, index: nil
+    s = index ? " at index #{index} " : " "
+
+    #try:
+        payload = item.to_json
+    #except Exception as e:
+    #    raise ValueError(f'Data item{s}is not serializable to JSON.') from e
+
+    length_bytes = payload.length # len(payload.encode('utf-8'))
+    if length_bytes > EFFECTIVE_LIMIT_BYTES
+        raise "Data item#{s}is too large (size: #{length_bytes} bytes, limit: #{EFFECTIVE_LIMIT_BYTES} bytes)" # ValueError
+	end
+	
+    return payload
+end
+
+"""Take an array of JSONs, produce iterator of chunked JSON arrays respecting `EFFECTIVE_LIMIT_BYTES`.
+
+Takes an array of JSONs (payloads) as input and produces an iterator of JSON strings
+where each string is a JSON array of payloads with a maximum size of `EFFECTIVE_LIMIT_BYTES` per one
+JSON array. Fits as many payloads as possible into a single JSON array and then moves
+on to the next, preserving item order.
+
+The function assumes that none of the items is larger than `EFFECTIVE_LIMIT_BYTES` and does not validate.
+"""
+=begin
+def _chunk_by_size items
+	"""
+    last_chunk_bytes = 2  # Add 2 bytes for [] wrapper.
+    current_chunk = []
+
+    for payload in items:
+        length_bytes = len(payload.encode('utf-8'))
+
+        if last_chunk_bytes + length_bytes <= EFFECTIVE_LIMIT_BYTES:
+            current_chunk.append(payload)
+            last_chunk_bytes += length_bytes + 1  # Add 1 byte for ',' separator.
+        else:
+            yield f'[{",".join(current_chunk)}]'
+            current_chunk = [payload]
+            last_chunk_bytes = length_bytes + 2  # Add 2 bytes for [] wrapper.
+
+    yield f'[{",".join(current_chunk)}]'
+	"""
+end
+=end
