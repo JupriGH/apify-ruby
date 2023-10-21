@@ -161,8 +161,6 @@ class dualproperty(Generic[DualPropertyType]):  # noqa: N801
 		## env_var_name = str(maybe_extract_enum_member_value(env_var))
 
 		val = ENV[env_var] # ENV(env_var_name)
-		puts "#{env_var}=#{val}"
-		
 		return default if val.nil? || val.empty?
 				
 		return ['true', '1'].include?(val.downcase) if 
@@ -181,10 +179,11 @@ class dualproperty(Generic[DualPropertyType]):  # noqa: N801
 			DATETIME_ENV_VARS.include?(env_var)
 		
 		return val # String
-	#rescue
-	#	return default
+	rescue Exception => exc
+		puts "[#{__method__}] Error: #{exc}"
+		return default
 	end
-	
+
 =begin
 def _get_cpu_usage_percent() -> float:
     return psutil.cpu_percent()
