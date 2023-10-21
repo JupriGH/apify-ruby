@@ -52,28 +52,26 @@ end
 
 ### BuildCollectionClient
 
+"""Sub-client for listing actor builds."""
 class BuildCollectionClient < ResourceCollectionClient
-    """Sub-client for listing actor builds."""
 
-    def initialize **kwargs
-        """Initialize the BuildCollectionClient."""
-        super resource_path: 'actor-builds', **kwargs
-	end
-	
+	"""Initialize the BuildCollectionClient."""
+    def initialize(**kwargs) = super(resource_path: 'actor-builds', **kwargs)
+
+	"""List all actor builds (either of a single actor, or all user's actors, depending on where this client was initialized from).
+
+	https://docs.apify.com/api/v2#/reference/actors/build-collection/get-list-of-builds
+	https://docs.apify.com/api/v2#/reference/actor-builds/build-collection/get-user-builds-list
+
+	Args:
+		limit (int, optional): How many builds to retrieve
+		offset (int, optional): What build to include as first when retrieving the list
+		desc (bool, optional): Whether to sort the builds in descending order based on their start date
+
+	Returns:
+		ListPage: The retrieved actor builds
+	"""	
     def list limit: nil, offset: nil, desc: nil
-        """List all actor builds (either of a single actor, or all user's actors, depending on where this client was initialized from).
-
-        https://docs.apify.com/api/v2#/reference/actors/build-collection/get-list-of-builds
-        https://docs.apify.com/api/v2#/reference/actor-builds/build-collection/get-user-builds-list
-
-        Args:
-            limit (int, optional): How many builds to retrieve
-            offset (int, optional): What build to include as first when retrieving the list
-            desc (bool, optional): Whether to sort the builds in descending order based on their start date
-
-        Returns:
-            ListPage: The retrieved actor builds
-        """
         _list limit: limit, offset: offset, desc: desc
 	end
 end

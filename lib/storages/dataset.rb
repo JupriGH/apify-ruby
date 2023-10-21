@@ -25,7 +25,9 @@ module Apify
 	"""
 
 	class Dataset < BaseStorage
-
+		
+		HUMAN_FRIENDLY_LABEL = 'Dataset'
+		
 		#_id: str
 		#_name: Optional[str]
 		@_dataset_client
@@ -45,7 +47,7 @@ module Apify
 			@_dataset_client = client.dataset(@_id)
 		end
 		
-		@human_friendly_label = 'Dataset'    
+		    
 		# def _get_human_friendly_label(cls) -> str:
 		#    'Dataset'
 		# end

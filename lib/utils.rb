@@ -102,85 +102,85 @@ class dualproperty(Generic[DualPropertyType]):  # noqa: N801
         return self.getter(obj or owner)
 
 
-@overload
-def _fetch_and_parse_env_var(env_var: BOOL_ENV_VARS_TYPE) -> Optional[bool]:
-    ...
+	@overload
+	def _fetch_and_parse_env_var(env_var: BOOL_ENV_VARS_TYPE) -> Optional[bool]:
+		...
 
 
-@overload
-def _fetch_and_parse_env_var(env_var: BOOL_ENV_VARS_TYPE, default: bool) -> bool:
-    ...
+	@overload
+	def _fetch_and_parse_env_var(env_var: BOOL_ENV_VARS_TYPE, default: bool) -> bool:
+		...
 
 
-@overload
-def _fetch_and_parse_env_var(env_var: DATETIME_ENV_VARS_TYPE) -> Optional[Union[datetime, str]]:
-    ...
+	@overload
+	def _fetch_and_parse_env_var(env_var: DATETIME_ENV_VARS_TYPE) -> Optional[Union[datetime, str]]:
+		...
 
 
-@overload
-def _fetch_and_parse_env_var(env_var: DATETIME_ENV_VARS_TYPE, default: datetime) -> Union[datetime, str]:
-    ...
+	@overload
+	def _fetch_and_parse_env_var(env_var: DATETIME_ENV_VARS_TYPE, default: datetime) -> Union[datetime, str]:
+		...
 
 
-@overload
-def _fetch_and_parse_env_var(env_var: FLOAT_ENV_VARS_TYPE) -> Optional[float]:
-    ...
+	@overload
+	def _fetch_and_parse_env_var(env_var: FLOAT_ENV_VARS_TYPE) -> Optional[float]:
+		...
 
 
-@overload
-def _fetch_and_parse_env_var(env_var: FLOAT_ENV_VARS_TYPE, default: float) -> float:
-    ...
+	@overload
+	def _fetch_and_parse_env_var(env_var: FLOAT_ENV_VARS_TYPE, default: float) -> float:
+		...
 
 
-@overload
-def _fetch_and_parse_env_var(env_var: INTEGER_ENV_VARS_TYPE) -> Optional[int]:
-    ...
+	@overload
+	def _fetch_and_parse_env_var(env_var: INTEGER_ENV_VARS_TYPE) -> Optional[int]:
+		...
 
 
-@overload
-def _fetch_and_parse_env_var(env_var: INTEGER_ENV_VARS_TYPE, default: int) -> int:
-    ...
+	@overload
+	def _fetch_and_parse_env_var(env_var: INTEGER_ENV_VARS_TYPE, default: int) -> int:
+		...
 
 
-@overload
-def _fetch_and_parse_env_var(env_var: STRING_ENV_VARS_TYPE, default: str) -> str:
-    ...
+	@overload
+	def _fetch_and_parse_env_var(env_var: STRING_ENV_VARS_TYPE, default: str) -> str:
+		...
 
 
-@overload
-def _fetch_and_parse_env_var(env_var: STRING_ENV_VARS_TYPE) -> Optional[str]:
-    ...
+	@overload
+	def _fetch_and_parse_env_var(env_var: STRING_ENV_VARS_TYPE) -> Optional[str]:
+		...
 
 
-@overload
-def _fetch_and_parse_env_var(env_var: Union[ActorEnvVars, ApifyEnvVars]) -> Optional[Any]:
-    ...
+	@overload
+	def _fetch_and_parse_env_var(env_var: Union[ActorEnvVars, ApifyEnvVars]) -> Optional[Any]:
+		...
+=end
 
+	def self._fetch_and_parse_env_var(env_var, default=nil)
+		## env_var_name = str(maybe_extract_enum_member_value(env_var))
 
-def _fetch_and_parse_env_var(env_var: Any, default: Any = None) -> Any:
-    env_var_name = str(maybe_extract_enum_member_value(env_var))
+		val = ENV[env_var] # ENV(env_var_name)
+		return default if val.nil? || val.empty?
+				
+		return ['true', '1'].include?(val.downcase) if 
+			Const::BOOL_ENV_VARS.include?(env_var)
+		
+		return Float(val) if 
+			Const::FLOAT_ENV_VARS.include?(env_var)
+		
+		return Int(val) if 
+			Const::INTEGER_ENV_VARS.include?(env_var)
 
-    val = os.getenv(env_var_name)
-    if not val:
-        return default
-
-    if env_var in BOOL_ENV_VARS:
-        return _maybe_parse_bool(val)
-    if env_var in FLOAT_ENV_VARS:
-        parsed_float = _maybe_parse_float(val)
-        if parsed_float is None:
-            return default
-        return parsed_float
-    if env_var in INTEGER_ENV_VARS:
-        parsed_int = _maybe_parse_int(val)
-        if parsed_int is None:
-            return default
-        return parsed_int
-    if env_var in DATETIME_ENV_VARS:
-        return _maybe_parse_datetime(val)
-    return val
-
-
+		return Date.strptime(val, '%Y-%m-%dT%H:%M:%S.%fZ').to_time.utc if
+			Const::DATETIME_ENV_VARS.include?(env_var)
+		
+		return val # String
+	rescue
+		return default
+	end
+	
+=begin
 def _get_cpu_usage_percent() -> float:
     return psutil.cpu_percent()
 
@@ -192,35 +192,9 @@ def _get_memory_usage_bytes() -> int:
         with contextlib.suppress(psutil.NoSuchProcess):
             mem += int(child.memory_info().rss or 0)
     return mem
+=end
 
-
-def _maybe_parse_bool(val: Optional[str]) -> bool:
-    if val == 'true' or val == 'True' or val == '1':
-        return True
-    return False
-
-
-def _maybe_parse_datetime(val: str) -> Union[datetime, str]:
-    try:
-        return datetime.strptime(val, '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=timezone.utc)
-    except ValueError:
-        return val
-
-
-def _maybe_parse_float(val: str) -> Optional[float]:
-    try:
-        return float(val)
-    except ValueError:
-        return None
-
-
-def _maybe_parse_int(val: str) -> Optional[int]:
-    try:
-        return int(val)
-    except ValueError:
-        return None
-
-
+=begin
 async def _run_func_at_interval_async(func: Callable, interval_secs: float) -> None:
     started_at = time.perf_counter()
     sleep_until = started_at
@@ -279,14 +253,18 @@ def _maybe_parse_body(body: bytes, content_type: str) -> Any:
         return body.decode('utf-8')
     return body
 
+=end
 
-def _unique_key_to_request_id(unique_key: str) -> str:
-    """Generate request ID based on unique key in a deterministic way."""
-    id = re.sub(r'(\+|\/|=)', '', base64.b64encode(hashlib.sha256(unique_key.encode('utf-8')).digest()).decode('utf-8'))
+	"""Generate request ID based on unique key in a deterministic way."""
+	def self._unique_key_to_request_id unique_key
+		#id = re.sub(r'(\+|\/|=)', '', base64.b64encode(hashlib.sha256(unique_key.encode('utf-8')).digest()).decode('utf-8'))
+		#return id[:REQUEST_ID_LENGTH] if len(id) > REQUEST_ID_LENGTH else id
+		
+		# https://stackoverflow.com/questions/2620975/strange-n-in-base64-encoded-string-in-ruby
+		Base64.strict_encode64( Digest::SHA256.digest(unique_key) ).gsub(/\+|\/|\=/,"")[.. Consts::REQUEST_ID_LENGTH]
+	end
 
-    return id[:REQUEST_ID_LENGTH] if len(id) > REQUEST_ID_LENGTH else id
-
-
+=begin
 async def _force_rename(src_dir: str, dst_dir: str) -> None:
     """Rename a directory. Checks for existence of soruce directory and removes destination directory if it exists."""
     # Make sure source directory exists
@@ -306,56 +284,70 @@ def _wrap_internal(implementation: ImplementationType, metadata_source: Metadata
         return implementation(*args, **kwargs)
 
     return cast(MetadataType, wrapper)
+=end
 
-
-@ignore_docs
-class LRUCache(MutableMapping, Generic[T]):
+	### Starting with Ruby 1.9, the Hash class maintains the order of key-value pairs based on the order of insertion.
+	
     """Attempt to reimplement LRUCache from `@apify/datastructures` using `OrderedDict`."""
+	class LRUCache < Hash # (MutableMapping, Generic[T]):
 
-    _cache: OrderedDictType[str, T]
+		#_cache: OrderedDictType[str, T]
+		#_max_length: int
+		
+		"""Create a LRUCache with a specific max_length."""
+		def initialize max_length
+			super
+			@_max_length = max_length
+		end
 
-    _max_length: int
+		"""Get an item from the cache. Move it to the end if present."""
+		def __getitem__ key
+			val = delete key
+			self[key] = val if val
+			return val
+		end
 
-    def __init__(self, max_length: int) -> None:
-        """Create a LRUCache with a specific max_length."""
-        self._cache = OrderedDict()
-        self._max_length = max_length
+		# Sadly TS impl returns bool indicating whether the key was already present or not
+		"""Add an item to the cache. Remove least used item if max_length exceeded."""
+		def __setitem__ key, value
+			#self._cache[key] = value
+			#if len(self._cache) > self._max_length:
+			#	self._cache.popitem(last=False)
 
-    def __getitem__(self, key: str) -> T:
-        """Get an item from the cache. Move it to the end if present."""
-        val = self._cache[key]
-        # No 'key in cache' condition since the previous line would raise KeyError
-        self._cache.move_to_end(key)
-        return val
+			# mutate ?
+			# delete key
+			
+			self[key] = value
+			shift if length > @_max_length
+		end
 
-    # Sadly TS impl returns bool indicating whether the key was already present or not
-    def __setitem__(self, key: str, value: T) -> None:
-        """Add an item to the cache. Remove least used item if max_length exceeded."""
-        self._cache[key] = value
-        if len(self._cache) > self._max_length:
-            self._cache.popitem(last=False)
+		"""Remove an item from the cache."""		
+		#def __delitem__(self, key: str) -> None:
+		#	del self._cache[key]
+		#end
+		
+		"""Iterate over the keys of the cache in order of insertion."""
+		#def __iter__(self) -> Iterator[str]:
+		#	return self._cache.__iter__()
+		#end
 
-    def __delitem__(self, key: str) -> None:
-        """Remove an item from the cache."""
-        del self._cache[key]
+		"""Get the number of items in the cache."""		
+		#def __len__(self) -> int:
+		#	return len(self._cache)
+		#end
+		
+		"""Iterate over the values in the cache in order of insertion."""
+		#def values(self) -> ValuesView[T]:  # Needed so we don't mutate the cache by __getitem__
+		#	return self._cache.values()
+		#end
 
-    def __iter__(self) -> Iterator[str]:
-        """Iterate over the keys of the cache in order of insertion."""
-        return self._cache.__iter__()
+		"""Iterate over the pairs of (key, value) in the cache in order of insertion."""
+		#def items(self) -> ItemsView[str, T]:  # Needed so we don't mutate the cache by __getitem__
+		#	return self._cache.items()
+		#end
+	end
 
-    def __len__(self) -> int:
-        """Get the number of items in the cache."""
-        return len(self._cache)
-
-    def values(self) -> ValuesView[T]:  # Needed so we don't mutate the cache by __getitem__
-        """Iterate over the values in the cache in order of insertion."""
-        return self._cache.values()
-
-    def items(self) -> ItemsView[str, T]:  # Needed so we don't mutate the cache by __getitem__
-        """Iterate over the pairs of (key, value) in the cache in order of insertion."""
-        return self._cache.items()
-
-
+=begin
 def _is_running_in_ipython() -> bool:
     return getattr(builtins, '__IPYTHON__', False)
 
@@ -363,38 +355,45 @@ def _is_running_in_ipython() -> bool:
 @overload
 def _budget_ow(value: Union[str, int, float, bool], predicate: Tuple[Type, bool], value_name: str) -> None:
     ...
-
-
 @overload
 def _budget_ow(value: Dict, predicate: Dict[str, Tuple[Type, bool]]) -> None:
     ...
+=end
 
 
-def _budget_ow(
-    value: Union[Dict, str, int, float, bool],
-    predicate: Union[Dict[str, Tuple[Type, bool]], Tuple[Type, bool]],
-    value_name: Optional[str] = None,
-) -> None:
-    """Budget version of ow."""
-    def validate_single(field_value: Any, expected_type: Type, required: bool, name: str) -> None:
-        if field_value is None and required:
-            raise ValueError(f'"{name}" is required!')
-        if (field_value is not None or required) and not isinstance(field_value, expected_type):
-            raise ValueError(f'"{name}" must be of type "{expected_type.__name__}" but it is "{type(field_value).__name__}"!')
+	"""Budget version of ow."""
+	def self.__validate_single field_value, expected_type, required, name
+		if field_value.nil? && required
+			# ValueError
+			raise "\"#{name}\" is required!"
+		end
+		if (!field_value.nil? || required) && (field_value.class != expected_type)
+			# ValueError
+			raise "\"#{name}\" must be of type \"#{expected_type.name}\" but it is \"#{field_value.class.name}\"!"
+		end
+	end
+	
+	def self._budget_ow value, predicate, value_name=nil
+				
+		# Validate object
+		if (value.class == Hash) && (predicate.class == Hash)			
+			predicate.each do |key, p|
+				field_type, required = p
+				__validate_single value[key], field_type, required, key
+			end
+			
+		# Validate "primitive"
+		#elsif isinstance(value, (int, str, float, bool)) && 
+		elsif (predicate.class == Array) && value_name
+			field_type, required = predicate
+			__validate_single value, field_type, required, value_name
+		
+		else
+			raise 'Wrong input!' # ValueError
+		end
+	end
 
-    # Validate object
-    if isinstance(value, dict) and isinstance(predicate, dict):
-        for key, (field_type, required) in predicate.items():
-            field_value = value.get(key)
-            validate_single(field_value, field_type, required, key)
-    # Validate "primitive"
-    elif isinstance(value, (int, str, float, bool)) and isinstance(predicate, tuple) and value_name is not None:
-        field_type, required = predicate
-        validate_single(value, field_type, required, value_name)
-    else:
-        raise ValueError('Wrong input!')
-
-
+=begin
 PARSE_DATE_FIELDS_MAX_DEPTH = 3
 PARSE_DATE_FIELDS_KEY_SUFFIX = 'At'
 ListOrDictOrAny = TypeVar('ListOrDictOrAny', List, Dict, Any)

@@ -245,7 +245,7 @@ module Apify
 					single_storage_client 	= _get_single_storage_client id, used_client				
 					storage_info 			= single_storage_client.get 
 
-					raise "#{@human_friendly_label} with id \"#{id}\" does not exist!" if !storage_info # RuntimeError
+					raise "#{self::HUMAN_FRIENDLY_LABEL} with id \"#{id}\" does not exist!" if !storage_info # RuntimeError
 
 				elsif is_default_storage_on_local
 

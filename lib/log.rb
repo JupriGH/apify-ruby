@@ -15,7 +15,6 @@ just_fix_windows_console()
 
 require 'logger'
 
-
 module Apify
 
 	Log = Logger.new $stdout, progname: 'apify'
