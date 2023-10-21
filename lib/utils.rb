@@ -364,7 +364,6 @@ def _budget_ow(value: Dict, predicate: Dict[str, Tuple[Type, bool]]) -> None:
     ...
 =end
 
-
 	"""Budget version of ow."""
 	def self.__validate_single field_value, expected_type, required, name
 		if field_value.nil? && required
@@ -385,13 +384,11 @@ def _budget_ow(value: Dict, predicate: Dict[str, Tuple[Type, bool]]) -> None:
 				field_type, required = p
 				__validate_single value[key], field_type, required, key
 			end
-			
 		# Validate "primitive"
 		#elsif isinstance(value, (int, str, float, bool)) && 
 		elsif (predicate.class == Array) && value_name
 			field_type, required = predicate
 			__validate_single value, field_type, required, value_name
-		
 		else
 			raise 'Wrong input!' # ValueError
 		end
