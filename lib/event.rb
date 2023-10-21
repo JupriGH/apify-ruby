@@ -262,21 +262,22 @@ module Apify
 					Log.debug "WS URL =>", url
 					
 					endpoint = Async::HTTP::Endpoint.parse(url)
-
-					return Async {					
-						Async::WebSocket::Client.connect(endpoint) { |connection|	
-							
-							@_connected_to_platform_websocket = true
-							p "WS CONNECTED"
-							Async {
-								while message = connection.read
-									Log.debug "WS Message:", message.buffer
-									#msg = JSON.parse(message.buffer, symbolize_names: true)
-									#p msg[:name]
-								end
-							}
-						}
-					}.wait
+			
+					connection = Async::WebSocket::Client.connect(endpoint)	
+						
+					@_connected_to_platform_websocket = true
+					p "WS CONNECTED"
+					Async {
+					
+						while message = connection.read
+							Log.debug "WS Message:", message.buffer
+							#msg = JSON.parse(message.buffer, symbolize_names: true)
+							#p msg[:name]
+						end
+					}
+					
+					p 'SLEEP 5'
+					sleep 5
 					
 				#rescue Exception => exc
 				#	p "WS ERROR:"
