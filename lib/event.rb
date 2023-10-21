@@ -312,8 +312,7 @@ module Apify
 					
 					endpoint = Async::HTTP::Endpoint.parse(url)
 			
-					connection = Async::WebSocket::Client.connect(endpoint)	
-						
+					@_platform_events_websocket = connection = Async::WebSocket::Client.connect(endpoint)
 					@_connected_to_platform_websocket = true
 					
 					Log.debug "!!WS CONNECTED!!".red
@@ -329,6 +328,7 @@ module Apify
 							#Log.debug "WS:", event_name, extra: event_data
 							@_event_emitter.emit(event_name, event_data)
 						end
+						Log.debug "!!WS DISCONNECT!!".red
 					}					
 				#rescue Exception => exc
 				#	p "WS ERROR:"
