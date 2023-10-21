@@ -276,7 +276,7 @@ module Apify
 								end
 							}
 						}
-					}
+					}.wait
 					
 				#rescue Exception => exc
 				#	p "WS ERROR:"
