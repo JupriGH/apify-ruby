@@ -251,7 +251,7 @@ module Apify
 
 						Async {
 							while message = connection.read
-								p message.buffer
+								Log.debug "WS Message:", message.buffer
 								#msg = JSON.parse(message.buffer, symbolize_names: true)
 								#p msg[:name]
 							end
