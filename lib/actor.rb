@@ -140,7 +140,7 @@ module Apify
 			
 			### EVENT MANAGER
 			
-			#@_event_manager.init
+			@_event_manager.init
 =begin
 			self._send_persist_state_interval_task = asyncio.create_task(
 				_run_func_at_interval_async(
@@ -272,11 +272,11 @@ module Apify
 			event_listeners_timeout_secs (float, optional): How long should the actor wait for actor event listeners to finish before exiting.
 			status_message (str, optional): The final status message that the actor should display.
 		"""	
-		def self.exit_ exit_code=0, status_message: nil, event_listeners_timeout_secs: Consts::EVENT_LISTENERS_TIMEOUT_SECS
+		def self.exit_ exit_code=0, status_message: nil, event_listeners_timeout_secs: EVENT_LISTENERS_TIMEOUT_SECS
 			_get_default_instance.exit_ exit_code,  status_message: status_message, event_listeners_timeout_secs: event_listeners_timeout_secs
 		end
 
-		def exit_ exit_code = 0, status_message: nil, event_listeners_timeout_secs: Consts::EVENT_LISTENERS_TIMEOUT_SECS
+		def exit_ exit_code = 0, status_message: nil, event_listeners_timeout_secs: EVENT_LISTENERS_TIMEOUT_SECS
 			_raise_if_not_initialized
 
 			@_is_exiting = true
@@ -386,7 +386,8 @@ module Apify
 			#else:
 			#	res = main_actor_function()
 			
-			exit
+			exit_
+			
 			#return cast(MainReturnType, res)
 			return res
 			
@@ -401,14 +402,25 @@ module Apify
 		def self.main_async main_actor_function
 			_get_default_instance.main_async main_actor_function
 		end 
+		
 		def main_async main_actor_function
-			Async {
-				init
+			
+			# accept only LAMBDA or PROC or METHOD(:function)
+			raise unless [Method, Proc].include?( main_actor_function.class )
+			
+			Async do
+				init_async
 				
-				res = method(main_actor_function).call(self)
+				res = main_actor_function.call(self)
 				
-				exit
-			}
+				p "SUCCESS"
+				exit_
+				
+				return res
+			rescue
+				p "FAILED"
+				#fail_
+			end
 		end
 
 		"""Return a new instance of the Apify API client.
