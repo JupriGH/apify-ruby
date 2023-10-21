@@ -77,7 +77,7 @@ module Apify
 				#self._connected_to_platform_websocket = asyncio.Future()
 				#self._process_platform_messages_task = asyncio.create_task(self._process_platform_messages())
 
-				_process_platform_messages.wait
+				_process_platform_messages
 				
 				is_connected = @_connected_to_platform_websocket
 				raise 'Error connecting to platform events websocket!' unless is_connected # RuntimeError
@@ -266,7 +266,7 @@ module Apify
 					return Async::WebSocket::Client.connect(endpoint) { |connection|	
 						
 						@_connected_to_platform_websocket = true
-
+						p "WS CONNECTED"
 						Async {
 							while message = connection.read
 								Log.debug "WS Message:", message.buffer
@@ -274,8 +274,6 @@ module Apify
 								#p msg[:name]
 							end
 						}
-						
-						p "WS CONNECTED"
 					}
 					
 				#rescue Exception => exc
