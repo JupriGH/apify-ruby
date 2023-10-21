@@ -82,6 +82,8 @@ module Apify
 					
 					is_connected = @_connected_to_platform_websocket
 					raise 'Error connecting to platform events websocket!' unless is_connected # RuntimeError
+					
+					p "IS_CONNECTED"
 				else
 					Log.debug 'APIFY_ACTOR_EVENTS_WS_URL env var not set, no events from Apify platform will be emitted.'
 				end
@@ -238,15 +240,34 @@ module Apify
 =end
 		def _process_platform_messages
 			return Async {
-				url = @_config.actor_events_ws_url
-				#url = 'ws://127.0.0.1:9999'
-				
-				endpoint = Async::HTTP::Endpoint.parse(url)
 				
 				#sleep 3
-				begin
-					Async::WebSocket::Client.connect(endpoint) do |connection|	
+				#begin
+					'''
+					Async {
+						sleep 3
 						p "WS CONNECTED"
+						@_connected_to_platform_websocket = true
+					
+						Async {
+							while true
+								Log.debug "WS Message: dummy"
+								sleep 2
+								#msg = JSON.parse(message.buffer, symbolize_names: true)
+								#p msg[:name]
+							end
+						}
+					}
+					'''
+					
+					url = @_config.actor_events_ws_url
+					#url = 'ws://127.0.0.1:9999'
+					Log.debug "WS URL =>", url
+					
+					endpoint = Async::HTTP::Endpoint.parse(url)
+
+					Async::WebSocket::Client.connect(endpoint) { |connection|	
+						
 						@_connected_to_platform_websocket = true
 
 						Async {
@@ -256,12 +277,15 @@ module Apify
 								#p msg[:name]
 							end
 						}
-					end
-				rescue Exception => exc
-					p "WS ERROR:"
-					p exc
-				end
-				p "RETURN ..."
+						
+						p "WS CONNECTED"
+					}
+					
+				#rescue Exception => exc
+				#	p "WS ERROR:"
+				#	p exc
+				#end
+				# p "RETURN ..."
 			}
 			###################################################################################################
 			return
