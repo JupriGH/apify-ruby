@@ -77,7 +77,7 @@ module Apify
 				#self._connected_to_platform_websocket = asyncio.Future()
 				#self._process_platform_messages_task = asyncio.create_task(self._process_platform_messages())
 
-				_process_platform_messages
+				_process_platform_messages.wait
 				
 				is_connected = @_connected_to_platform_websocket
 				raise 'Error connecting to platform events websocket!' unless is_connected # RuntimeError
