@@ -68,28 +68,26 @@ module Apify
 		that can be listened to by the `Actor.on()` method.
 		"""
 		def init
-			Async {
-				p "EventManager.init"
-				sleep 2
-				raise 'EventManager was already initialized!' if @_initialized # RuntimeError
+			p "EventManager.init"
 
-				# Run tasks but don't await them
-				if true # @_config.actor_events_ws_url
-					#self._connected_to_platform_websocket = asyncio.Future()
-					#self._process_platform_messages_task = asyncio.create_task(self._process_platform_messages())
+			raise 'EventManager was already initialized!' if @_initialized # RuntimeError
 
-					_process_platform_messages.wait
-					
-					is_connected = @_connected_to_platform_websocket
-					raise 'Error connecting to platform events websocket!' unless is_connected # RuntimeError
-					
-					p "IS_CONNECTED"
-				else
-					Log.debug 'APIFY_ACTOR_EVENTS_WS_URL env var not set, no events from Apify platform will be emitted.'
-				end
+			# Run tasks but don't await them
+			if true # @_config.actor_events_ws_url
+				#self._connected_to_platform_websocket = asyncio.Future()
+				#self._process_platform_messages_task = asyncio.create_task(self._process_platform_messages())
+
+				_process_platform_messages
 				
-				@_initialized = true
-			}
+				is_connected = @_connected_to_platform_websocket
+				raise 'Error connecting to platform events websocket!' unless is_connected # RuntimeError
+				
+				p "IS_CONNECTED"
+			else
+				Log.debug 'APIFY_ACTOR_EVENTS_WS_URL env var not set, no events from Apify platform will be emitted.'
+			end
+			
+			@_initialized = true
 		end
 
 		"""Initialize the event manager.
@@ -239,7 +237,6 @@ module Apify
 				await _wait_for_listeners()
 =end
 		def _process_platform_messages
-			return Async {
 				
 				#sleep 3
 				#begin
@@ -266,17 +263,17 @@ module Apify
 					
 					endpoint = Async::HTTP::Endpoint.parse(url)
 
-					Async::WebSocket::Client.connect(endpoint) { |connection|	
+					return Async::WebSocket::Client.connect(endpoint) { |connection|	
 						
 						@_connected_to_platform_websocket = true
 
-						#Async {
+						Async {
 							while message = connection.read
 								Log.debug "WS Message:", message.buffer
 								#msg = JSON.parse(message.buffer, symbolize_names: true)
 								#p msg[:name]
 							end
-						#}
+						}
 						
 						p "WS CONNECTED"
 					}
@@ -286,7 +283,7 @@ module Apify
 				#	p exc
 				#end
 				# p "RETURN ..."
-			}
+			
 			###################################################################################################
 			return
 		
