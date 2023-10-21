@@ -147,6 +147,10 @@ module Apify
 			#pp self
 		end
 		
+		### Addiotional API by JUPRI
+		def to_json = to_h.to_json
+		def to_h = instance_variables.map { |a| [a, instance_variable_get(a)] }.to_h
+		
 		def getenv(*args) = Utils::_fetch_and_parse_env_var(*args)
 
 		def self._get_default_instance = @@_default_instance ||= new
