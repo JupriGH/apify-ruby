@@ -51,23 +51,22 @@ module Apify
 
 module Utils
 
+	def self._get_system_info
+		#python_version = '.'.join([str(x) for x in sys.version_info[:3]])
+
+		system_info = {
+			'ruby_sdk_version'		=> "TODO", # metadata.version('apify'),
+			'ruby_client_version'	=> "TODO", # metadata.version('apify-client'),
+			'ruby_version'			=> RUBY_VERSION, # python_version,
+			'os'					=> RbConfig::CONFIG['host_os'], # sys.platform,
+		}
+
+		#if _is_running_in_ipython():
+		#	system_info['is_running_in_ipython'] = True
+		system_info
+	end
+
 =begin
-def _get_system_info() -> Dict:
-    python_version = '.'.join([str(x) for x in sys.version_info[:3]])
-
-    system_info: Dict[str, Union[str, bool]] = {
-        'apify_sdk_version': metadata.version('apify'),
-        'apify_client_version': metadata.version('apify-client'),
-        'python_version': python_version,
-        'os': sys.platform,
-    }
-
-    if _is_running_in_ipython():
-        system_info['is_running_in_ipython'] = True
-
-    return system_info
-
-
 DualPropertyType = TypeVar('DualPropertyType')
 DualPropertyOwner = TypeVar('DualPropertyOwner')
 

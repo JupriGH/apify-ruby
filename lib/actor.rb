@@ -121,7 +121,7 @@ module Apify
 			@_was_final_persist_state_emitted = false
 
 			Log.info 'Initializing actor...'
-			#Log.info ({message: 'System info', extra: _get_system_info})
+			Log.info 'System info', extra: Utils::_get_system_info
 
 			# TODO: Print outdated SDK version warning (we need a new env var for this)
 
