@@ -31,11 +31,11 @@ LOG_LEVEL_COLOR = {
 }
 
 LOG_LEVEL_SHORT_ALIAS = {
-	'DEBUG' => 'DEBUG',
-	'INFO' => 'INFO ',
-	'WARN' => 'WARN ',
-	'ERROR' => 'ERROR',
-	'FATAL' => 'CRITICAL',
+	'DEBUG' 	=> 'DEBUG ',
+	'INFO' 		=> ' INFO ',
+	'WARN' 		=> ' WARN ',
+	'ERROR' 	=> 'ERROR ',
+	'FATAL' 	=> 'FATAL ',
 }
 	
 =begin
@@ -46,9 +46,14 @@ LOG_LEVEL_SHORT_ALIAS = {
 
 ### process extra info's
 class LoggerExtra < Logger
-	def __extra *msg, extra: nil
+	def __extra *msg, extra: nil, exc_info: nil, **kwargs
 		if extra
 			msg << "(#{extra.to_json})".light_black
+		end
+		if exc_info
+			#p "TODO: Log Traceback"
+			#p exc_info
+			msg << "\n" << exc_info.backtrace.join("\n\t")
 		end
 		msg.join " "
 	end

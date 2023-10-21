@@ -2,8 +2,6 @@ require 'async'
 require 'async/io/stream'
 require 'async/http/endpoint'
 require 'async/websocket/client'
-#require 'async/io/stream'
-#require 'async/websocent'
 
 =begin
 import asyncio
@@ -18,9 +16,6 @@ from pyee.asyncio import AsyncIOEventEmitter
 
 from apify_shared.consts import ActorEventTypes
 from apify_shared.utils import ignore_docs, maybe_extract_enum_member_value, parse_date_fields
-
-from .config import Configuration
-from .log import logger
 
 ListenerType = Union[Callable[[], None], Callable[[Any], None], Callable[[], Coroutine[Any, Any, None]], Callable[[Any], Coroutine[Any, Any, None]]]
 =end
@@ -106,8 +101,6 @@ module Apify
 		that can be listened to by the `Actor.on()` method.
 		"""
 		def init
-			p "EventManager.init"
-
 			raise 'EventManager was already initialized!' if @_initialized # RuntimeError
 
 			# Run tasks but don't await them
@@ -119,8 +112,6 @@ module Apify
 				
 				is_connected = @_connected_to_platform_websocket
 				raise 'Error connecting to platform events websocket!' unless is_connected # RuntimeError
-				
-				p "IS_CONNECTED"
 			else
 				Log.debug 'APIFY_ACTOR_EVENTS_WS_URL env var not set, no events from Apify platform will be emitted.'
 			end
@@ -286,60 +277,45 @@ module Apify
 		end
 		
 		def _process_platform_messages
-				
-				#sleep 3
-				#begin
-					'''
-					Async {
-						sleep 3
-						p "WS CONNECTED"
-						@_connected_to_platform_websocket = true
-					
-						Async {
-							while true
-								Log.debug "WS Message: dummy"
-								sleep 2
-								#msg = JSON.parse(message.buffer, symbolize_names: true)
-								#p msg[:name]
-							end
-						}
-					}
-					'''
-					
-					url = @_config.actor_events_ws_url
-					#url = 'ws://127.0.0.1:9999'
-					Log.debug "!!WS URL!!".red, url
-					
-					endpoint = Async::HTTP::Endpoint.parse(url)
-			
-					@_platform_events_websocket = connection = Async::WebSocket::Client.connect(endpoint)
-					@_connected_to_platform_websocket = true
-					
-					Log.debug "!!WS CONNECTED!!".red
-					
-					return Async {
-						while message = connection.read							
-							parsed_message = JSON.parse(message.buffer) # , symbolize_names: true)
-							#assert isinstance(parsed_message, dict)
-							#parsed_message = parse_date_fields(parsed_message)
-							event_name = parsed_message['name']
-							event_data = parsed_message['data']  # 'data' can be missing
 
-							#Log.debug "WS:", event_name, extra: event_data
-							@_event_emitter.emit(event_name, event_data)
-						end
-						Log.debug "!!WS DISCONNECT!!".red
-					}					
-				#rescue Exception => exc
-				#	p "WS ERROR:"
-				#	p exc
-				#end
-				# p "RETURN ..."
+			# This should be called only on the platform, where we have the ACTOR_EVENTS_WS_URL configured
+			url = @_config.actor_events_ws_url
+			
+			#assert self._config.actor_events_ws_url is not None
+			#assert self._connected_to_platform_websocket is not None
+
+			#begin
+				#url = 'ws://127.0.0.1:9999'
+				Log.debug "!!WS URL!!".red, url
+				
+				endpoint = Async::HTTP::Endpoint.parse(url)
+		
+				@_platform_events_websocket = connection = Async::WebSocket::Client.connect(endpoint)
+				@_connected_to_platform_websocket = true
+				
+				Log.debug "!!WS CONNECTED!!".red
+				
+				return Async {
+					while message = connection.read							
+						parsed_message = JSON.parse(message.buffer) # , symbolize_names: true)
+						#assert isinstance(parsed_message, dict)
+						#parsed_message = parse_date_fields(parsed_message)
+						event_name = parsed_message['name']
+						event_data = parsed_message['data']  # 'data' can be missing
+
+						#Log.debug "WS:", event_name, extra: event_data
+						@_event_emitter.emit(event_name, event_data)
+					end
+					Log.debug "!!WS DISCONNECT!!".red
+				}					
+			#rescue Exception => exc
+			#	p "WS ERROR:"
+			#	p exc
+			#end
 			
 			###################################################################################################
 			return
 		
-			# This should be called only on the platform, where we have the ACTOR_EVENTS_WS_URL configured
 
 			#Async do
 				p "WEBSOCKET:"
@@ -377,9 +353,6 @@ module Apify
 			#Async::Reactor.run
 			
 =begin
-			assert self._config.actor_events_ws_url is not None
-			assert self._connected_to_platform_websocket is not None
-
 			try:
 				async with websockets.client.connect(self._config.actor_events_ws_url) as websocket:
 					self._platform_events_websocket = websocket

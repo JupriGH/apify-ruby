@@ -103,16 +103,9 @@ module Apify
 		and it should be called only once.
 		"""
 
-		#################################################### ASYNC
-		def self.init_async
-			Async {
-				p "self.init_async"
-				#sleep 2
-				_get_default_instance.init_async
-			}
-		end
+		def self.init = _get_default_instance.init
 		
-		def init_async 
+		def init
 			raise 'The actor was already initialized!' if @_is_initialized # RuntimeError
 			
 			@_is_exiting = false
@@ -149,55 +142,6 @@ module Apify
 			# We need to make a first, dummy call, so the next calls have something to compare itself agains
 			
 			# Utils::_get_cpu_usage_percent
-			
-			@_is_initialized = true
-		end
-		
-		####################################################
-		
-		def self.init = _get_default_instance.init
-
-		def init
-			raise 'The actor was already initialized!' if @_is_initialized # RuntimeError
-			
-			@_is_exiting = false
-			@_was_final_persist_state_emitted = false
-
-			Log.info 'Initializing actor...'
-			Log.info 'System info', extra: Utils::_get_system_info
-
-			# TODO: Print outdated SDK version warning (we need a new env var for this)
-
-			StorageClientManager.set_config(@_config)		
-			StorageClientManager.set_cloud_client(@_apify_client) if @_config.token
-			
-			### EVENT MANAGER
-
-			#@_event_manager.init
-=begin
-			self._send_persist_state_interval_task = asyncio.create_task(
-				_run_func_at_interval_async(
-					lambda: self._event_manager.emit(ActorEventTypes.PERSIST_STATE, {'isMigrating': False}),
-					self._config.persist_state_interval_millis / 1000,
-				),
-			)
-
-			if not self.is_at_home():
-				self._send_system_info_interval_task = asyncio.create_task(
-					_run_func_at_interval_async(
-						lambda: self._event_manager.emit(ActorEventTypes.SYSTEM_INFO, self._get_system_info()),
-						self._config.system_info_interval_millis / 1000,
-					),
-				)
-
-			self._event_manager.on(ActorEventTypes.MIGRATING, self._respond_to_migrating_event)
-=end
-			
-			"""
-			# The CPU usage is calculated as an average between two last calls to psutil
-			# We need to make a first, dummy call, so the next calls have something to compare itself agains
-			_get_cpu_usage_percent
-			"""
 			
 			@_is_initialized = true
 		end
@@ -324,9 +268,9 @@ module Apify
 			# so the exception traceback will be printed on its own
 			
 			# TODO:
-			# if exception and not _is_running_in_ipython():
-			#	self.log.exception('Actor failed with an exception', exc_info=exception)
-
+			if exception ## and not _is_running_in_ipython():
+				Log.error('Actor failed with an exception', exc_info: exception)
+			end
 			exit_ exit_code, status_message: status_message
 		end
 
@@ -355,56 +299,34 @@ module Apify
 		end
 
 		def main main_actor_function
-			Log.debug "MAIN", main_actor_function
-			#if not inspect.isfunction(main_actor_function):
-			#	raise TypeError(f'First argument passed to Actor.main() must be a function, but instead it was {type(main_actor_function)}')
-
-			init
-			
-			Log.debug "CALLING", main_actor_function
-			
-			res = main_actor_function.call
-			
-			#if inspect.iscoroutinefunction(main_actor_function):
-			#	res = await main_actor_function()
-			#else:
-			#	res = main_actor_function()
-			
-			exit_
-			
-			#return cast(MainReturnType, res)
-			return res
-			
-		#rescue Exception => e
-			#fail_(
-			#	exit_code=ActorExitCodes.ERROR_USER_FUNCTION_THREW.value,
-			#	exception=e,
-			#)
-		#	nil
-		end
-
-		def self.main_async main_actor_function
-			_get_default_instance.main_async main_actor_function
-		end 
-		
-		def main_async main_actor_function
-			
-			# accept only LAMBDA or PROC or METHOD(:function)
-			raise unless [Method, Proc].include?( main_actor_function.class )
-			
-			Async do
-				init_async
+			Async do |task|
+				#if not inspect.isfunction(main_actor_function):
+				#	raise TypeError(f'First argument passed to Actor.main() must be a function, but instead it was {type(main_actor_function)}')
+				raise unless [Method, Proc].include?( main_actor_function.class )
+				
+				init
 				
 				res = main_actor_function.call(self)
 				
-				p "SUCCESS"
+				#if inspect.iscoroutinefunction(main_actor_function):
+				#	res = await main_actor_function()
+				#else:
+				#	res = main_actor_function()
+				
 				exit_
 				
+				#return cast(MainReturnType, res)
 				return res
-			#rescue Exception => exc
-			#	p exc
-			#	p "FAILED"
-			#	#fail_
+			
+			rescue SystemExit => e
+				Log.debug '# SystemExit #'
+				
+			rescue Exception => e
+				fail_ ActorExitCodes::ERROR_USER_FUNCTION_THREW, exception: e
+			
+			ensure 
+				Log.debug '# Main Stop #'
+				task.stop
 			end
 		end
 
