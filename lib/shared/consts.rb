@@ -213,7 +213,7 @@ module Apify
 		ActorEnvVars::WEB_SERVER_PORT,
 		# Apify env vars
 		ApifyEnvVars::CONTAINER_PORT,
-		ApifyEnvVars::DEDICATED_CPUS,
+		ApifyEnvVars::DEDICATED_CPUS, # <jupri> float ?
 		ApifyEnvVars::LOG_LEVEL,
 		ApifyEnvVars::MEMORY_MBYTES,
 		ApifyEnvVars::METAMORPH_AFTER_SLEEP_MILLIS,
@@ -224,6 +224,7 @@ module Apify
 
 	FLOAT_ENV_VARS = [
 		ApifyEnvVars::MAX_USED_CPU_RATIO,
+		#ApifyEnvVars::DEDICATED_CPUS
 	]
 
 	BOOL_ENV_VARS = [
