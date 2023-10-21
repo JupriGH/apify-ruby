@@ -113,10 +113,12 @@ module Apify
 		"""
 
 		#################################################### ASYNC
-		def self.init_async			
-			p "self.init_async"
-			#sleep 2
-			_get_default_instance.init_async
+		def self.init_async
+			Async {
+				p "self.init_async"
+				#sleep 2
+				_get_default_instance.init_async
+			}
 		end
 		
 		def init_async 
@@ -138,7 +140,7 @@ module Apify
 			
 			### EVENT MANAGER
 			
-			@_event_manager.init
+			#@_event_manager.init
 =begin
 			self._send_persist_state_interval_task = asyncio.create_task(
 				_run_func_at_interval_async(
@@ -364,16 +366,18 @@ module Apify
 		Args:
 			main_actor_function (Callable): The user function which should be run in the actor
 		"""
-
 		def self.main main_actor_function
 			_get_default_instance.main main_actor_function
 		end
 
 		def main main_actor_function
+			Log.debug "MAIN", main_actor_function
 			#if not inspect.isfunction(main_actor_function):
 			#	raise TypeError(f'First argument passed to Actor.main() must be a function, but instead it was {type(main_actor_function)}')
 
 			init
+			
+			Log.debug "CALLING", main_actor_function
 			
 			res = main_actor_function.call
 			
@@ -386,12 +390,25 @@ module Apify
 			#return cast(MainReturnType, res)
 			return res
 			
-		rescue Exception => e
+		#rescue Exception => e
 			#fail_(
 			#	exit_code=ActorExitCodes.ERROR_USER_FUNCTION_THREW.value,
 			#	exception=e,
 			#)
-			nil
+		#	nil
+		end
+
+		def self.main_async main_actor_function
+			_get_default_instance.main_async main_actor_function
+		end 
+		def main_async main_actor_function
+			Async {
+				init
+				
+				res = method(main_actor_function).call
+				
+				exit
+			}
 		end
 
 		"""Return a new instance of the Apify API client.
