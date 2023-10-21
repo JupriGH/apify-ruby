@@ -169,7 +169,7 @@ class dualproperty(Generic[DualPropertyType]):  # noqa: N801
 		return Float(val) if 
 			FLOAT_ENV_VARS.include?(env_var)
 		
-		return Int(val) if 
+		return Integer(val) if 
 			INTEGER_ENV_VARS.include?(env_var)
 
 		#return DateTime.iso8601(val, '%Y-%m-%dT%H:%M:%S.%fZ').to_time.localtime if # Local time
