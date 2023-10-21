@@ -405,7 +405,7 @@ module Apify
 			Async {
 				init
 				
-				res = method(main_actor_function).call
+				res = method(main_actor_function).call(self)
 				
 				exit
 			}
