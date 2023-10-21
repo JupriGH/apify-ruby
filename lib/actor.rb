@@ -113,9 +113,6 @@ module Apify
 		end
 		
 		def init_async 
-			p "init_async"
-			#sleep 2
-			
 			raise 'The actor was already initialized!' if @_is_initialized # RuntimeError
 			
 			@_is_exiting = false
@@ -128,9 +125,7 @@ module Apify
 
 			StorageClientManager.set_config(@_config)		
 			StorageClientManager.set_cloud_client(@_apify_client) if @_config.token
-			
-			### EVENT MANAGER
-			
+
 			@_event_manager.init
 			
 			@_send_persist_state_interval_task = Async { #asyncio.create_task(
@@ -140,10 +135,10 @@ module Apify
 				)
 			}
 			if !is_at_home
-				@_send_system_info_interval_task = Async {  #asyncio.create_task(
+				@_send_system_info_interval_task = Async { #asyncio.create_task(
 					Utils::_run_func_at_interval_async(
 						lambda { @_event_manager.emit(ActorEventTypes::SYSTEM_INFO, _get_system_info) },
-						5, # @_config.system_info_interval_millis / 1000
+						@_config.system_info_interval_millis / 1000
 					)
 				}
 			end
@@ -156,7 +151,6 @@ module Apify
 			# Utils::_get_cpu_usage_percent
 			
 			@_is_initialized = true
-			Log.debug "Actor INIT: OK"
 		end
 		
 		####################################################

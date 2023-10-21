@@ -292,14 +292,16 @@ module Apify
 					
 					url = @_config.actor_events_ws_url
 					#url = 'ws://127.0.0.1:9999'
-					Log.debug "WS URL =>", url
+					Log.debug "!!WS URL!!".red, url
 					
 					endpoint = Async::HTTP::Endpoint.parse(url)
 			
 					connection = Async::WebSocket::Client.connect(endpoint)	
 						
 					@_connected_to_platform_websocket = true
-					p "WS CONNECTED"
+					
+					Log.debug "!!WS CONNECTED!!".red
+					
 					Async {
 						while message = connection.read							
 							parsed_message = JSON.parse(message.buffer) # , symbolize_names: true)
@@ -308,14 +310,10 @@ module Apify
 							event_name = parsed_message['name']
 							event_data = parsed_message['data']  # 'data' can be missing
 
-							Log.debug "WS:", event_name, extra: event_data
+							#Log.debug "WS:", event_name, extra: event_data
 							@_event_emitter.emit(event_name, event_data)
 						end
-					}
-					
-					p 'SLEEP 5'
-					sleep 5
-					
+					}					
 				#rescue Exception => exc
 				#	p "WS ERROR:"
 				#	p exc

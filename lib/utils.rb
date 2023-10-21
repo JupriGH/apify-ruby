@@ -223,11 +223,10 @@ class dualproperty(Generic[DualPropertyType]):  # noqa: N801
 			
 			sleep_for_secs = sleep_until - now
 			sleep sleep_for_secs # await asyncio.sleep(sleep_for_secs)
+			
 			#res = func()
 			#if inspect.isawaitable(res):
-			#	await res
-			p "_run_func_at_interval_async()"
-			
+			#	await res			
 			func.call
 		end
 	end
