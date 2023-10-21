@@ -3,21 +3,20 @@ require 'base64'
 require 'securerandom' # Python secrets.choice
 
 =begin
-	from cryptography.exceptions import InvalidTag as InvalidTagException
-	from cryptography.hazmat.primitives import hashes, serialization
-	from cryptography.hazmat.primitives.asymmetric import padding, rsa
-	from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-	from .consts import ENCRYPTED_INPUT_VALUE_REGEXP
+from cryptography.exceptions import InvalidTag as InvalidTagException
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import padding, rsa
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 =end
+
+ENCRYPTION_KEY_LENGTH = 32
+ENCRYPTION_IV_LENGTH = 16
+ENCRYPTION_AUTH_TAG_LENGTH = 16
 
 module Apify
 
 	class Crypto
 	
-		ENCRYPTION_KEY_LENGTH = 32
-		ENCRYPTION_IV_LENGTH = 16
-		ENCRYPTION_AUTH_TAG_LENGTH = 16
-
 		"""Encrypts the given value using AES cipher and the password for encryption using the public key.
 
 		The encryption password is a string of encryption key and initial vector used for cipher.
@@ -138,7 +137,7 @@ module Apify
 			if input.class == Hash
 				input.each do |key, value|	
 					if value.class == String
-						match = value.match(Consts::ENCRYPTED_INPUT_VALUE_REGEXP)
+						match = value.match(ENCRYPTED_INPUT_VALUE_REGEXP)
 						if match
 							input[key] = private_decrypt match[1], match[2], private_key
 						end
