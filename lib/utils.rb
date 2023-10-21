@@ -164,16 +164,16 @@ class dualproperty(Generic[DualPropertyType]):  # noqa: N801
 		return default if val.nil? || val.empty?
 				
 		return ['true', '1'].include?(val.downcase) if 
-			Const::BOOL_ENV_VARS.include?(env_var)
+			BOOL_ENV_VARS.include?(env_var)
 		
 		return Float(val) if 
-			Const::FLOAT_ENV_VARS.include?(env_var)
+			FLOAT_ENV_VARS.include?(env_var)
 		
 		return Int(val) if 
-			Const::INTEGER_ENV_VARS.include?(env_var)
+			INTEGER_ENV_VARS.include?(env_var)
 
 		return Date.strptime(val, '%Y-%m-%dT%H:%M:%S.%fZ').to_time.utc if
-			Const::DATETIME_ENV_VARS.include?(env_var)
+			DATETIME_ENV_VARS.include?(env_var)
 		
 		return val # String
 	rescue
