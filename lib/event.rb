@@ -270,13 +270,13 @@ module Apify
 						
 						@_connected_to_platform_websocket = true
 
-						Async {
+						#Async {
 							while message = connection.read
 								Log.debug "WS Message:", message.buffer
 								#msg = JSON.parse(message.buffer, symbolize_names: true)
 								#p msg[:name]
 							end
-						}
+						#}
 						
 						p "WS CONNECTED"
 					}
