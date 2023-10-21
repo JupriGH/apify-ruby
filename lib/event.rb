@@ -143,7 +143,7 @@ module Apify
 				#await self._platform_events_websocket.close()
 				Log.debug "@_platform_events_websocket.close"
 				@_platform_events_websocket.close
-				@_platform_events_websocket.wait
+				#@_platform_events_websocket.wait
 			end
 			if @_process_platform_messages_task
 				Log.debug "@_process_platform_messages_task.stop"
