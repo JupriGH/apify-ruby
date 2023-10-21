@@ -44,7 +44,11 @@ class EventEmitter
 	# Emit an event and trigger subscribed callbacks
 	def emit event, *args
 		if @subscribers[event]
-			@subscribers[event].each { |callback| callback.call(*args) }
+			@subscribers[event].each { |callback| 
+				Async { 
+					callback.call(*args) 
+				} 
+			}
 		end
 	end
 
