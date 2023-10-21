@@ -177,8 +177,8 @@ class dualproperty(Generic[DualPropertyType]):  # noqa: N801
 			DATETIME_ENV_VARS.include?(env_var)
 		
 		return val # String
-	rescue
-		return default
+	#rescue
+	#	return default
 	end
 	
 =begin

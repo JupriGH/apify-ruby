@@ -141,10 +141,10 @@ module Apify
 			@xvfb 							= getenv(ApifyEnvVars::XVFB, false)
 			@system_info_interval_millis 	= system_info_interval_millis || getenv(ApifyEnvVars::SYSTEM_INFO_INTERVAL_MILLIS, 60000)
 			
-			ENV.each do |key, val|
-				p "#{key}=#{val}"
-			end
-			pp self
+			#ENV.each do |key, val|
+			#	p "#{key}=#{val}"
+			#end
+			#pp self
 		end
 		
 		def getenv(*args) = Utils::_fetch_and_parse_env_var(*args)
