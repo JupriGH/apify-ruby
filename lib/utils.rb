@@ -161,6 +161,8 @@ class dualproperty(Generic[DualPropertyType]):  # noqa: N801
 		## env_var_name = str(maybe_extract_enum_member_value(env_var))
 
 		val = ENV[env_var] # ENV(env_var_name)
+		puts "#{env_var}=#{val}"
+		
 		return default if val.nil? || val.empty?
 				
 		return ['true', '1'].include?(val.downcase) if 
