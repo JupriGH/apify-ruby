@@ -256,7 +256,7 @@ module Apify
 								#p msg[:name]
 							end
 						}
-					end.wait
+					end
 				rescue Exception => exc
 					p "WS ERROR:"
 					p exc
