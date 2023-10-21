@@ -265,7 +265,7 @@ def _maybe_parse_body(body: bytes, content_type: str) -> Any:
 		#return id[:REQUEST_ID_LENGTH] if len(id) > REQUEST_ID_LENGTH else id
 		
 		# https://stackoverflow.com/questions/2620975/strange-n-in-base64-encoded-string-in-ruby
-		Base64.strict_encode64( Digest::SHA256.digest(unique_key) ).gsub(/\+|\/|\=/,"")[.. Consts::REQUEST_ID_LENGTH]
+		Base64.strict_encode64( Digest::SHA256.digest(unique_key) ).gsub(/\+|\/|\=/,"")[.. REQUEST_ID_LENGTH]
 	end
 
 =begin

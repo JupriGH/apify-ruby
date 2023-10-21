@@ -26,7 +26,7 @@ module Apify
 
 	class Dataset < BaseStorage
 		
-		HUMAN_FRIENDLY_LABEL = 'Dataset'
+		HUMAN_FRIENDLY_LABEL = StorageTypes::DATASET
 		
 		#_id: str
 		#_name: Optional[str]

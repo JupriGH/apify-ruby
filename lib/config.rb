@@ -1,4 +1,3 @@
-
 module Apify
 
     """A class for specifying the configuration of an actor.

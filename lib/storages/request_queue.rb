@@ -1,9 +1,3 @@
-=begin
-from ..consts import REQUEST_QUEUE_HEAD_MAX_LIMIT
-from ..log import logger
-from .base_storage import BaseStorage
-=end
-
 module Apify
 
 	"""Represents a queue of URLs to crawl.
@@ -37,7 +31,7 @@ module Apify
 	"""
 	class RequestQueue < BaseStorage
 
-		HUMAN_FRIENDLY_LABEL = 'Request queue'
+		HUMAN_FRIENDLY_LABEL = StorageTypes::REQUEST_QUEUE
 
 		MAX_CACHED_REQUESTS = 1_000_000
 
@@ -459,9 +453,9 @@ module Apify
 			"""
 
 			# If limit was not reached in the call then there are no more requests to be returned.
-			if queue_head['prevLimit'] >= Const::REQUEST_QUEUE_HEAD_MAX_LIMIT
+			if queue_head['prevLimit'] >= REQUEST_QUEUE_HEAD_MAX_LIMIT
 				# logger.warning('Reached the maximum number of requests in progress', extra={'limit': REQUEST_QUEUE_HEAD_MAX_LIMIT})
-				puts "WARNING", 'Reached the maximum number of requests in progress', {'limit': Const::REQUEST_QUEUE_HEAD_MAX_LIMIT}		
+				puts "WARNING", 'Reached the maximum number of requests in progress', {'limit': REQUEST_QUEUE_HEAD_MAX_LIMIT}		
 			end
 
 			return true

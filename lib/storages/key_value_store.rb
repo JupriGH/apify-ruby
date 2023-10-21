@@ -33,7 +33,7 @@ module Apify
 		
 	class KeyValueStore < BaseStorage
 		
-		HUMAN_FRIENDLY_LABEL = 'Key-value store'
+		HUMAN_FRIENDLY_LABEL = StorageTypes::KEY_VALUE_STORE
 		
 		"""Create a `KeyValueStore` instance.
 
