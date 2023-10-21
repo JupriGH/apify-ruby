@@ -1,5 +1,7 @@
 ### APIFY_UTILS
 
+require 'sys-proctable'
+
 =begin
 import asyncio
 import base64
@@ -188,34 +190,49 @@ class dualproperty(Generic[DualPropertyType]):  # noqa: N801
 		Sys::ProcTable.ps(pid: Process.pid).pctcpu
 	end
 
-=begin
-def _get_memory_usage_bytes() -> int:
-    current_process = psutil.Process(os.getpid())
-    mem = int(current_process.memory_info().rss or 0)
-    for child in current_process.children(recursive=True):
-        with contextlib.suppress(psutil.NoSuchProcess):
-            mem += int(child.memory_info().rss or 0)
-    return mem
-=end
+	def self._get_memory_usage_bytes
+		"""
+		current_process = psutil.Process(os.getpid())
+		mem = int(current_process.memory_info().rss or 0)
+		for child in current_process.children(recursive=True):
+			with contextlib.suppress(psutil.NoSuchProcess):
+				mem += int(child.memory_info().rss or 0)
+		return mem
+		"""
+		current_pid = Process.pid
+		current_process = Sys::ProcTable.ps(pid: current_pid)
+		mem = current_process.rss
+
+		# Calculate memory usage for child processes recursively
+		children = Sys::ProcTable.ps.select { |p| p.ppid == current_pid }
+		children.each do |child|
+			mem += child.rss
+		end
+		return mem
+	end
+
+	def self._run_func_at_interval_async func, interval_secs
+		started_at = sleep_until = Process.clock_gettime(Process::CLOCK_MONOTONIC) # time.perf_counter()
+		
+		while true
+			now = Process.clock_gettime(Process::CLOCK_MONOTONIC) # time.perf_counter()
+			while true
+				sleep_until += interval_secs
+				break if sleep_until >= now
+			end
+			
+			sleep_for_secs = sleep_until - now
+			sleep sleep_for_secs # await asyncio.sleep(sleep_for_secs)
+			#res = func()
+			#if inspect.isawaitable(res):
+			#	await res
+			p "_run_func_at_interval_async()"
+			
+			func.call
+		end
+	end
 
 =begin
-async def _run_func_at_interval_async(func: Callable, interval_secs: float) -> None:
-    started_at = time.perf_counter()
-    sleep_until = started_at
-    while True:
-        now = time.perf_counter()
-        sleep_until += interval_secs
-        while sleep_until < now:
-            sleep_until += interval_secs
-
-        sleep_for_secs = sleep_until - now
-        await asyncio.sleep(sleep_for_secs)
-
-        res = func()
-        if inspect.isawaitable(res):
-            await res
-
-
 async def _force_remove(filename: str) -> None:
     """JS-like rm(filename, { force: true })."""
     with contextlib.suppress(FileNotFoundError):

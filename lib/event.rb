@@ -240,12 +240,11 @@ module Apify
 			event_name (ActorEventTypes): The actor event which should be emitted.
 			data (Any): The data that should be emitted with the event.
 		"""
-=begin
-		def emit(self, event_name: ActorEventTypes, data: Any) -> None:
-			event_name = maybe_extract_enum_member_value(event_name)
-
-			self._event_emitter.emit(event_name, data)
-=end
+		def emit event_name, data
+			#event_name = maybe_extract_enum_member_value(event_name)
+			@_event_emitter.emit event_name, data
+		end
+		
 		"""Wait for all event listeners which are currently being executed to complete.
 
 		Args:

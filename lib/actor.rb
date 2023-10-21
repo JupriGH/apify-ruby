@@ -5,13 +5,7 @@ module Apify
 
 		@@_default_instance = nil
 
-		#_apify_client: ApifyClientAsync
 		#_memory_storage_client: MemoryStorageClient
-		#_config: Configuration
-		#_event_manager: EventManager
-		#_send_system_info_interval_task: Optional[asyncio.Task] = None
-		#_send_persist_state_interval_task: Optional[asyncio.Task] = None
-		@_is_exiting = false
 		#_was_final_persist_state_emitted = False
 
 		"""Create an Actor instance.
@@ -33,6 +27,9 @@ module Apify
 			@_apify_client = new_client
 			@_event_manager = EventManager.new @_config
 			@_is_initialized = false
+			@_is_exiting = false
+			@_send_system_info_interval_task = nil 
+			@_send_persist_state_interval_task = nil
 		end
 
 =begin
@@ -81,16 +78,10 @@ module Apify
 		"""The Configuration instance the Actor instance uses."""
 		def self.config = _get_default_instance.config
 		def config = @_config
-		
-=begin
-		@dualproperty
-		def event_manager(self_or_cls) -> EventManager:  # noqa: N805
-			"""The EventManager instance the Actor instance uses."""  # noqa: D401
-			if isinstance(self_or_cls, type):
-				return self_or_cls._get_default_instance()._event_manager
-			else:
-				return self_or_cls._event_manager
-=end
+
+		"""The EventManager instance the Actor instance uses."""  # noqa: D401		
+		def self.event_manager = _get_default_instance.event_manager
+		def event_manager = @_event_manager
 
 		"""The logging.Logger instance the Actor uses."""  # noqa: D401
 		#def self.log = LOGGER # noqa: N805
@@ -141,22 +132,22 @@ module Apify
 			### EVENT MANAGER
 			
 			@_event_manager.init
-=begin
-			self._send_persist_state_interval_task = asyncio.create_task(
-				_run_func_at_interval_async(
-					lambda: self._event_manager.emit(ActorEventTypes.PERSIST_STATE, {'isMigrating': False}),
-					self._config.persist_state_interval_millis / 1000,
-				),
-			)
-
-			if not self.is_at_home():
-				self._send_system_info_interval_task = asyncio.create_task(
-					_run_func_at_interval_async(
-						lambda: self._event_manager.emit(ActorEventTypes.SYSTEM_INFO, self._get_system_info()),
-						self._config.system_info_interval_millis / 1000,
-					),
+			
+			@_send_persist_state_interval_task = Async { #asyncio.create_task(
+				Utils::_run_func_at_interval_async(
+					lambda { @_event_manager.emit(ActorEventTypes::PERSIST_STATE, {'isMigrating': false}) },
+					@_config.persist_state_interval_millis / 1000
 				)
-=end
+			}
+			if !is_at_home
+				@_send_system_info_interval_task = Async {  #asyncio.create_task(
+					Utils::_run_func_at_interval_async(
+						lambda { @_event_manager.emit(ActorEventTypes::SYSTEM_INFO, _get_system_info) },
+						5, # @_config.system_info_interval_millis / 1000
+					)
+				}
+			end
+			
 			@_event_manager.on ActorEventTypes::MIGRATING, method(:_respond_to_migrating_event)
 			
 			# The CPU usage is calculated as an average between two last calls to psutil
@@ -217,23 +208,20 @@ module Apify
 			@_is_initialized = true
 		end
 
-=begin
 		def _get_system_info
-			cpu_usage_percent = _get_cpu_usage_percent()
-			memory_usage_bytes = _get_memory_usage_bytes()
+			cpu_usage_percent 	= Utils::_get_cpu_usage_percent
+			memory_usage_bytes 	= Utils::_get_memory_usage_bytes
 			# This is in camel case to be compatible with the events from the platform
 			result = {
-				'createdAt': datetime.now(timezone.utc),
-				'cpuCurrentUsage': cpu_usage_percent,
-				'memCurrentBytes': memory_usage_bytes,
+				'createdAt'			=> Time.now.utc, # datetime.now(timezone.utc),
+				'cpuCurrentUsage' 	=> cpu_usage_percent,
+				'memCurrentBytes'	=> memory_usage_bytes,
 			}
-			if self._config.max_used_cpu_ratio:
-				result['isCpuOverloaded'] = (cpu_usage_percent > 100 * self._config.max_used_cpu_ratio)
-
-			return result
-		end
-=end
-		
+			if @_config.max_used_cpu_ratio
+				result['isCpuOverloaded'] = (cpu_usage_percent > 100 * @_config.max_used_cpu_ratio)
+			end
+			result
+		end		
 
 		# Don't emit any more regular persist state events		
 		def _respond_to_migrating_event _event_data
