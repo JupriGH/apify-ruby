@@ -270,13 +270,12 @@ module Apify
 
 			# TODO
 			# exit_code = Utils::maybe_extract_enum_member_value(exit_code)
+			Log.info 'Exiting actor', extra: {'exit_code': exit_code}
 
-			"""
-			self.log.info('Exiting actor', extra={'exit_code': exit_code})
-
-			await self._cancel_event_emitting_intervals()
+			_cancel_event_emitting_intervals
 
 			# Send final persist state event
+			"""
 			if not self._was_final_persist_state_emitted:
 				self._event_manager.emit(ActorEventTypes.PERSIST_STATE, {'isMigrating': False})
 				self._was_final_persist_state_emitted = True
@@ -286,12 +285,10 @@ module Apify
 				set_status_message status_message, is_terminal: true
 			end
 			
-			"""
 			# Sleep for a bit so that the listeners have a chance to trigger
-			await asyncio.sleep(0.1)
+			#await asyncio.sleep(0.1)
 
-			await self._event_manager.close(event_listeners_timeout_secs=event_listeners_timeout_secs)
-			"""
+			@_event_manager.close event_listeners_timeout_secs: event_listeners_timeout_secs
 			
 			@_is_initialized = false
 
@@ -646,12 +643,11 @@ module Apify
 		@classmethod
 		def off(cls, event_name: ActorEventTypes, listener: Optional[Callable] = None) -> None:
 			return cls._get_default_instance().off(event_name, listener)
-
-		def _off_internal(self, event_name: ActorEventTypes, listener: Optional[Callable] = None) -> None:
-			self._raise_if_not_initialized()
-
-			return self._event_manager.off(event_name, listener)
 =end
+		def off event_name, listener
+			_raise_if_not_initialized
+			@_event_manager.off event_name, listener
+		end
 
 		"""Return `True` when the actor is running on the Apify platform, and `False` otherwise (for example when running locally)."""
 		def self.is_at_home = _get_default_instance.is_at_home

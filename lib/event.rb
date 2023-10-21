@@ -37,8 +37,8 @@ class EventEmitter
 	end
 	
 	# Remove a specific callback from an event
-	def off event, callback
-		#@subscribers[event]&.delete(callback)
+	def remove_listener event, callback
+		@subscribers[event]&.delete(callback)
 	end
 
 	# Emit an event and trigger subscribed callbacks
@@ -53,9 +53,13 @@ class EventEmitter
 	end
 
 	# Remove all callbacks from an event
-	#def off_all event
-	#	@subscribers[event] = []
-	#end
+	def remove_all_listeners event=nil
+		if event
+			@subscribers[event].clear # = []
+		else
+			@subscribers.clear
+		end
+	end
 end
 
 module Apify
@@ -87,10 +91,12 @@ module Apify
 			@_event_emitter = EventEmitter.new  # AsyncIOEventEmitter()
 			@_initialized = false
 			#@_listener_tasks = set()
-			#@_listeners_to_wrappers = defaultdict(lambda: defaultdict(list))
+			@_listeners_to_wrappers = {} # defaultdict(lambda: defaultdict(list))
 
 			##
+			@_platform_events_websocket = nil
 			@_connected_to_platform_websocket = false
+			
 		end
 
 		"""Initialize the event manager.
@@ -109,7 +115,7 @@ module Apify
 				#self._connected_to_platform_websocket = asyncio.Future()
 				#self._process_platform_messages_task = asyncio.create_task(self._process_platform_messages())
 
-				_process_platform_messages
+				@_process_platform_messages_task = _process_platform_messages
 				
 				is_connected = @_connected_to_platform_websocket
 				raise 'Error connecting to platform events websocket!' unless is_connected # RuntimeError
@@ -130,23 +136,27 @@ module Apify
 		Args:
 			event_listeners_timeout_secs (float, optional): Optional timeout after which the pending event listeners are canceled.
 		"""		
-=begin
-		async def close(self, event_listeners_timeout_secs: Optional[float] = None) -> None:
-			if not self._initialized:
-				raise RuntimeError('EventManager was not initialized!')
+		def close event_listeners_timeout_secs: nil
+			raise 'EventManager was not initialized!' if !@_initialized # RuntimeError
 
-			if self._platform_events_websocket:
-				await self._platform_events_websocket.close()
+			if @_platform_events_websocket
+				#await self._platform_events_websocket.close()
+				Log.debug "@_platform_events_websocket.close"
+				@_platform_events_websocket.close
+				@_platform_events_websocket.wait
+			end
+			if @_process_platform_messages_task
+				Log.debug "@_process_platform_messages_task.stop"
+				@_process_platform_messages_task.stop
+				#await self._process_platform_messages_task
+			end
+			
+			wait_for_all_listeners_to_complete timeout_secs: event_listeners_timeout_secs
 
-			if self._process_platform_messages_task:
-				await self._process_platform_messages_task
+			@_event_emitter.remove_all_listeners
 
-			await self.wait_for_all_listeners_to_complete(timeout_secs=event_listeners_timeout_secs)
-
-			self._event_emitter.remove_all_listeners()
-
-			self._initialized = False
-=end
+			@_initialized = false
+		end
 
 		"""Add an event listener to the event manager.
 
@@ -159,9 +169,8 @@ module Apify
 		def on event_name, listener
 			raise 'EventManager was not initialized!' if !@_initialized # RuntimeError
 
-			@_event_emitter.add_listener event_name, listener
-=begin			
 			# Detect whether the listener will accept the event_data argument
+=begin
 			try:
 				signature = inspect.signature(listener)
 			except (ValueError, TypeError):
@@ -179,9 +188,10 @@ module Apify
 						listener_argument_count = 0
 					except TypeError:
 						raise ValueError('The "listener" argument must be a callable which accepts 0 or 1 arguments!')
-
-			event_name = maybe_extract_enum_member_value(event_name)
-
+=end
+			
+			#event_name = maybe_extract_enum_member_value(event_name)
+=begin
 			async def inner_wrapper(event_data: Any) -> None:
 				if inspect.iscoroutinefunction(listener):
 					if listener_argument_count == 0:
@@ -208,9 +218,10 @@ module Apify
 					self._listener_tasks.remove(listener_task)
 
 			self._listeners_to_wrappers[event_name][listener].append(outer_wrapper)
-
-			return self._event_emitter.add_listener(event_name, outer_wrapper)
 =end
+
+			@_event_emitter.add_listener event_name, listener
+			#return self._event_emitter.add_listener(event_name, outer_wrapper)
 		end
 
 		"""Remove a listener, or all listeners, from an actor event.
@@ -219,21 +230,23 @@ module Apify
 			event_name (ActorEventTypes): The actor event for which to remove listeners.
 			listener (Callable, optional): The listener which is supposed to be removed. If not passed, all listeners of this event are removed.
 		"""
-=begin
-		def off(self, event_name: ActorEventTypes, listener: Optional[Callable] = None) -> None:
-			if not self._initialized:
-				raise RuntimeError('EventManager was not initialized!')
+		def off event_name, listener			
+			raise 'EventManager was not initialized!' if !@_initialized # RuntimeError
 
-			event_name = maybe_extract_enum_member_value(event_name)
+			#event_name = maybe_extract_enum_member_value(event_name)
 
-			if listener:
-				for listener_wrapper in self._listeners_to_wrappers[event_name][listener]:
-					self._event_emitter.remove_listener(event_name, listener_wrapper)
-				self._listeners_to_wrappers[event_name][listener] = []
-			else:
+			if listener
+				#for listener_wrapper in self._listeners_to_wrappers[event_name][listener]:
+				#	@_event_emitter.remove_listener event_name, listener_wrapper
+				#self._listeners_to_wrappers[event_name][listener] = []
+				
+				@_event_emitter.remove_listener event_name, listener
+			else
 				self._listeners_to_wrappers[event_name] = defaultdict(list)
-				self._event_emitter.remove_all_listeners(event_name)
-=end
+				@_event_emitter.remove_all_listeners event_name
+			end
+		end
+		
 		"""Emit an actor event manually.
 
 		Args:
@@ -250,25 +263,28 @@ module Apify
 		Args:
 			timeout_secs (float, optional): Timeout for the wait. If the event listeners don't finish until the timeout, they will be canceled.
 		"""
+		def wait_for_all_listeners_to_complete timeout_secs: nil
+			Log.fatal "TODO: #{self.class}.#{__method__}", timeout_secs
 =begin
-		async def wait_for_all_listeners_to_complete(self, *, timeout_secs: Optional[float] = None) -> None:
 			async def _wait_for_listeners() -> None:
 				results = await asyncio.gather(*self._listener_tasks, return_exceptions=True)
 				for result in results:
 					if result is Exception:
 						logger.exception('Event manager encountered an exception in one of the event listeners', exc_info=result)
-
-			if timeout_secs:
-				_, pending = await asyncio.wait([asyncio.create_task(_wait_for_listeners())], timeout=timeout_secs)
-				if pending:
-					logger.warning('Timed out waiting for event listeners to complete, unfinished event listeners will be canceled')
-					for pending_task in pending:
-						pending_task.cancel()
-						with contextlib.suppress(asyncio.CancelledError):
-							await pending_task
-			else:
-				await _wait_for_listeners()
 =end
+			if false # timeout_secs:
+				#_, pending = await asyncio.wait([asyncio.create_task(_wait_for_listeners())], timeout=timeout_secs)
+				#if pending:
+				#	logger.warning('Timed out waiting for event listeners to complete, unfinished event listeners will be canceled')
+				#	for pending_task in pending:
+				#		pending_task.cancel()
+				#		with contextlib.suppress(asyncio.CancelledError):
+				#			await pending_task
+			else
+				#_wait_for_listeners
+			end
+		end
+		
 		def _process_platform_messages
 				
 				#sleep 3
@@ -302,7 +318,7 @@ module Apify
 					
 					Log.debug "!!WS CONNECTED!!".red
 					
-					Async {
+					return Async {
 						while message = connection.read							
 							parsed_message = JSON.parse(message.buffer) # , symbolize_names: true)
 							#assert isinstance(parsed_message, dict)
