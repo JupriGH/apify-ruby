@@ -84,9 +84,6 @@ module Apify
 		def self.event_manager = _get_default_instance.event_manager
 		def event_manager = @_event_manager
 
-		"""The logging.Logger instance the Actor uses."""  # noqa: D401
-		#def self.log = LOGGER # noqa: N805
-		#def log = LOGGER
 
 		def _raise_if_not_initialized
 			raise 'The actor was not initialized!' unless @_is_initialized # RuntimeError()
@@ -182,7 +179,7 @@ module Apify
 		
 		def _cancel_event_emitting_intervals
 			[	@_send_persist_state_interval_task, 
-				@_send_system_info_interval_task].each { |task| task.stop if task && !task.stopped? }
+				@_send_system_info_interval_task	].each { |task| task.stop if task && !task.stopped? }
 		end
 		
 		"""Exit the actor instance.
@@ -214,7 +211,6 @@ module Apify
 			_cancel_event_emitting_intervals
 
 			# Send final persist state event
-			
 			if !@_was_final_persist_state_emitted
 				@_event_manager.emit(ActorEventTypes::PERSIST_STATE, {'isMigrating': false})
 				@_was_final_persist_state_emitted = true
@@ -232,12 +228,11 @@ module Apify
 
 			if defined?(IRB)
 				Log.debug "Not calling sys.exit(#{exit_code}) because actor is running in IRB"
-			elsif nil # _is_running_in_ipython():
-				#self.log.debug(f'Not calling sys.exit({exit_code}) because actor is running in IPython')
 			elsif nil # os.getenv('PYTEST_CURRENT_TEST', False):
 				#self.log.debug(f'Not calling sys.exit({exit_code}) because actor is running in an unit test')
-			elsif nil # hasattr(asyncio, '_nest_patched'):
-				#self.log.debug(f'Not calling sys.exit({exit_code}) because actor is running in a nested event loop')
+			#elsif Async::Task.current? && Async::Task.current.parent 
+			#	#nil # hasattr(asyncio, '_nest_patched'):
+			#	Log.debug "Not calling sys.exit(#{exit_code}) because actor is running in a nested event loop"
 			else
 				exit exit_code
 			end
@@ -537,28 +532,25 @@ module Apify
 			event_name (ActorEventTypes): The actor event for which to listen to.
 			listener (Callable): The function which is to be called when the event is emitted (can be async).
 		"""
-=begin
-		@classmethod
-		def on(cls, event_name: ActorEventTypes, listener: Callable) -> Callable:
+		def self.on event_name, listener
+			_get_default_instance.on event_name, listener
+		end
 
-			return cls._get_default_instance().on(event_name, listener)
-=end
 		def on event_name, listener
 			_raise_if_not_initialized
 			@_event_manager.on event_name, listener
 		end
-
+		
 		"""Remove a listener, or all listeners, from an actor event.
 
 		Args:
 			event_name (ActorEventTypes): The actor event for which to remove listeners.
 			listener (Callable, optional): The listener which is supposed to be removed. If not passed, all listeners of this event are removed.
 		"""
-=begin
-		@classmethod
-		def off(cls, event_name: ActorEventTypes, listener: Optional[Callable] = None) -> None:
-			return cls._get_default_instance().off(event_name, listener)
-=end
+		def self.off event_name, listener
+			_get_default_instance.off event_name, listener
+		end
+		
 		def off event_name, listener
 			_raise_if_not_initialized
 			@_event_manager.off event_name, listener
@@ -656,7 +648,6 @@ module Apify
 		Returns:
 			dict: Info about the aborted actor run
 		"""
-
 		def self.abort run_id, token: nil, gracefully: nil
 			_get_default_instance.abort run_id, token: token, gracefully: gracefully
 		end
@@ -694,7 +685,6 @@ module Apify
 		Returns:
 			dict: Info about the started actor run
 		"""
-		
 		def self.call(
 			actor_id, run_input = nil,
 			token: nil, 

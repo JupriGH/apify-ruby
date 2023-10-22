@@ -5,7 +5,7 @@ module Apify
 
 		attr_accessor :_config, :_local_client, :_cloud_client
 
-		@_default_instance = nil
+		@@_default_instance = nil
 
 		"""Create a `StorageClientManager` instance."""
 		def initialize
@@ -55,7 +55,7 @@ module Apify
 			_get_default_instance._cloud_client = client
 		end
 		
-		def self._get_default_instance = @_default_instance ||= new
+		def self._get_default_instance = @@_default_instance ||= new
 	end
 
 	 """A class for managing storages."""
