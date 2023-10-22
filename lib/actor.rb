@@ -119,7 +119,6 @@ module Apify
 			StorageClientManager.set_config(@_config)		
 			StorageClientManager.set_cloud_client(@_apify_client) if @_config.token
 
-=begin
 			@_event_manager.init
 			
 			@_send_persist_state_interval_task = Async { #asyncio.create_task(
@@ -138,7 +137,6 @@ module Apify
 			end
 			
 			@_event_manager.on ActorEventTypes::MIGRATING, method(:_respond_to_migrating_event)
-=end
 			
 			# The CPU usage is calculated as an average between two last calls to psutil
 			# We need to make a first, dummy call, so the next calls have something to compare itself agains
