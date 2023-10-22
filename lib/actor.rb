@@ -119,6 +119,7 @@ module Apify
 			StorageClientManager.set_config(@_config)		
 			StorageClientManager.set_cloud_client(@_apify_client) if @_config.token
 
+=begin
 			@_event_manager.init
 			
 			@_send_persist_state_interval_task = Async { #asyncio.create_task(
@@ -137,6 +138,7 @@ module Apify
 			end
 			
 			@_event_manager.on ActorEventTypes::MIGRATING, method(:_respond_to_migrating_event)
+=end
 			
 			# The CPU usage is calculated as an average between two last calls to psutil
 			# We need to make a first, dummy call, so the next calls have something to compare itself agains
@@ -754,60 +756,37 @@ module Apify
 		Returns:
 			dict: Info about the started actor run
 		"""
-=begin
-		@classmethod
-		async def call_task(
-			cls,
-			task_id: str,
-			task_input: Optional[Dict[str, Any]] = None,
-			*,
-			build: Optional[str] = None,
-			memory_mbytes: Optional[int] = None,
-			timeout_secs: Optional[int] = None,
-			webhooks: Optional[List[Dict]] = None,
-			wait_secs: Optional[int] = None,
-			token: Optional[str] = None,
-		) -> Optional[Dict]:
-
-			return await cls._get_default_instance().call_task(
-				task_id=task_id,
-				task_input=task_input,
-				token=token,
-				build=build,
-				memory_mbytes=memory_mbytes,
-				timeout_secs=timeout_secs,
-				webhooks=webhooks,
-				wait_secs=wait_secs,
+		def self.call_task(
+			task_id, task_input = nil,
+			build: nil, memory_mbytes: nil, timeout_secs: nil, webhooks: nil, wait_secs: nil, token: nil
+		)
+			_get_default_instance.call_task(
+				task_id, task_input,
+				token: token,
+				build: build,
+				memory_mbytes: memory_mbytes,
+				timeout_secs: timeout_secs,
+				webhooks: webhooks,
+				wait_secs: wait_secs
 			)
+		end
 
-		async def _call_task_internal(
-			self,
-			task_id: str,
-			task_input: Optional[Dict[str, Any]] = None,
-			*,
-			build: Optional[str] = None,
-			memory_mbytes: Optional[int] = None,
-			timeout_secs: Optional[int] = None,
-			webhooks: Optional[List[Dict]] = None,
-			wait_secs: Optional[int] = None,
-			token: Optional[str] = None,
-		) -> Optional[Dict]:
-			self._raise_if_not_initialized()
+		def call_task(
+			task_id, task_input = nil,
+			build: nil, memory_mbytes: nil, timeout_secs: nil, webhooks: nil, wait_secs: nil, token: nil
+		)
+			_raise_if_not_initialized
 
-			if token:
-				client = self.new_client(token=token)
-			else:
-				client = self._apify_client
-
-			return await client.task(task_id).call(
-				task_input=task_input,
-				build=build,
-				memory_mbytes=memory_mbytes,
-				timeout_secs=timeout_secs,
-				webhooks=webhooks,
-				wait_secs=wait_secs,
+			client = token ? new_client(token) : @_apify_client
+			client.task(task_id).call(
+				task_input,
+				build: build,
+				memory_mbytes: memory_mbytes,
+				timeout_secs: timeout_secs,
+				webhooks: webhooks,
+				wait_secs: wait_secs
 			)
-=end
+		end
 
 		"""Transform this actor run to an actor run of a different actor.
 
@@ -886,19 +865,18 @@ module Apify
 			event_listeners_timeout_secs (int, optional): How long should the actor wait for actor event listeners to finish before exiting
 			custom_after_sleep_millis (int, optional): How long to sleep for after the reboot, to wait for the container to be stopped.
 		"""
-		def self.reboot event_listeners_timeout_secs: Consts::EVENT_LISTENERS_TIMEOUT_SECS, custom_after_sleep_millis: nil
+		def self.reboot event_listeners_timeout_secs: EVENT_LISTENERS_TIMEOUT_SECS, custom_after_sleep_millis: nil
 			_get_default_instance.reboot(
 				event_listeners_timeout_secs: event_listeners_timeout_secs,
 				custom_after_sleep_millis: custom_after_sleep_millis,
 			)
 		end
 		
-		def reboot event_listeners_timeout_secs: Consts::EVENT_LISTENERS_TIMEOUT_SECS, custom_after_sleep_millis: nil
+		def reboot event_listeners_timeout_secs: EVENT_LISTENERS_TIMEOUT_SECS, custom_after_sleep_millis: nil
 			_raise_if_not_initialized
 
 			if !is_at_home
-				#self.log.error('Actor.reboot() is only supported when running on the Apify platform.')
-				puts 'Actor.reboot() is only supported when running on the Apify platform.'
+				Log.error 'Actor.reboot() is only supported when running on the Apify platform.'
 				return
 			end
 			

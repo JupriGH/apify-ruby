@@ -67,13 +67,13 @@ module Apify
 	class EventManager
 
 =begin
-	_platform_events_websocket: Optional[websockets.client.WebSocketClientProtocol] = None
-	_process_platform_messages_task: Optional[asyncio.Task] = None
-	_send_persist_state_interval_task: Optional[asyncio.Task] = None
-	_send_system_info_interval_task: Optional[asyncio.Task] = None
-	_listener_tasks: Set[asyncio.Task]
-	_listeners_to_wrappers: Dict[ActorEventTypes, Dict[Callable, List[Callable]]]
-	_connected_to_platform_websocket: Optional[asyncio.Future] = None
+		_platform_events_websocket: Optional[websockets.client.WebSocketClientProtocol] = None
+		_process_platform_messages_task: Optional[asyncio.Task] = None
+		_send_persist_state_interval_task: Optional[asyncio.Task] = None
+		_send_system_info_interval_task: Optional[asyncio.Task] = None
+		_listener_tasks: Set[asyncio.Task]
+		_listeners_to_wrappers: Dict[ActorEventTypes, Dict[Callable, List[Callable]]]
+		_connected_to_platform_websocket: Optional[asyncio.Future] = None
 =end
 
 		"""Create an instance of the EventManager.
@@ -91,7 +91,6 @@ module Apify
 			##
 			@_platform_events_websocket = nil
 			@_connected_to_platform_websocket = false
-			
 		end
 
 		"""Initialize the event manager.
@@ -131,7 +130,6 @@ module Apify
 			raise 'EventManager was not initialized!' if !@_initialized # RuntimeError
 
 			if @_platform_events_websocket
-				#await self._platform_events_websocket.close()
 				Log.debug "@_platform_events_websocket.close"
 				@_platform_events_websocket.close
 				#@_platform_events_websocket.wait
@@ -156,7 +154,6 @@ module Apify
 			listener (Callable): The function which is to be called when the event is emitted (can be async).
 				Must accept either zero or one arguments (the first argument will be the event data).
 		"""
-
 		def on event_name, listener
 			raise 'EventManager was not initialized!' if !@_initialized # RuntimeError
 
@@ -277,41 +274,46 @@ module Apify
 		end
 		
 		def _process_platform_messages
-
 			# This should be called only on the platform, where we have the ACTOR_EVENTS_WS_URL configured
 			url = @_config.actor_events_ws_url
+			url = 'ws://127.0.0.1:9999'
 			
-			#assert self._config.actor_events_ws_url is not None
+			raise unless url
 			#assert self._connected_to_platform_websocket is not None
 
-			#begin
-				#url = 'ws://127.0.0.1:9999'
+			begin
+				endpoint = Async::HTTP::Endpoint.parse(url)
 				Log.debug "!!WS URL!!".red, url
 				
-				endpoint = Async::HTTP::Endpoint.parse(url)
-		
 				@_platform_events_websocket = connection = Async::WebSocket::Client.connect(endpoint)
 				@_connected_to_platform_websocket = true
-				
 				Log.debug "!!WS CONNECTED!!".red
 				
 				return Async {
 					while message = connection.read							
-						parsed_message = JSON.parse(message.buffer) # , symbolize_names: true)
-						#assert isinstance(parsed_message, dict)
-						#parsed_message = parse_date_fields(parsed_message)
-						event_name = parsed_message['name']
-						event_data = parsed_message['data']  # 'data' can be missing
-
-						#Log.debug "WS:", event_name, extra: event_data
-						@_event_emitter.emit(event_name, event_data)
+						begin
+							parsed_message = JSON.parse(message.buffer) # , symbolize_names: true)
+							raise unless parsed_message.class == Hash
+							#parsed_message = parse_date_fields(parsed_message)
+							event_name = parsed_message['name']
+							event_data = parsed_message['data']  # 'data' can be missing
+							#Log.debug "WS:", event_name, extra: event_data
+							
+							@_event_emitter.emit(event_name, event_data)
+						
+						rescue JSON::ParserError => exc
+							Log.fatal 'Cannot parse actor event', extra: {'message': message}
+							raise exc
+						end
 					end
-					Log.debug "!!WS DISCONNECT!!".red
-				}					
-			#rescue Exception => exc
-			#	p "WS ERROR:"
-			#	p exc
-			#end
+					#Log.debug "!!WS NO MORE DATA!!".red
+				}
+			rescue
+				Log.fatal 'Error in websocket connection'
+			ensure 
+				connection.close
+				@_connected_to_platform_websocket = false
+			end
 			
 			###################################################################################################
 			return

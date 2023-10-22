@@ -199,7 +199,7 @@ module Apify
 			res = @http_client.call(
 				url: _url('runs'),
 				method: 'POST',
-				headers: {'content-type': content_type},
+				headers: {'content-type' => content_type},
 				data: run_input,
 				params: request_params
 			)

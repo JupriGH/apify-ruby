@@ -1,8 +1,3 @@
-=begin
-from apify_shared.utils import filter_out_none_values_recursively, ignore_docs, parse_date_fields
-from ..._utils import _encode_key_value_store_record_value, _pluck_data, _to_safe_id
-=end
-
 module Apify
 
 	"""Sub-client for manipulating a single actor run."""
@@ -221,10 +216,6 @@ module Apify
 			LogClient.new **_sub_resource_init_options(resource_path: 'log')
 		end
 	end
-
-=begin
-from apify_shared.utils import ignore_docs, maybe_extract_enum_member_value
-=end
 
 	### RunCollectionClient
 
