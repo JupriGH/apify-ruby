@@ -306,7 +306,7 @@ module Apify
 			
 			raise unless [Method, Proc].include?( main_actor_function.class )
 			
-			Async do |task|
+			Async do #|task|
 				#if not inspect.isfunction(main_actor_function):
 				#	raise TypeError(f'First argument passed to Actor.main() must be a function, but instead it was {type(main_actor_function)}')
 				
