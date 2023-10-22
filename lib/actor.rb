@@ -141,7 +141,7 @@ module Apify
 			else
 				Log.fatal "No event loop is currently running. EventManager will be disabled."
 			end
-			
+
 			# The CPU usage is calculated as an average between two last calls to psutil
 			# We need to make a first, dummy call, so the next calls have something to compare itself agains
 			
@@ -180,18 +180,25 @@ module Apify
 		end
 		
 		def _cancel_event_emitting_intervals
-			Log.debug "TODO: _cancel_event_emitting_intervals()"
-=begin
-			if self._send_persist_state_interval_task and not self._send_persist_state_interval_task.cancelled():
-				self._send_persist_state_interval_task.cancel()
-				with contextlib.suppress(asyncio.CancelledError):
-					await self._send_persist_state_interval_task
-
-			if self._send_system_info_interval_task and not self._send_system_info_interval_task.cancelled():
-				self._send_system_info_interval_task.cancel()
-				with contextlib.suppress(asyncio.CancelledError):
-					await self._send_system_info_interval_task
-=end
+			#Log.debug "TODO: _cancel_event_emitting_intervals()"
+			[	@_send_persist_state_interval_task, 
+				@_send_system_info_interval_task].each { |task| task.stop if !task.stopped? }
+			
+			"""
+			if @_send_persist_state_interval_task && !@_send_persist_state_interval_task.stopped?
+				@_send_persist_state_interval_task.stop
+				#self._send_persist_state_interval_task.cancel()
+				#with contextlib.suppress(asyncio.CancelledError):
+				#	await self._send_persist_state_interval_task
+			end
+			
+			if @_send_system_info_interval_task && !@_send_system_info_interval_task.stopped?
+				@_send_system_info_interval_task.stop
+				#self._send_system_info_interval_task.cancel()
+				#with contextlib.suppress(asyncio.CancelledError):
+				#	await self._send_system_info_interval_task
+			end
+			"""
 		end
 		
 		"""Exit the actor instance.
@@ -227,8 +234,7 @@ module Apify
 			if not self._was_final_persist_state_emitted:
 				self._event_manager.emit(ActorEventTypes.PERSIST_STATE, {'isMigrating': False})
 				self._was_final_persist_state_emitted = True
-			"""
-			
+			"""			
 			if status_message
 				set_status_message status_message, is_terminal: true
 			end
@@ -240,7 +246,9 @@ module Apify
 			
 			@_is_initialized = false
 
-			if nil # _is_running_in_ipython():
+			if defined?(IRB)
+				Log.debug "Not calling sys.exit(#{exit_code}) because actor is running in IRB"
+			elsif nil # _is_running_in_ipython():
 				#self.log.debug(f'Not calling sys.exit({exit_code}) because actor is running in IPython')
 			elsif nil # os.getenv('PYTEST_CURRENT_TEST', False):
 				#self.log.debug(f'Not calling sys.exit({exit_code}) because actor is running in an unit test')
@@ -309,8 +317,7 @@ module Apify
 			Async do |task|
 				#if not inspect.isfunction(main_actor_function):
 				#	raise TypeError(f'First argument passed to Actor.main() must be a function, but instead it was {type(main_actor_function)}')
-				
-				
+
 				init
 				
 				res = main_actor_function.call(self)
@@ -328,13 +335,15 @@ module Apify
 			#rescue SystemExit => e
 			#	Log.debug '# SystemExit #'
 				
-			rescue Exception => e
-				fail_ ActorExitCodes::ERROR_USER_FUNCTION_THREW, exception: e
+			#rescue Exception => e
+			#	fail_ ActorExitCodes::ERROR_USER_FUNCTION_THREW, exception: e
 				
 			#ensure 
 			#	Log.debug '# Main Stop #'
 			#	task.stop
 			end
+			
+			# print "OK 1"
 		
 		end
 
