@@ -67,3 +67,29 @@ end
 
 Apify::Actor.main( method(:main) ).wait
 ```
+### Using "with" *emulator*
+
+Use `with` function to emulate **Python** `context manager`
+
+```ruby
+# SYNC Mode
+with Apify::Actor do |actor|
+	input = actor.get_input
+end
+
+# ASYNC Mode
+Async do
+	with Apify::Actor do |actor|
+		input = actor.get_input
+	end
+end
+```
+`do ... end` can be replaced with `{ ... }`
+
+```ruby
+Async {
+	with Apify::Actor { |actor|
+		input = actor.get_input
+	}
+}
+```

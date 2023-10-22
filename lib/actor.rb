@@ -59,16 +59,6 @@ module Apify
 			else
 				exit_
 			end
-			"""
-			if not self._is_exiting:
-				if exc_value:
-					await self.fail(
-						exit_code=ActorExitCodes.ERROR_USER_FUNCTION_THREW.value,
-						exception=exc_value,
-					)
-				else:
-					await self.exit()
-			"""
 		end
 
 		def self._get_default_instance = @@_default_instance ||= new(config: Configuration.get_global_configuration)
