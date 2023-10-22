@@ -182,7 +182,7 @@ module Apify
 		def _cancel_event_emitting_intervals
 			#Log.debug "TODO: _cancel_event_emitting_intervals()"
 			[	@_send_persist_state_interval_task, 
-				@_send_system_info_interval_task].each { |task| task.stop if !task.stopped? }
+				@_send_system_info_interval_task].each { |task| task.stop if task && !task.stopped? }
 			
 			"""
 			if @_send_persist_state_interval_task && !@_send_persist_state_interval_task.stopped?
