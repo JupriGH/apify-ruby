@@ -1,56 +1,44 @@
-=begin
-from apify_shared.consts import ActorJobStatus, MetaOrigin
-from apify_shared.utils import filter_out_none_values_recursively, ignore_docs, maybe_extract_enum_member_value, parse_date_fields
-
-from ..._utils import _encode_key_value_store_record_value, _encode_webhook_list_to_base64, _pluck_data
-from .actor_version import ActorVersionClient, ActorVersionClientAsync
-from .actor_version_collection import ActorVersionCollectionClient, ActorVersionCollectionClientAsync
-
 def _get_actor_representation(
-    *,
-    name: Optional[str],
-    title: Optional[str] = None,
-    description: Optional[str] = None,
-    seo_title: Optional[str] = None,
-    seo_description: Optional[str] = None,
-    versions: Optional[List[Dict]] = None,
-    restart_on_error: Optional[bool] = None,
-    is_public: Optional[bool] = None,
-    is_deprecated: Optional[bool] = None,
-    is_anonymously_runnable: Optional[bool] = None,
-    categories: Optional[List[str]] = None,
-    default_run_build: Optional[str] = None,
-    default_run_max_items: Optional[int] = None,
-    default_run_memory_mbytes: Optional[int] = None,
-    default_run_timeout_secs: Optional[int] = None,
-    example_run_input_body: Optional[Any] = None,
-    example_run_input_content_type: Optional[str] = None,
-) -> Dict:
-    return {
-        'name': name,
-        'title': title,
-        'description': description,
-        'seoTitle': seo_title,
-        'seoDescription': seo_description,
-        'versions': versions,
-        'restartOnError': restart_on_error,
-        'isPublic': is_public,
-        'isDeprecated': is_deprecated,
-        'isAnonymouslyRunnable': is_anonymously_runnable,
-        'categories': categories,
-        'defaultRunOptions': {
-            'build': default_run_build,
-            'maxItems': default_run_max_items,
-            'memoryMbytes': default_run_memory_mbytes,
-            'timeoutSecs': default_run_timeout_secs,
-        },
-        'exampleRunInput': {
-            'body': example_run_input_body,
-            'contentType': example_run_input_content_type,
-        },
-    }
-
-=end
+    name: nil,
+    title: nil,
+    description: nil,
+    seo_title: nil,
+    seo_description: nil,
+    versions: nil,
+    restart_on_error: nil,
+    is_public: nil,
+    is_deprecated: nil,
+    is_anonymously_runnable: nil,
+    categories: nil,
+    default_run_build: nil,
+    default_run_max_items: nil,
+    default_run_memory_mbytes: nil,
+    default_run_timeout_secs: nil,
+    example_run_input_body: nil,
+    example_run_input_content_type: nil
+) = ({
+	'name': name,
+	'title': title,
+	'description': description,
+	'seoTitle': seo_title,
+	'seoDescription': seo_description,
+	'versions': versions,
+	'restartOnError': restart_on_error,
+	'isPublic': is_public,
+	'isDeprecated': is_deprecated,
+	'isAnonymouslyRunnable': is_anonymously_runnable,
+	'categories': categories,
+	'defaultRunOptions': {
+		'build': default_run_build,
+		'maxItems': default_run_max_items,
+		'memoryMbytes': default_run_memory_mbytes,
+		'timeoutSecs': default_run_timeout_secs,
+	},
+	'exampleRunInput': {
+		'body': example_run_input_body,
+		'contentType': example_run_input_content_type,
+	},
+})
 
 module Apify
 
@@ -338,12 +326,8 @@ module Apify
 		def webhooks = WebhookCollectionClient.new(**_sub_resource_init_options)
 	end
 
-=begin
-	from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
-	from .actor import _get_actor_representation
-=end
-
-
+	### ActorCollectionClient
+	
 	"""Sub-client for manipulating actors."""
 	class ActorCollectionClient < ResourceCollectionClient
 
@@ -392,51 +376,48 @@ module Apify
 		Returns:
 			dict: The created actor.
 		"""
-=begin
 		def create(
-			self,
-			*,
-			name: str,
-			title: Optional[str] = None,
-			description: Optional[str] = None,
-			seo_title: Optional[str] = None,
-			seo_description: Optional[str] = None,
-			versions: Optional[List[Dict]] = None,
-			restart_on_error: Optional[bool] = None,
-			is_public: Optional[bool] = None,
-			is_deprecated: Optional[bool] = None,
-			is_anonymously_runnable: Optional[bool] = None,
-			categories: Optional[List[str]] = None,
-			default_run_build: Optional[str] = None,
-			default_run_max_items: Optional[int] = None,
-			default_run_memory_mbytes: Optional[int] = None,
-			default_run_timeout_secs: Optional[int] = None,
-			example_run_input_body: Optional[Any] = None,
-			example_run_input_content_type: Optional[str] = None,
-		) -> Dict:
-			actor_representation = _get_actor_representation(
-				name=name,
-				title=title,
-				description=description,
-				seo_title=seo_title,
-				seo_description=seo_description,
-				versions=versions,
-				restart_on_error=restart_on_error,
-				is_public=is_public,
-				is_deprecated=is_deprecated,
-				is_anonymously_runnable=is_anonymously_runnable,
-				categories=categories,
-				default_run_build=default_run_build,
-				default_run_max_items=default_run_max_items,
-				default_run_memory_mbytes=default_run_memory_mbytes,
-				default_run_timeout_secs=default_run_timeout_secs,
-				example_run_input_body=example_run_input_body,
-				example_run_input_content_type=example_run_input_content_type,
+			name,
+			title: nil,
+			description: nil,
+			seo_title: nil,
+			seo_description: nil,
+			versions:  nil,
+			restart_on_error: nil,
+			is_public: nil,
+			is_deprecated: nil,
+			is_anonymously_runnable: nil,
+			categories: nil,
+			default_run_build: nil,
+			default_run_max_items: nil,
+			default_run_memory_mbytes: nil,
+			default_run_timeout_secs: nil,
+			example_run_input_body: nil,
+			example_run_input_content_type: nil
+		)
+			actor_representation = Utils::filter_out_none_values_recursively(
+				_get_actor_representation(
+					name: name,
+					title: title,
+					description: description,
+					seo_title: seo_title,
+					seo_description: seo_description,
+					versions: versions,
+					restart_on_error: restart_on_error,
+					is_public: is_public,
+					is_deprecated: is_deprecated,
+					is_anonymously_runnable: is_anonymously_runnable,
+					categories: categories,
+					default_run_build: default_run_build,
+					default_run_max_items: default_run_max_items,
+					default_run_memory_mbytes: default_run_memory_mbytes,
+					default_run_timeout_secs: default_run_timeout_secs,
+					example_run_input_body: example_run_input_body,
+					example_run_input_content_type: example_run_input_content_type
+				)
 			)
-
-			return self._create(filter_out_none_values_recursively(actor_representation))
-=end
-
+			_create actor_representation
+		end
 	end
 
 end

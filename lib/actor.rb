@@ -119,24 +119,28 @@ module Apify
 			StorageClientManager.set_config(@_config)		
 			StorageClientManager.set_cloud_client(@_apify_client) if @_config.token
 
-			@_event_manager.init
-			
-			@_send_persist_state_interval_task = Async { #asyncio.create_task(
-				Utils::_run_func_at_interval_async(
-					lambda { @_event_manager.emit(ActorEventTypes::PERSIST_STATE, {'isMigrating': false}) },
-					@_config.persist_state_interval_millis / 1000
-				)
-			}
-			if !is_at_home
-				@_send_system_info_interval_task = Async { #asyncio.create_task(
+			if Async::Task.current?
+				@_event_manager.init
+
+				@_send_persist_state_interval_task = Async { #asyncio.create_task(
 					Utils::_run_func_at_interval_async(
-						lambda { @_event_manager.emit(ActorEventTypes::SYSTEM_INFO, _get_system_info) },
-						@_config.system_info_interval_millis / 1000
+						lambda { @_event_manager.emit(ActorEventTypes::PERSIST_STATE, {'isMigrating': false}) },
+						@_config.persist_state_interval_millis / 1000
 					)
 				}
+				if !is_at_home
+					@_send_system_info_interval_task = Async { #asyncio.create_task(
+						Utils::_run_func_at_interval_async(
+							lambda { @_event_manager.emit(ActorEventTypes::SYSTEM_INFO, _get_system_info) },
+							@_config.system_info_interval_millis / 1000
+						)
+					}
+				end
+				
+				@_event_manager.on ActorEventTypes::MIGRATING, method(:_respond_to_migrating_event)
+			else
+				Log.fatal "No event loop is currently running. EventManager will be disabled."
 			end
-			
-			@_event_manager.on ActorEventTypes::MIGRATING, method(:_respond_to_migrating_event)
 			
 			# The CPU usage is calculated as an average between two last calls to psutil
 			# We need to make a first, dummy call, so the next calls have something to compare itself agains

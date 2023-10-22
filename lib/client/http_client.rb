@@ -42,6 +42,7 @@ module Apify
 			
 			c = response.body.length
 			e = response['content-encoding']
+			Log.debug "compression: #{e}" if e
 			
 			case e
 			when nil
@@ -53,7 +54,8 @@ module Apify
 				
 				Log.debug "decompressed: gzip #{c} => #{response.body.length}"
 			when "deflate"
-				response.body = Zlib::Inflate.new(-15).inflate(response.body) # deflate	
+				#response.body = Zlib::Inflate.new(-15).inflate(response.body) # deflate
+				response.body = Zlib::Inflate.inflate(response.body) # deflate	
 				Log.debug "decompressed: deflate #{c} => #{response.body.length}"
 			when "br"
 				response.body = Brotli.inflate(response.body)
