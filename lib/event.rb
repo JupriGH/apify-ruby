@@ -276,8 +276,7 @@ module Apify
 		def _process_platform_messages
 			# This should be called only on the platform, where we have the ACTOR_EVENTS_WS_URL configured
 			url = @_config.actor_events_ws_url
-			url = 'ws://127.0.0.1:9999'
-			
+
 			raise unless url
 			#assert self._connected_to_platform_websocket is not None
 
