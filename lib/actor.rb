@@ -303,10 +303,13 @@ module Apify
 		end
 
 		def main main_actor_function
+			
+			raise unless [Method, Proc].include?( main_actor_function.class )
+			
 			Async do |task|
 				#if not inspect.isfunction(main_actor_function):
 				#	raise TypeError(f'First argument passed to Actor.main() must be a function, but instead it was {type(main_actor_function)}')
-				raise unless [Method, Proc].include?( main_actor_function.class )
+				
 				
 				init
 				
@@ -322,15 +325,15 @@ module Apify
 				#return cast(MainReturnType, res)
 				return res
 			
-			rescue SystemExit => e
-				Log.debug '# SystemExit #'
+			#rescue SystemExit => e
+			#	Log.debug '# SystemExit #'
 				
-			rescue Exception => e
-				fail_ ActorExitCodes::ERROR_USER_FUNCTION_THREW, exception: e
+			#rescue Exception => e
+			#	fail_ ActorExitCodes::ERROR_USER_FUNCTION_THREW, exception: e
 			
-			ensure 
-				Log.debug '# Main Stop #'
-				task.stop
+			#ensure 
+			#	Log.debug '# Main Stop #'
+			#	task.stop
 			end
 		end
 
