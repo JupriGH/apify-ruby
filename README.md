@@ -30,3 +30,40 @@ Inspired by [Apify Python SDK](https://docs.apify.com/sdk/python/)
 **Developer Notes**
 
 - Some method is conflicting with Ruby internal method such as: `.initialize`, `.exit`, `.fail`, etc. Renamed to:  `.initialize_`, `.exit_`, `.fail_` etc.
+
+## Basic Usage
+
+```ruby
+# SYNC Mode
+# 1 - manually init and exit_/fail_
+# 2 - won't be able to receive platform events (aborting, migration, etc.)
+actor = Apify::Actor
+actor.init
+actor.exit_ 0
+
+# ASYNC Mode
+# 1 - automatic init and exit_/fail_
+# 2 - use on apify platform to receive platform events
+Apify::Actor.main( <callable> ).wait
+```
+
+***Example #1***
+
+```ruby
+Apify::Actor.main( proc { |actor| 
+	input = actor.get_input
+	# ... scraping codes ...
+}).wait
+```
+
+
+***Example #2***
+
+```ruby
+def main(actor)
+	input = actor.get_input
+	# ... scraping codes ...
+end
+
+Apify::Actor.main( method(:main) ).wait
+```
