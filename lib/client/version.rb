@@ -8,19 +8,17 @@ def _get_actor_version_representation(
     git_repo_url: nil,
     tarball_url: nil,
     github_gist_url: nil
-) 
-	{
-		'versionNumber' => version_number,
-		'buildTag' =>  build_tag,
-		'envVars' => env_vars,
-		'applyEnvVarsToBuild' => apply_env_vars_to_build,
-		'sourceType' => maybe_extract_enum_member_value(source_type),
-		'sourceFiles' => source_files,
-		'gitRepoUrl' => git_repo_url,
-		'tarballUrl' => tarball_url,
-		'gitHubGistUrl' => github_gist_url
-	}
-end
+) = ({
+	'versionNumber' => version_number,
+	'buildTag' =>  build_tag,
+	'envVars' => env_vars,
+	'applyEnvVarsToBuild' => apply_env_vars_to_build,
+	'sourceType' => maybe_extract_enum_member_value(source_type),
+	'sourceFiles' => source_files,
+	'gitRepoUrl' => git_repo_url,
+	'tarballUrl' => tarball_url,
+	'gitHubGistUrl' => github_gist_url
+})
 
 module Apify
 
@@ -109,11 +107,6 @@ module Apify
 	end
 
 	### ActorVersionCollectionClient
-=begin
-from apify_shared.consts import ActorSourceType
-from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
-from .actor_version import _get_actor_version_representation
-=end
 
 	"""Sub-client for manipulating actor versions."""
 	class ActorVersionCollectionClient < ResourceCollectionClient

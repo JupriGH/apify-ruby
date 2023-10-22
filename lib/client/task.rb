@@ -196,15 +196,12 @@ module Apify
 			dict, optional: Retrieved task input
 		"""
 		def get_input
-			#try:
-
-				res = @http_client.call url: _url('input'), method: 'GET', params: _params
-				res && res[:parsed]
-				#return cast(Dict, response.json())
+			res = @http_client.call url: _url('input'), method: 'GET', params: _params
+			res && res[:parsed]
+			#return cast(Dict, response.json())
 			
-			#except ApifyApiError as exc:
-			#	_catch_not_found_or_throw(exc)
-			#return None
+		rescue ApifyApiError => exc
+			Utils::_catch_not_found_or_throw
 		end
 
 		"""Update the default input for this task.

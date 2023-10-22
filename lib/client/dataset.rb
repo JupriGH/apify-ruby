@@ -533,7 +533,6 @@ module Apify
 			resource = Utils::filter_out_none_values_recursively({'schema': schema})			
 			_get_or_create name: name, resource: resource
 		end
-
 	end
 
 end

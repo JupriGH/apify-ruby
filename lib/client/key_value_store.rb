@@ -73,41 +73,38 @@ module Apify
 			dict, optional: The requested record, or None, if the record does not exist
 		"""
 		def get_record key #, as_bytes: false, as_file: false
-			begin
 =begin            
-				raise 'You cannot have both as_bytes and as_file set.' if as_bytes and as_file # ValueError
+			raise 'You cannot have both as_bytes and as_file set.' if as_bytes and as_file # ValueError
 
-				if as_bytes
-					raise "TODO"
-					"""
-					warnings.warn(
-						'`KeyValueStoreClient.get_record(..., as_bytes=True)` is deprecated, use `KeyValueStoreClient.get_record_as_bytes()` instead.',  # noqa: E501
-						DeprecationWarning,
-						stacklevel=2,
-					)
-					return self.get_record_as_bytes(key)
-					"""
-				end
-				
-				if as_file
-					raise "TODO"
-					"""
-					warnings.warn(
-						'`KeyValueStoreClient.get_record(..., as_file=True)` is deprecated, use `KeyValueStoreClient.stream_record()` instead.',
-						DeprecationWarning,
-						stacklevel=2,
-					)
-					return self.stream_record(key)  # type: ignore
-					"""
-				end
+			if as_bytes
+				raise "TODO"
+				"""
+				warnings.warn(
+					'`KeyValueStoreClient.get_record(..., as_bytes=True)` is deprecated, use `KeyValueStoreClient.get_record_as_bytes()` instead.',  # noqa: E501
+					DeprecationWarning,
+					stacklevel=2,
+				)
+				return self.get_record_as_bytes(key)
+				"""
+			end
+			
+			if as_file
+				raise "TODO"
+				"""
+				warnings.warn(
+					'`KeyValueStoreClient.get_record(..., as_file=True)` is deprecated, use `KeyValueStoreClient.stream_record()` instead.',
+					DeprecationWarning,
+					stacklevel=2,
+				)
+				return self.stream_record(key)  # type: ignore
+				"""
+			end
 =end			
-				res = @http_client.call url: _url("records/#{key}"), method: 'GET', params: _params
-				return { key: key, value: res[:parsed], content_type: res[:response]['content-type'] }
+			res = @http_client.call url: _url("records/#{key}"), method: 'GET', params: _params
+			return { key: key, value: res[:parsed], content_type: res[:response]['content-type'] }
 				
-			rescue ApifyApiError => exc
-				Utils::_catch_not_found_or_throw exc
-			end			
-			nil
+		rescue ApifyApiError => exc
+			Utils::_catch_not_found_or_throw exc
 		end
 
 		"""Retrieve the given record from the key-value store, without parsing it.
@@ -121,13 +118,10 @@ module Apify
 			dict, optional: The requested record, or None, if the record does not exist
 		"""
 		def get_record_as_bytes key
-			begin
-				res = @http_client.call url: _url("records/#{key}"), method: 'GET', params: _params, parse_response: false
-				return { key: key, value: res[:response].body, content_type: res[:response]['content-type'] }			
-			rescue ApifyApiError => exc
-				Utils::_catch_not_found_or_throw exc
-			end
-			nil
+			res = @http_client.call url: _url("records/#{key}"), method: 'GET', params: _params, parse_response: false
+			return { key: key, value: res[:response].body, content_type: res[:response]['content-type'] }			
+		rescue ApifyApiError => exc
+			Utils::_catch_not_found_or_throw exc
 		end
 
 		"""Retrieve the given record from the key-value store, as a stream.

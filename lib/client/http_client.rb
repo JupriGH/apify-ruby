@@ -183,9 +183,8 @@ module Apify
 			# log_context.url.set(url)
 			Log.debug "#{method} #{url}"
 			
-			if stream && parse_response
-				raise 'Cannot stream response and parse it at the same time!' # ValueError
-			end
+			raise 'Cannot stream response and parse it at the same time!' if # ValueError
+				stream && parse_response
 
 			headers, params, content = _prepare_request_call(headers, params, data, json)
 
@@ -201,11 +200,9 @@ module Apify
 				if params && params.length > 0
 					uri.query = URI.encode_www_form params
 				end
-				
-				if stream
-					raise "TODO: stream"
-				end	
-						
+								
+				# raise "TODO: stream" if stream
+
 				# create the request
 				case method
 				when 'POST'
@@ -226,37 +223,34 @@ module Apify
 				headers.each { |key, val| req[key] = val }
 
 				# perform the request
-				res = http.request(req)
-				
-				# decompress
-				_decompress res
-				
-				# Handle the response
-				if res.is_a?(Net::HTTPSuccess)
-
-					# res.each do |key, val|
-					#	p "#{key}: #{val}"
-					# end
-									
-					_maybe_parsed_body = nil
-					if not stream
-						if parse_response
-							_maybe_parsed_body = _maybe_parse_response res
+				http.request(req) do |res|
+					# Handle the response
+					if res.is_a?(Net::HTTPSuccess)
+						if stream
+							res.read_body do |chunk|
+								yield chunk
+							end
 						else
-							#_maybe_parsed_body = res.body # response.content
-						end
-						# setattr(response, '_maybe_parsed_body', _maybe_parsed_body)  # noqa: B010
-					end
-					return { response: res, parsed: _maybe_parsed_body }
-			
-				else
-					# TODO: handle errors/retries		
-					#raise "HTTP Error: #{res.code}: #{res.body}"
-					raise ApifyApiError.new res, 1 #, attempt)
-				end
-			end
+							# decompress
+							_decompress res if !stream
+							_maybe_parsed_body = nil
 
-			
+							if parse_response
+								_maybe_parsed_body = _maybe_parse_response res
+							else
+								#_maybe_parsed_body = res.body # response.content
+							end
+							# setattr(response, '_maybe_parsed_body', _maybe_parsed_body)  # noqa: B010
+							return { response: res, parsed: _maybe_parsed_body }
+						end
+					else
+						# TODO: handle errors/retries		
+						#raise "HTTP Error: #{res.code}: #{res.body}"
+						raise ApifyApiError.new res, 1 #, attempt)
+					end
+				end
+
+			end
 			###################################################################################
 =begin
 			httpx_client = self.httpx_client

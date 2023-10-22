@@ -3,13 +3,11 @@ def _get_actor_env_var_representation(
     is_secret: nil,
     name: nil,
     value: nil
-)
-    {
-        'isSecret' => is_secret,
-        'name' => name,
-        'value' => value,
-    }
-end
+) = ({
+	'isSecret' => is_secret,
+	'name' => name,
+	'value' => value,
+})
 
 module Apify
 

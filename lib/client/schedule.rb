@@ -1,28 +1,24 @@
+def _get_schedule_representation(
+	cron_expression: nil,
+	is_enabled: nil,
+	is_exclusive: nil,
+	name: nil,
+	actions: nil,
+	description: nil,
+	timezone: nil,
+	title: nil
+) = ({
+	'cronExpression' 	=> cron_expression,
+	'isEnabled'			=> is_enabled,
+	'isExclusive'		=> is_exclusive,
+	'name'				=> name,
+	'actions'			=> actions,
+	'description'		=> description,
+	'timezone'			=> timezone,
+	'title'				=> title
+})
+		
 module Apify
-
-	module Utils
-		def self._get_schedule_representation(
-			cron_expression: nil,
-			is_enabled: nil,
-			is_exclusive: nil,
-			name: nil,
-			actions: nil,
-			description: nil,
-			timezone: nil,
-			title: nil
-		)
-			{
-				'cronExpression' 	=> cron_expression,
-				'isEnabled'			=> is_enabled,
-				'isExclusive'		=> is_exclusive,
-				'name'				=> name,
-				'actions'			=> actions,
-				'description'		=> description,
-				'timezone'			=> timezone,
-				'title'				=> title
-			}
-		end
-	end
 
 	"""Sub-client for manipulating a single schedule."""
 	class ScheduleClient < ResourceClient
@@ -69,7 +65,7 @@ module Apify
 			timezone: nil,
 			title: nil
 		)
-			schedule_representation = Utils::filter_out_none_values_recursively Utils::_get_schedule_representation(
+			schedule_representation = Utils::filter_out_none_values_recursively _get_schedule_representation(
 				cron_expression: cron_expression,
 				is_enabled: is_enabled,
 				is_exclusive: is_exclusive,
