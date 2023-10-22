@@ -286,6 +286,7 @@ module Apify
 				
 				@_platform_events_websocket = connection = Async::WebSocket::Client.connect(endpoint)
 				@_connected_to_platform_websocket = true
+				
 				Log.debug "!!WS CONNECTED!!".red
 				
 				return Async {
@@ -306,12 +307,11 @@ module Apify
 						end
 					end
 					#Log.debug "!!WS NO MORE DATA!!".red
+					connection.close
+					@_connected_to_platform_websocket = false					
 				}
 			rescue
 				Log.fatal 'Error in websocket connection'
-			ensure 
-				connection.close
-				@_connected_to_platform_websocket = false
 			end
 			
 			###################################################################################################

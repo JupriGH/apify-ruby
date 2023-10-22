@@ -119,7 +119,7 @@ module Apify
 			StorageClientManager.set_config(@_config)		
 			StorageClientManager.set_cloud_client(@_apify_client) if @_config.token
 
-			#if Async::Task.current?
+			if Async::Task.current?
 				@_event_manager.init
 
 				@_send_persist_state_interval_task = Async { #asyncio.create_task(
@@ -138,9 +138,9 @@ module Apify
 				end
 				
 				@_event_manager.on ActorEventTypes::MIGRATING, method(:_respond_to_migrating_event)
-			#else
-			#	Log.fatal "No event loop is currently running. EventManager will be disabled."
-			#end
+			else
+				Log.fatal "No event loop is currently running. EventManager will be disabled."
+			end
 			
 			# The CPU usage is calculated as an average between two last calls to psutil
 			# We need to make a first, dummy call, so the next calls have something to compare itself agains
@@ -306,7 +306,7 @@ module Apify
 			
 			raise unless [Method, Proc].include?( main_actor_function.class )
 			
-			Async do #|task|
+			Async do |task|
 				#if not inspect.isfunction(main_actor_function):
 				#	raise TypeError(f'First argument passed to Actor.main() must be a function, but instead it was {type(main_actor_function)}')
 				
@@ -328,13 +328,14 @@ module Apify
 			#rescue SystemExit => e
 			#	Log.debug '# SystemExit #'
 				
-			#rescue Exception => e
-			#	fail_ ActorExitCodes::ERROR_USER_FUNCTION_THREW, exception: e
-			
+			rescue Exception => e
+				fail_ ActorExitCodes::ERROR_USER_FUNCTION_THREW, exception: e
+				
 			#ensure 
 			#	Log.debug '# Main Stop #'
 			#	task.stop
 			end
+		
 		end
 
 		"""Return a new instance of the Apify API client.
