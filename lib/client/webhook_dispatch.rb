@@ -4,9 +4,7 @@ module Apify
 	class WebhookDispatchClient < ResourceClient
 
 		"""Initialize the WebhookDispatchClient."""
-		def initialize **kwargs
-			super resource_path: 'webhook-dispatches', **kwargs
-		end
+		def initialize(**kwargs) = super(resource_path: 'webhook-dispatches', **kwargs)
 
 		"""Retrieve the webhook dispatch.
 

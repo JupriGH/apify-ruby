@@ -24,9 +24,7 @@ module Apify
 	class ScheduleClient < ResourceClient
 
 		"""Initialize the ScheduleClient."""
-		def initialize **kwargs
-			super resource_path: 'schedules', **kwargs
-		end
+		def initialize(**kwargs) = super(resource_path: 'schedules', **kwargs)
 
 		"""Return information about the schedule.
 
@@ -93,15 +91,12 @@ module Apify
 			list, optional: Retrieved log of the given schedule
 		"""		
 		def get_log
-			#try:
-				res = @http_client.call url: _url('log'), method: 'GET', params: _params
-				res && res.dig(:parsed, "data")
-				#return _pluck_data_as_list(response.json())
+			res = @http_client.call url: _url('log'), method: 'GET', params: _params
+			res && res.dig(:parsed, "data")
+			#return _pluck_data_as_list(response.json())
 			
-			#except ApifyApiError as exc:
-			#    _catch_not_found_or_throw(exc)
-
-			#return None
+		rescue ApifyApiError => exc
+			Utils::_catch_not_found_or_throw(exc)
 		end
 	end
 
@@ -111,9 +106,7 @@ module Apify
 	class ScheduleCollectionClient < ResourceCollectionClient
 
 		"""Initialize the ScheduleCollectionClient with the passed arguments."""
-		def initialize **kwargs
-			super resource_path: 'schedules', **kwargs
-		end
+		def initialize(**kwargs) = super(resource_path: 'schedules', **kwargs)
 
 		"""List the available schedules.
 

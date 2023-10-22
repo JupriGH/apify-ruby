@@ -1,22 +1,11 @@
 module Apify
 
-class StoreCollectionClient < ResourceCollectionClient
-    """Sub-client for Apify store."""
+	"""Sub-client for Apify store."""
+	class StoreCollectionClient < ResourceCollectionClient
 
-    def initialize **kwargs
-        """Initialize the StoreCollectionClient."""
-        super resource_path: 'store', **kwargs
-	end
-	
-    def list(
-        limit: nil,
-        offset: nil,
-        search: nil,
-        sort_by: nil,
-        category: nil,
-        username: nil,
-        pricing_model: nil
-    )
+		"""Initialize the StoreCollectionClient."""
+		def initialize(**kwargs) = super(resource_path: 'store', **kwargs)
+
         """List Actors in Apify store.
 
         https://docs.apify.com/api/v2/#/reference/store/store-actors-collection/get-list-of-actors-in-store
@@ -32,17 +21,26 @@ class StoreCollectionClient < ResourceCollectionClient
 
         Returns:
             ListPage: The list of available tasks matching the specified filters.
-        """
-        _list(
-            limit: limit,
-            offset: offset,
-            search: search,
-            sortBy: sort_by,
-            category: category,
-            username: username,
-            pricingModel: pricing_model
-        )
+        """	
+		def list(
+			limit: nil,
+			offset: nil,
+			search: nil,
+			sort_by: nil,
+			category: nil,
+			username: nil,
+			pricing_model: nil
+		)
+			_list(
+				limit: limit,
+				offset: offset,
+				search: search,
+				sortBy: sort_by,
+				category: category,
+				username: username,
+				pricingModel: pricing_model
+			)
+		end
 	end
-end
 
 end

@@ -119,7 +119,7 @@ module Apify
 		"""
 		def get_record_as_bytes key
 			res = @http_client.call url: _url("records/#{key}"), method: 'GET', params: _params, parse_response: false
-			return { key: key, value: res[:response].body, content_type: res[:response]['content-type'] }			
+			return { key: key, value: res[:response].body, content_type: res[:response]['content-type'] }					
 		rescue ApifyApiError => exc
 			Utils::_catch_not_found_or_throw exc
 		end

@@ -23,9 +23,7 @@ module Apify
 	class DatasetClient < ResourceClient
 
 		"""Initialize the DatasetClient."""		
-		def initialize **kwargs
-			super resource_path: 'datasets', **kwargs 
-		end
+		def initialize(**kwargs) = super(resource_path: 'datasets', **kwargs) 
 
 		"""Retrieve the dataset.
 
@@ -461,7 +459,6 @@ module Apify
 				if response:
 					response.close()
 =end
-
 		"""Push items to the dataset.
 
 		https://docs.apify.com/api/v2#/reference/datasets/item-collection/put-items
@@ -497,9 +494,7 @@ module Apify
 	class DatasetCollectionClient < ResourceCollectionClient
 
 		"""Initialize the DatasetCollectionClient with the passed arguments."""
-		def initialize **kwargs
-			super resource_path: 'datasets', **kwargs
-		end 
+		def initialize(**kwargs) = super(resource_path: 'datasets', **kwargs)
 
 		"""List the available datasets.
 

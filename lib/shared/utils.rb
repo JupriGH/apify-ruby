@@ -24,31 +24,31 @@ def ignore_docs(method: T) -> T:
 module Apify
 
 module Utils
-	
-def self.filter_out_none_values_recursively dictionary
-    """Return copy of the dictionary, recursively omitting all keys for which values are None."""
-    # return cast(dict, _filter_out_none_values_recursively_internal(dictionary))
-	_filter_out_none_values_recursively_internal dictionary
-end
 
-def self._filter_out_none_values_recursively_internal dictionary, remove_empty_dicts=false
+    """Return copy of the dictionary, recursively omitting all keys for which values are None."""	
+	def self.filter_out_none_values_recursively dictionary
+		# return cast(dict, _filter_out_none_values_recursively_internal(dictionary))
+		_filter_out_none_values_recursively_internal dictionary
+	end
+
     """Recursively filters out None values from a dictionary.
 
     Unfortunately, it's necessary to have an internal function for the correct result typing,
     without having to create complicated overloads
     """
-    result = {}
+	def self._filter_out_none_values_recursively_internal dictionary, remove_empty_dicts=false
+		result = {}
 
-	dictionary.each { |k,v|
-		if v.class == Hash
-			v = _filter_out_none_values_recursively_internal(v, remove_empty_dicts != false)
-		end
-		result[k] = v if v
-	}
-	
-	return nil if (result.length == 0) && remove_empty_dicts
-	return result
-end
+		dictionary.each { |k,v|
+			if v.class == Hash
+				v = _filter_out_none_values_recursively_internal(v, remove_empty_dicts != false)
+			end
+			result[k] = v if v
+		}
+		
+		return nil if (result.length == 0) && remove_empty_dicts
+		return result
+	end
 
 =begin
 @ignore_docs
@@ -69,13 +69,14 @@ def is_content_type_text(content_type: str) -> bool:
     return bool(re.search(r'^text/', content_type, flags=re.IGNORECASE))
 =end
 
-	def self.is_file_or_bytes value
-		"""Check if the input value is a file-like object or bytes.
+	"""Check if the input value is a file-like object or bytes.
 
-		The check for IOBase is not ideal, it would be better to use duck typing,
-		but then the check would be super complex, judging from how the 'requests' library does it.
-		This way should be good enough for the vast majority of use cases, if it causes issues, we can improve it later.
-		"""
+	The check for IOBase is not ideal, it would be better to use duck typing,
+	but then the check would be super complex, judging from how the 'requests' library does it.
+	This way should be good enough for the vast majority of use cases, if it causes issues, we can improve it later.
+	"""
+	def self.is_file_or_bytes value
+
 		
 		### TODO
 		#return isinstance(value, (bytes, bytearray, io.IOBase))

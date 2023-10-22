@@ -33,32 +33,32 @@ module Apify
 			@_was_final_persist_state_emitted = false
 		end
 
-=begin
-		@ignore_docs
-		async def __aenter__(self) -> 'Actor':
-			"""Initialize the Actor.
+		### CONTEXT MANAGER EMULATOR: with class do |x| ...
+		"""Initialize the Actor.
 
-			Automatically initializes the Actor instance when you use it in an `async with ...` statement.
+		Automatically initializes the Actor instance when you use it in an `async with ...` statement.
 
-			When you exit the `async with` block, the `Actor.exit()` method is called,
-			and if any exception happens while executing the block code,
-			the `Actor.fail` method is called.
-			"""
-			await self.init()
-			return self
+		When you exit the `async with` block, the `Actor.exit()` method is called,
+		and if any exception happens while executing the block code,
+		the `Actor.fail` method is called.
+		"""		
+		def self.__enter__
+			init
+			self
+		end
 
-		@ignore_docs
-		async def __aexit__(
-			self,
-			_exc_type: Optional[Type[BaseException]],
-			exc_value: Optional[BaseException],
-			_exc_traceback: Optional[TracebackType],
-		) -> None:
-			"""Exit the Actor, handling any exceptions properly.
+		"""Exit the Actor, handling any exceptions properly.
 
-			When you exit the `async with` block, the `Actor.exit()` method is called,
-			and if any exception happens while executing the block code,
-			the `Actor.fail` method is called.
+		When you exit the `async with` block, the `Actor.exit()` method is called,
+		and if any exception happens while executing the block code,
+		the `Actor.fail` method is called.
+		"""
+		def self.__exit__  exc
+			if exc
+				fail_ ActorExitCodes::ERROR_USER_FUNCTION_THREW, exception: exc
+			else
+				exit_
+			end
 			"""
 			if not self._is_exiting:
 				if exc_value:
@@ -68,7 +68,8 @@ module Apify
 					)
 				else:
 					await self.exit()
-=end
+			"""
+		end
 
 		def self._get_default_instance = @@_default_instance ||= new(config: Configuration.get_global_configuration)
 
@@ -222,7 +223,9 @@ module Apify
 			# Sleep for a bit so that the listeners have a chance to trigger
 			#await asyncio.sleep(0.1)
 			
-			@_event_manager.close event_listeners_timeout_secs: event_listeners_timeout_secs
+			
+			@_event_manager.close event_listeners_timeout_secs: event_listeners_timeout_secs if
+				Async::Task::current?
 			
 			@_is_initialized = false
 

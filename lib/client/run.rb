@@ -4,9 +4,7 @@ module Apify
 	class RunClient < ActorJobBaseClient
 
 		"""Initialize the RunClient."""
-		def initialize **kwargs
-			super resource_path: 'actor-runs', **kwargs
-		end
+		def initialize(**kwargs) = super(resource_path: 'actor-runs', **kwargs)
 
 		"""Return information about the actor run.
 
@@ -55,9 +53,7 @@ module Apify
 		Returns:
 			dict: The data of the aborted actor run
 		"""		
-		def abort gracefully=false
-			_abort gracefully
-		end
+		def abort(gracefully=false) = _abort(gracefully)
 
 		"""Wait synchronously until the run finishes or the server times out.
 
@@ -68,9 +64,7 @@ module Apify
 			dict, optional: The actor run data. If the status on the object is not one of the terminal statuses
 				(SUCEEDED, FAILED, TIMED_OUT, ABORTED), then the run has not yet finished.
 		"""		
-		def wait_for_finish wait_secs=nil
-			_wait_for_finish wait_secs
-		end
+		def wait_for_finish(wait_secs=nil) = _wait_for_finish(wait_secs)
 
 		"""Transform an actor run into a run of another actor with a new input.
 
@@ -133,28 +127,17 @@ module Apify
 		Returns:
 			dict: The actor run data.
 		"""
-=begin
-		def resurrect(
-			self,
-			*,
-			build: Optional[str] = None,
-			memory_mbytes: Optional[int] = None,
-			timeout_secs: Optional[int] = None,
-		) -> Dict:
-			request_params = self._params(
-				build=build,
-				memory=memory_mbytes,
-				timeout=timeout_secs,
+		def resurrect build: nil, memory_mbytes: nil, timeout_secs: nil
+			request_params = _params(
+				build: build,
+				memory: memory_mbytes,
+				timeout: timeout_secs,
 			)
 
-			response = self.http_client.call(
-				url=self._url('resurrect'),
-				method='POST',
-				params=request_params,
-			)
-
-			return parse_date_fields(_pluck_data(response.json()))
-=end
+			res = @http_client.call url: _url('resurrect'), method: 'POST', params: request_params
+			res && res.dig(:parsed, 'data')
+			#return parse_date_fields(_pluck_data(response.json()))
+		end
 
 		"""Reboot an Actor run. Only runs that are running, i.e. runs with status RUNNING can be rebooted.
 
@@ -163,14 +146,11 @@ module Apify
 		Returns:
 			dict: The Actor run data.
 		"""
-=begin		
-		def reboot(self) -> Dict:
-			response = self.http_client.call(
-				url=self._url('reboot'),
-				method='POST',
-			)
-			return parse_date_fields(_pluck_data(response.json()))
-=end
+		def reboot
+			res = @http_client.call url: _url('reboot'), method: 'POST'
+			res && res.dig(:parsed, 'data')
+			#return parse_date_fields(_pluck_data(response.json()))
+		end
 
 		"""Get the client for the default dataset of the actor run.
 
@@ -223,9 +203,7 @@ module Apify
 	class RunCollectionClient < ResourceCollectionClient
 
 		"""Initialize the RunCollectionClient."""
-		def initialize **kwargs
-			super resource_path: 'actor-runs', **kwargs
-		end
+		def initialize(**kwargs) = super(resource_path: 'actor-runs', **kwargs)
 
 		"""List all actor runs (either of a single actor, or all user's actors, depending on where this client was initialized from).
 

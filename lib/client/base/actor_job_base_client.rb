@@ -10,7 +10,7 @@ module Apify
 
 		def _wait_for_finish wait_secs=nil
 
-			started_at = Time.now # datetime.now(timezone.utc)
+			started_at = Time.now.utc # datetime.now(timezone.utc)
 			job = nil
 			seconds_elapsed = 0
 
@@ -24,7 +24,7 @@ module Apify
 					job = res.dig(:parsed, "data")
 		
 					#seconds_elapsed = math.floor(((datetime.now(timezone.utc) - started_at).total_seconds()))
-					seconds_elapsed = Time.now - started_at
+					seconds_elapsed = Time.now.utc - started_at
 
 					# Early return here so that we avoid the sleep below if not needed
 					return job if ActorJobStatus::_is_terminal(job['status']) || (wait_secs && (seconds_elapsed >= wait_secs))

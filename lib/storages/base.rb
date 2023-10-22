@@ -168,9 +168,9 @@ module Apify
 				return cached_storage
 			end
 			
-			# Purge default storages if configured
+			# Purge default storages if configured	
 			"""
-			if used_config.purge_on_start and isinstance(used_client, MemoryStorageClient):
+			if used_config.purge_on_start && isinstance(used_client, MemoryStorageClient):
 				await used_client._purge_on_start()
 			"""
 			
