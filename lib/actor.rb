@@ -6,7 +6,7 @@ module Apify
 		@@_default_instance = nil
 
 		#_memory_storage_client: MemoryStorageClient
-		#_was_final_persist_state_emitted = False
+		
 
 		"""Create an Actor instance.
 
@@ -30,6 +30,7 @@ module Apify
 			@_is_exiting = false
 			@_send_system_info_interval_task = nil 
 			@_send_persist_state_interval_task = nil
+			@_was_final_persist_state_emitted = false
 		end
 
 =begin
@@ -180,25 +181,8 @@ module Apify
 		end
 		
 		def _cancel_event_emitting_intervals
-			#Log.debug "TODO: _cancel_event_emitting_intervals()"
 			[	@_send_persist_state_interval_task, 
 				@_send_system_info_interval_task].each { |task| task.stop if task && !task.stopped? }
-			
-			"""
-			if @_send_persist_state_interval_task && !@_send_persist_state_interval_task.stopped?
-				@_send_persist_state_interval_task.stop
-				#self._send_persist_state_interval_task.cancel()
-				#with contextlib.suppress(asyncio.CancelledError):
-				#	await self._send_persist_state_interval_task
-			end
-			
-			if @_send_system_info_interval_task && !@_send_system_info_interval_task.stopped?
-				@_send_system_info_interval_task.stop
-				#self._send_system_info_interval_task.cancel()
-				#with contextlib.suppress(asyncio.CancelledError):
-				#	await self._send_system_info_interval_task
-			end
-			"""
 		end
 		
 		"""Exit the actor instance.
@@ -230,18 +214,18 @@ module Apify
 			_cancel_event_emitting_intervals
 
 			# Send final persist state event
-			"""
-			if not self._was_final_persist_state_emitted:
-				self._event_manager.emit(ActorEventTypes.PERSIST_STATE, {'isMigrating': False})
-				self._was_final_persist_state_emitted = True
-			"""			
+			
+			if !@_was_final_persist_state_emitted
+				@_event_manager.emit(ActorEventTypes::PERSIST_STATE, {'isMigrating': false})
+				@_was_final_persist_state_emitted = true
+			end			
 			if status_message
 				set_status_message status_message, is_terminal: true
 			end
 			
 			# Sleep for a bit so that the listeners have a chance to trigger
 			#await asyncio.sleep(0.1)
-
+			
 			@_event_manager.close event_listeners_timeout_secs: event_listeners_timeout_secs
 			
 			@_is_initialized = false
@@ -281,7 +265,7 @@ module Apify
 			
 			# TODO:
 			if exception ## and not _is_running_in_ipython():
-				Log.error('Actor failed with an exception', exc_info: exception)
+				Log.error 'Actor failed with an exception', exc_info: exception
 			end
 			exit_ exit_code, status_message: status_message
 		end
@@ -319,31 +303,23 @@ module Apify
 				#	raise TypeError(f'First argument passed to Actor.main() must be a function, but instead it was {type(main_actor_function)}')
 
 				init
-				
-				res = main_actor_function.call(self)
+
+				begin
+					res = main_actor_function.call(self)
+				rescue Exception => e
+					fail_ ActorExitCodes::ERROR_USER_FUNCTION_THREW, exception: e
+					return res
+				end
 				
 				#if inspect.iscoroutinefunction(main_actor_function):
 				#	res = await main_actor_function()
 				#else:
 				#	res = main_actor_function()
-				
+
 				exit_
-				
-				#return cast(MainReturnType, res)
 				return res
-			
-			#rescue SystemExit => e
-			#	Log.debug '# SystemExit #'
-				
-			#rescue Exception => e
-			#	fail_ ActorExitCodes::ERROR_USER_FUNCTION_THREW, exception: e
-				
-			#ensure 
-			#	Log.debug '# Main Stop #'
-			#	task.stop
+				#return cast(MainReturnType, res)
 			end
-			
-			# print "OK 1"
 		
 		end
 

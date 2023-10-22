@@ -53,6 +53,7 @@ class LoggerExtra < Logger
 		if exc_info
 			#p "TODO: Log Traceback"
 			#p exc_info
+			msg << "\n" << exc_info.message
 			msg << "\n" << exc_info.backtrace.join("\n\t")
 		end
 		msg.join " "
