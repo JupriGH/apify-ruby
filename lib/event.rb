@@ -22,12 +22,13 @@ ListenerType = Union[Callable[[], None], Callable[[Any], None], Callable[[], Cor
 
 class EventEmitter
 	def initialize
+		@task_list = []
 		@subscribers = {}
 	end
 
 	# Subscribe a callback to an event	
 	def add_listener event, callback
-		@subscribers[event] ||= []
+		@subscribers[event] ||= Set.new
 		@subscribers[event] << callback
 	end
 	
@@ -40,9 +41,16 @@ class EventEmitter
 	def emit event, *args
 		if @subscribers[event]
 			@subscribers[event].each { |callback| 
-				Async { 
+				Async do |task|
+					error = nil
+					@task_list << task
 					callback.call(*args) 
-				} 
+				rescue => e 
+					error = e
+				ensure
+					@task_list.delete(task)
+					raise error if error
+				end
 			}
 		end
 	end
