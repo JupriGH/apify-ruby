@@ -70,15 +70,14 @@ module Apify
 			if @_platform_events_websocket
 				Log.debug "@_platform_events_websocket.close"
 				@_platform_events_websocket.close
-				#@_platform_events_websocket.wait
 			end
 			if @_process_platform_messages_task
 				Log.debug "@_process_platform_messages_task.stop"
 				@_process_platform_messages_task.stop
-				#await self._process_platform_messages_task
 			end
 			
 			wait_for_all_listeners_to_complete timeout_secs: event_listeners_timeout_secs
+			
 			#@_event_emitter.remove_all_listeners
 			@_listeners_to_wrappers.clear
 			
@@ -96,59 +95,12 @@ module Apify
 			raise 'EventManager was not initialized!' if !@_initialized # RuntimeError
 
 			# Detect whether the listener will accept the event_data argument
-=begin
-			try:
-				signature = inspect.signature(listener)
-			except (ValueError, TypeError):
-				# If we can't determine the listener argument count (e.g. for the built-in `print` function),
-				# let's assume the listener will accept the argument
-				listener_argument_count = 1
-			else:
-				try:
-					dummy_event_data: Dict = {}
-					signature.bind(dummy_event_data)
-					listener_argument_count = 1
-				except TypeError:
-					try:
-						signature.bind()
-						listener_argument_count = 0
-					except TypeError:
-						raise ValueError('The "listener" argument must be a callable which accepts 0 or 1 arguments!')
-=end
-			
+			raise 'The "listener" argument must be a callable which accepts 0 or 1 arguments!' if 
+				![Method, Proc].include?(listener.class) || (listener.parameters.count { |x| [:req,:opt].include?(x[0]) } < 1)
+				
 			#event_name = maybe_extract_enum_member_value(event_name)
-=begin
-			async def inner_wrapper(event_data: Any) -> None:
-				if inspect.iscoroutinefunction(listener):
-					if listener_argument_count == 0:
-						await listener()
-					else:
-						await listener(event_data)
-				else:
-					if listener_argument_count == 0:
-						listener()  # type: ignore[call-arg]
-					else:
-						listener(event_data)  # type: ignore[call-arg]
 
-			async def outer_wrapper(event_data: Any) -> None:
-				listener_task = asyncio.create_task(inner_wrapper(event_data))
-				self._listener_tasks.add(listener_task)
-				try:
-					await listener_task
-				except asyncio.CancelledError:
-					raise
-				except Exception:
-					# We need to swallow the exception and just log it here, since it could break the event emitter otherwise
-					logger.exception('Exception in event listener', extra={'event_name': event_name, 'listener_name': listener.__name__})
-				finally:
-					self._listener_tasks.remove(listener_task)
-
-			self._listeners_to_wrappers[event_name][listener].append(outer_wrapper)
-=end
-
-			# @_event_emitter.add_listener event_name, listener
 			@_listeners_to_wrappers[event_name] ||= Set.new << listener
-		
 			#return self._event_emitter.add_listener(event_name, outer_wrapper)
 		end
 
@@ -180,20 +132,23 @@ module Apify
 		"""
 		def emit event_name, data
 			#event_name = maybe_extract_enum_member_value(event_name)
-			#@_event_emitter.emit event_name, data
+
 			list = @_listeners_to_wrappers[event_name]
 			return if !list
 
 			list.each { |listener| 
 				Async do |task|
+					# if coroutine then wait ? listener.call.wait
 					@_listener_tasks << task
-					error = nil
-					listener.call(data) 
+					if listener.arity >= 1
+						listener.call data
+					else
+						listener.call
+					end
 				rescue => exc
-					error = exc
+					Log.error 'Exception in event listener', extra={event_name: event_name, listener_name: listener.name.to_s}
 				ensure
-					@_listener_tasks.delete(task)
-					Log.error(error) if error
+					@_listener_tasks.delete task
 				end
 			}
 		end
@@ -212,7 +167,7 @@ module Apify
 				Log.debug "All listeners stopped"
 			else
 				if timeout_secs
-					Log.warn "cancelling #{tasks.length} listeners in #{timeout_secs} seconds ..."
+					Log.warn "Cancelling #{tasks.length} listeners in #{timeout_secs} seconds ..."
 					sleep timeout_secs if timeout_secs 
 				end
 				if !tasks.empty?
@@ -227,26 +182,6 @@ module Apify
 					tasks.clear
 				end
 			end
-			###################################################################################################
-=begin
-			async def _wait_for_listeners() -> None:
-				results = await asyncio.gather(*self._listener_tasks, return_exceptions=True)
-				for result in results:
-					if result is Exception:
-						logger.exception('Event manager encountered an exception in one of the event listeners', exc_info=result)
-
-			if timeout_secs:
-				#_, pending = await asyncio.wait([asyncio.create_task(_wait_for_listeners())], timeout=timeout_secs)
-				#if pending:
-				#	logger.warning('Timed out waiting for event listeners to complete, unfinished event listeners will be canceled')
-				#	for pending_task in pending:
-				#		pending_task.cancel()
-				#		with contextlib.suppress(asyncio.CancelledError):
-				#			await pending_task
-			else
-				#_wait_for_listeners
-			end
-=end
 		end
 		
 		def _process_platform_messages
@@ -290,29 +225,6 @@ module Apify
 				Log.fatal 'Error in websocket connection'
 				@_connected_to_platform_websocket = false
 			end
-			###################################################################################################			
-=begin
-			try:
-				async with websockets.client.connect(self._config.actor_events_ws_url) as websocket:
-					self._platform_events_websocket = websocket
-					self._connected_to_platform_websocket.set_result(True)
-					async for message in websocket:
-						try:
-							parsed_message = json.loads(message)
-							assert isinstance(parsed_message, dict)
-							parsed_message = parse_date_fields(parsed_message)
-							event_name = parsed_message['name']
-							event_data = parsed_message.get('data')  # 'data' can be missing
-
-							self._event_emitter.emit(event_name, event_data)
-
-						except Exception:
-							logger.exception('Cannot parse actor event', extra={'message': message})
-			except Exception:
-				logger.exception('Error in websocket connection')
-	   
-			 self._connected_to_platform_websocket.set_result(False)
-=end
 		end
 
 	end
