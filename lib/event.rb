@@ -100,7 +100,10 @@ module Apify
 				
 			#event_name = maybe_extract_enum_member_value(event_name)
 
-			@_listeners_to_wrappers[event_name] ||= Set.new << listener
+			@_listeners_to_wrappers[event_name] ||= Set.new 
+			@_listeners_to_wrappers[event_name] << listener
+			p "#{event_name} => #{@_listeners_to_wrappers[event_name]}"
+			
 			#return self._event_emitter.add_listener(event_name, outer_wrapper)
 		end
 
