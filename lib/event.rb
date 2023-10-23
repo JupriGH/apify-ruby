@@ -146,7 +146,7 @@ module Apify
 						listener.call
 					end
 				rescue => exc
-					Log.error 'Exception in event listener', extra={event_name: event_name, listener_name: listener.name.to_s}
+					Log.error 'Exception in event listener', extra: {event_name: event_name, listener_name: listener.name.to_s}
 				ensure
 					@_listener_tasks.delete task
 				end
