@@ -185,7 +185,8 @@ module Apify
 			return if !list
 
 			list.each { |listener| 
-				@_listener_tasks << Async do |task|
+				Async do |task|
+					@_listener_tasks << task
 					error = nil
 					listener.call(data) 
 				rescue => exc
@@ -210,7 +211,10 @@ module Apify
 			if tasks.empty?
 				Log.debug "All listeners stopped"
 			else
-				sleep timeout_secs if timeout_secs 
+				if timeout_secs
+					Log.warn "cancelling #{tasks.length} listeners in #{timeout_secs} seconds ..."
+					sleep timeout_secs if timeout_secs 
+				end
 				if !tasks.empty?
 					
 					if timeout_secs
