@@ -14,7 +14,7 @@ module Apify
 			@min_delay_between_retries_millis = min_delay_between_retries_millis
 			@timeout_secs = timeout_secs
 
-			@headers = {'Accept': 'application/json, */*'}
+			@headers = {'Accept' => 'application/json, */*'}
 
 			workflow_key = ENV['APIFY_WORKFLOW_KEY']
 			if workflow_key

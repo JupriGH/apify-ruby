@@ -28,13 +28,13 @@ module Apify
 		"""
 		def self.get_storage_client force_cloud=false # Union[ApifyClientAsync, MemoryStorageClient]:
 			default_instance = _get_default_instance
-					
+
 			if default_instance._config.is_at_home || force_cloud
 				# assert default_instance._cloud_client is not None
 				raise if default_instance._cloud_client.nil?
 				return default_instance._cloud_client
 			end
-			
+
 			raise "### TODO: local_client not implemented"
 			
 			if !default_instance._local_client
@@ -134,7 +134,7 @@ module Apify
 		Returns:
 			An instance of the storage.
 		""" 
-		def self.open id: nil, name: nil, force_cloud: false, config: nil
+		def self._open_internal id: nil, name: nil, force_cloud: false, config: nil			
 			_ensure_class_initialized
 
 			raise if !@_cache_by_id
@@ -151,7 +151,8 @@ module Apify
 			if ! (id || name)
 				#if isinstance(used_client, MemoryStorageClient):
 				#    is_default_storage_on_local = True
-				id = _get_default_id used_config
+
+				id = _get_default_id used_config # BUG: should be calling abstract implemented method
 			end
 			
 			# Try to get the storage instance from cache		

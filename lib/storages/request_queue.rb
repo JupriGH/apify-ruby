@@ -99,15 +99,10 @@ module Apify
 			client.request_queue id
 		end
 		
-=begin
-		@classmethod
-		def _get_storage_collection_client(
-			cls,
-			client: Union[ApifyClientAsync, MemoryStorageClient],
-		) -> Union[RequestQueueCollectionClientAsync, RequestQueueCollectionClient]:
-			return client.request_queues()
-=end
-
+		def self._get_storage_collection_client client
+			client.request_queues
+		end
+		
 		"""Add a request to the queue.
 
 		Args:
@@ -124,7 +119,7 @@ module Apify
 			@_last_activity = Time.now # datetime.now(timezone.utc)
 			
 			# TODO: Check Request class in crawlee and replicate uniqueKey generation logic...
-			request['uniqueKey'] ||= request['url']
+			request['uniqueKey'] ||= normalize_url(request['url'])
 			
 			cache_key = Utils::_unique_key_to_request_id(request['uniqueKey'])
 			cached_info = @_requests_cache.__getitem__(cache_key)
@@ -196,16 +191,16 @@ module Apify
 			next_request_id, _ = @_queue_head_dict.shift # ~removeFirst()
 
 			# This should never happen, but...
-			"""
-			if next_request_id in self._in_progress or self._recently_handled.get(next_request_id):
-				logger.warning('Queue head returned a request that is already in progress?!', extra={
+			in_prog = @_in_progress.include?(next_request_id)
+			in_hand = @_recently_handled.__getitem__(next_request_id)
+			if in_prog || in_hand
+				Log.warn 'Queue head returned a request that is already in progress?!', extra: {
 					'nextRequestId': next_request_id,
-					'inProgress': next_request_id in self._in_progress,
-					'recentlyHandled': next_request_id in self._recently_handled,
-				})
+					'inProgress': in_prog,
+					'recentlyHandled': !in_prog.nil?,
+				}
 				return
 			end
-			"""
 			
 			@_in_progress.add next_request_id
 			@_last_activity = Time.now # datetime.now(timezone.utc)
@@ -321,12 +316,12 @@ module Apify
 			# Wait a little to increase a chance that the next call to fetchNextRequest() will return the request with updated data.
 			# This is to compensate for the limitation of DynamoDB, where writes might not be immediately visible to subsequent reads.
 			
-			Async { # call later, assume we have async loop
+			Async { |task| # call later, assume we have async loop
 				Async::Task.current.sleep STORAGE_CONSISTENCY_DELAY
 				# callback
 				if  !@_in_progress.include?(request['id'])
 					Log.debug 'The request is no longer marked as in progress in the queue?!', extra: {'requestId': request['id']}
-					return
+					task.stop # return
 				end
 				
 				@_in_progress.delete request['id']
@@ -365,15 +360,9 @@ module Apify
 				Log.warn "The request queue seems to be stuck for #{@_internal_timeout_seconds}s, resetting internal state."
 				_reset
 			end
-						
-			if (@_queue_head_dict.length > 0) || (_in_progress_count > 0)
-				return false
-			end
-			
-			# <jupri> both must be 0
-			
-			# is_head_consistent = _ensure_head_is_non_empty true
-			# return is_head_consistent && (@_queue_head_dict == 0) && (_in_progress_count == 0)
+
+			return false if (@_queue_head_dict.length > 0) || (_in_progress_count > 0)
+			# else: both must be == 0
 			_ensure_head_is_non_empty true
 		end
 
@@ -468,16 +457,12 @@ module Apify
 			should_repeat_for_consistency = ensure_consistency && !is_database_consistent && !is_locally_consistent
 
 			# If both are false then head is consistent and we may exit.
-			if !should_repeat_with_higher_limit && !should_repeat_for_consistency
-				return true
-			end
-			
+			return true if !should_repeat_with_higher_limit && !should_repeat_for_consistency
+	
 			# If we are querying for consistency then we limit the number of queries to MAX_QUERIES_FOR_CONSISTENCY.
 			# If this is reached then we return false so that empty() and finished() returns possibly false negative.
-			if !should_repeat_with_higher_limit && (iteration > MAX_QUERIES_FOR_CONSISTENCY)
-				return false
-			end
-			
+			return false if !should_repeat_with_higher_limit && (iteration > MAX_QUERIES_FOR_CONSISTENCY)
+	
 			next_limit = should_repeat_with_higher_limit ? (queue_head['prevLimit'] * 1.5).round : queue_head['prevLimit']
 			
 			# If we are repeating for consistency then wait required time.
@@ -537,22 +522,34 @@ module Apify
 		Returns:
 			RequestQueue: An instance of the `RequestQueue` class for the given ID or name.
 		"""
-=begin
-		@classmethod
-		async def open(
-			cls,
-			*,
-			id: Optional[str] = None,
-			name: Optional[str] = None,
-			force_cloud: bool = False,
-			config: Optional[Configuration] = None,
-		) -> 'RequestQueue':
-
-			queue = await super().open(id=id, name=name, force_cloud=force_cloud, config=config)
-			await queue._ensure_head_is_non_empty()
+		def self.open id: nil, name: nil, force_cloud: nil, config: nil
+			queue = _open_internal id: id, name: name, force_cloud: force_cloud, config: config
+			queue._ensure_head_is_non_empty
 			return queue
-=end
-
+		end
 	end
 
+end
+
+## TODO: request symbolic JSON keys from http client
+
+def normalize_url url, keep_fragment=nil
+	return if url.class != String || url.empty?
+	res = URI(url.strip)
+
+	params = nil
+	if res.query
+		params = URI.encode_www_form URI.decode_www_form(res.query).filter { |x| x[0][0,4] != 'utm_' }.sort_by {|k,v| k}
+	end
+
+	proto 	= res.scheme&.downcase||''
+	host 	= res.host&.downcase||''
+	path 	= res.path&.sub(/\/$/, '')||''
+	params 	= params ? "?#{params}" : ''
+	hash 	= keep_fragment ? (u.fragment||'') : ''
+
+	"#{proto}://#{host}#{path}#{params}#{hash}"
+rescue
+	# something wrong: invalid url ?
+	url
 end

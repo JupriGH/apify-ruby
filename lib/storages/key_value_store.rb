@@ -194,12 +194,9 @@ module Apify
 		Returns:
 			KeyValueStore: An instance of the `KeyValueStore` class for the given ID or name.
 		"""
-=begin
 		def self.open id: nil, name: nil, force_cloud: false, config: nil	
-			superclass.open id:id, name:name, force_cloud:force_cloud, config:config
+			_open_internal id:id, name:name, force_cloud:force_cloud, config:config
 		end
-=end
-
 	end
 
 end
