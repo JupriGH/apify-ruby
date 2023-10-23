@@ -3,68 +3,6 @@ require 'async/io/stream'
 require 'async/http/endpoint'
 require 'async/websocket/client'
 
-=begin
-import asyncio
-import contextlib
-import inspect
-import json
-from collections import defaultdict
-from typing import Any, Callable, Coroutine, Dict, List, Optional, Set, Union
-
-import websockets.client
-from pyee.asyncio import AsyncIOEventEmitter
-
-from apify_shared.consts import ActorEventTypes
-from apify_shared.utils import ignore_docs, maybe_extract_enum_member_value, parse_date_fields
-
-ListenerType = Union[Callable[[], None], Callable[[Any], None], Callable[[], Coroutine[Any, Any, None]], Callable[[Any], Coroutine[Any, Any, None]]]
-=end
-
-class EventEmitter
-	def initialize
-		@task_list = []
-		@subscribers = {}
-	end
-
-	# Subscribe a callback to an event	
-	def add_listener event, callback
-		@subscribers[event] ||= Set.new
-		@subscribers[event] << callback
-	end
-	
-	# Remove a specific callback from an event
-	def remove_listener event, callback
-		@subscribers[event]&.delete(callback)
-	end
-
-	# Emit an event and trigger subscribed callbacks
-	def emit event, *args
-		if @subscribers[event]
-			@subscribers[event].each { |callback| 
-				Async do |task|
-					error = nil
-					@task_list << task
-					callback.call(*args) 
-				rescue => e 
-					error = e
-				ensure
-					@task_list.delete(task)
-					raise error if error
-				end
-			}
-		end
-	end
-
-	# Remove all callbacks from an event
-	def remove_all_listeners event=nil
-		if event
-			@subscribers[event].clear # = []
-		else
-			@subscribers.clear
-		end
-	end
-end
-
 module Apify
 
 	"""A class for managing actor events.
@@ -74,16 +12,6 @@ module Apify
 	"""
 	class EventManager
 
-=begin
-		_platform_events_websocket: Optional[websockets.client.WebSocketClientProtocol] = None
-		_process_platform_messages_task: Optional[asyncio.Task] = None
-		_send_persist_state_interval_task: Optional[asyncio.Task] = None
-		_send_system_info_interval_task: Optional[asyncio.Task] = None
-		_listener_tasks: Set[asyncio.Task]
-		_listeners_to_wrappers: Dict[ActorEventTypes, Dict[Callable, List[Callable]]]
-		_connected_to_platform_websocket: Optional[asyncio.Future] = None
-=end
-
 		"""Create an instance of the EventManager.
 
 		Args:
@@ -91,14 +19,16 @@ module Apify
 		"""
 		def initialize config
 			@_config = config
-			@_event_emitter = EventEmitter.new  # AsyncIOEventEmitter()
 			@_initialized = false
-			#@_listener_tasks = set()
-			@_listeners_to_wrappers = {} # defaultdict(lambda: defaultdict(list))
-
-			##
+		
+			# websocket
 			@_platform_events_websocket = nil
+			@_process_platform_messages_task = nil
 			@_connected_to_platform_websocket = false
+			
+			# Built-in EventEmitter @_event_emitter = AsyncIOEventEmitter()
+			@_listener_tasks = Set.new
+			@_listeners_to_wrappers = {} # @subscribers
 		end
 
 		"""Initialize the event manager.
@@ -115,7 +45,7 @@ module Apify
 				#self._connected_to_platform_websocket = asyncio.Future()
 				#self._process_platform_messages_task = asyncio.create_task(self._process_platform_messages())
 
-				@_process_platform_messages_task = _process_platform_messages
+				_process_platform_messages
 				
 				is_connected = @_connected_to_platform_websocket
 				raise 'Error connecting to platform events websocket!' unless is_connected # RuntimeError
@@ -149,9 +79,9 @@ module Apify
 			end
 			
 			wait_for_all_listeners_to_complete timeout_secs: event_listeners_timeout_secs
-
-			@_event_emitter.remove_all_listeners
-
+			#@_event_emitter.remove_all_listeners
+			@_listeners_to_wrappers.clear
+			
 			@_initialized = false
 		end
 
@@ -216,7 +146,9 @@ module Apify
 			self._listeners_to_wrappers[event_name][listener].append(outer_wrapper)
 =end
 
-			@_event_emitter.add_listener event_name, listener
+			# @_event_emitter.add_listener event_name, listener
+			@_listeners_to_wrappers[event_name] ||= Set.new << listener
+		
 			#return self._event_emitter.add_listener(event_name, outer_wrapper)
 		end
 
@@ -226,21 +158,18 @@ module Apify
 			event_name (ActorEventTypes): The actor event for which to remove listeners.
 			listener (Callable, optional): The listener which is supposed to be removed. If not passed, all listeners of this event are removed.
 		"""
-		def off event_name, listener			
+		def off event_name, listener=nil			
 			raise 'EventManager was not initialized!' if !@_initialized # RuntimeError
 
 			#event_name = maybe_extract_enum_member_value(event_name)
-
+			list = @_listeners_to_wrappers[event_name]
+			return if !list
+			
 			if listener
-				#for listener_wrapper in self._listeners_to_wrappers[event_name][listener]:
-				#	@_event_emitter.remove_listener event_name, listener_wrapper
-				#self._listeners_to_wrappers[event_name][listener] = []
-				
-				@_event_emitter.remove_listener event_name, listener
+				list.delete(listener)
 			else
-				self._listeners_to_wrappers[event_name] = defaultdict(list)
-				@_event_emitter.remove_all_listeners event_name
-			end
+				list.clear # = []
+			end			
 		end
 		
 		"""Emit an actor event manually.
@@ -251,7 +180,21 @@ module Apify
 		"""
 		def emit event_name, data
 			#event_name = maybe_extract_enum_member_value(event_name)
-			@_event_emitter.emit event_name, data
+			#@_event_emitter.emit event_name, data
+			list = @_listeners_to_wrappers[event_name]
+			return if !list
+
+			list.each { |listener| 
+				@_listener_tasks << Async do |task|
+					error = nil
+					listener.call(data) 
+				rescue => exc
+					error = exc
+				ensure
+					@_listener_tasks.delete(task)
+					Log.error(error) if error
+				end
+			}
 		end
 		
 		"""Wait for all event listeners which are currently being executed to complete.
@@ -260,15 +203,35 @@ module Apify
 			timeout_secs (float, optional): Timeout for the wait. If the event listeners don't finish until the timeout, they will be canceled.
 		"""
 		def wait_for_all_listeners_to_complete timeout_secs: nil
-			Log.fatal "TODO: #{self.class}.#{__method__}", timeout_secs
+			# Log.fatal "TODO: #{self.class}.#{__method__}", timeout_secs
+			#@_event_emitter.wait_for_all_listeners_to_complete timeout_secs
+			
+			tasks = @_listener_tasks
+			if tasks.empty?
+				Log.debug "All listeners stopped"
+			else
+				sleep timeout_secs if timeout_secs 
+				if !tasks.empty?
+					
+					if timeout_secs
+						Log.warn "Timed out waiting for event listeners to complete, unfinished #{tasks.length} event listeners will be canceled"
+					else
+						Log.warn "Unfinished #{tasks.length} event listeners will be canceled"
+					end
+					
+					tasks.each { |task| task.stop }
+					tasks.clear
+				end
+			end
+			###################################################################################################
 =begin
 			async def _wait_for_listeners() -> None:
 				results = await asyncio.gather(*self._listener_tasks, return_exceptions=True)
 				for result in results:
 					if result is Exception:
 						logger.exception('Event manager encountered an exception in one of the event listeners', exc_info=result)
-=end
-			if false # timeout_secs:
+
+			if timeout_secs:
 				#_, pending = await asyncio.wait([asyncio.create_task(_wait_for_listeners())], timeout=timeout_secs)
 				#if pending:
 				#	logger.warning('Timed out waiting for event listeners to complete, unfinished event listeners will be canceled')
@@ -279,6 +242,7 @@ module Apify
 			else
 				#_wait_for_listeners
 			end
+=end
 		end
 		
 		def _process_platform_messages
@@ -292,12 +256,10 @@ module Apify
 				endpoint = Async::HTTP::Endpoint.parse(url)
 				Log.debug "!!WS URL!!".red, url
 				
-				@_platform_events_websocket = connection = Async::WebSocket::Client.connect(endpoint)
-				@_connected_to_platform_websocket = true
-				
+				@_platform_events_websocket = connection = Async::WebSocket::Client.connect(endpoint)				
 				Log.debug "!!WS CONNECTED!!".red
 				
-				return Async {
+				@_process_platform_messages_task = Async {
 					while message = connection.read							
 						begin
 							parsed_message = JSON.parse(message.buffer) # , symbolize_names: true)
@@ -307,7 +269,7 @@ module Apify
 							event_data = parsed_message['data']  # 'data' can be missing
 							#Log.debug "WS:", event_name, extra: event_data
 							
-							@_event_emitter.emit(event_name, event_data)
+							emit event_name, event_data
 						
 						rescue JSON::ParserError => exc
 							Log.fatal 'Cannot parse actor event', extra: {'message': message}
@@ -318,49 +280,13 @@ module Apify
 					connection.close
 					@_connected_to_platform_websocket = false					
 				}
+				
+				@_connected_to_platform_websocket = true
 			rescue
 				Log.fatal 'Error in websocket connection'
+				@_connected_to_platform_websocket = false
 			end
-			
-			###################################################################################################
-			return
-		
-
-			#Async do
-				p "WEBSOCKET:"
-				p @_config.actor_events_ws_url
-				
-				uri = URL(@_config.actor_events_ws_url)
-				
-				stream = Async::IO::Stream.open(uri.host, uri.port)
-				client = Async::WebSocket::Client.new(stream)
-				
-				client.connect
-
-				#client.write("Hello, WebSocket!")
-
-				client.read do |message|
-					parsed_message = JSON.parse(message.buffer, symbolize_names: true)
-					assert isinstance(parsed_message, dict)
-					
-					#parsed_message = parse_date_fields(parsed_message)
-					event_name = parsed_message[:name]
-					event_data = parsed_message[:data]  # 'data' can be missing
-					
-					_event_emitter.emit(event_name, event_data)
-					
-					client.close
-				end
-
-				client.wait
-			
-				p "WEBSOCKET: DONE"
-				
-				raise
-			#end
-
-			#Async::Reactor.run
-			
+			###################################################################################################			
 =begin
 			try:
 				async with websockets.client.connect(self._config.actor_events_ws_url) as websocket:
