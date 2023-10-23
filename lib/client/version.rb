@@ -9,15 +9,15 @@ def _get_actor_version_representation(
     tarball_url: nil,
     github_gist_url: nil
 ) = ({
-	'versionNumber' => version_number,
-	'buildTag' =>  build_tag,
-	'envVars' => env_vars,
-	'applyEnvVarsToBuild' => apply_env_vars_to_build,
-	'sourceType' => maybe_extract_enum_member_value(source_type),
-	'sourceFiles' => source_files,
-	'gitRepoUrl' => git_repo_url,
-	'tarballUrl' => tarball_url,
-	'gitHubGistUrl' => github_gist_url
+	versionNumber: version_number,
+	buildTag: build_tag,
+	envVars: env_vars,
+	applyEnvVarsToBuild: apply_env_vars_to_build,
+	sourceType: source_type, ### maybe_extract_enum_member_value(source_type), ### TODO
+	sourceFiles: source_files,
+	gitRepoUrl: git_repo_url,
+	tarballUrl: tarball_url,
+	gitHubGistUrl: github_gist_url
 })
 
 module Apify

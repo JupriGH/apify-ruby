@@ -109,8 +109,7 @@ module Apify
 
 		Returns:
 			dict, optional: The retrieved request, or None, if it did not exist.
-		"""
-		### TODO: def ... rescue ... end		
+		"""	
 		def get_request request_id
 			res = @http_client.call url: _url("requests/#{request_id}"), method: 'GET', params: _params
 			return res && res.dig(:parsed, 'data')
@@ -244,9 +243,7 @@ module Apify
 	class RequestQueueCollectionClient < ResourceCollectionClient
 
 		"""Initialize the RequestQueueCollectionClient with the passed arguments."""
-		def initialize **kwargs
-			super resource_path: 'request-queues', **kwargs
-		end
+		def initialize(**kwargs) = super(resource_path: 'request-queues', **kwargs)
 
 		"""List the available request queues.
 
@@ -275,9 +272,7 @@ module Apify
 		Returns:
 			dict: The retrieved or newly-created request queue.
 		"""		
-		def get_or_create name: nil
-			_get_or_create name: name
-		end
+		def get_or_create(name: nil) = _get_or_create(name: name)
 	end
 
 end

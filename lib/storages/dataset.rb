@@ -403,11 +403,10 @@ module Apify
 		
 
 		"""Remove the dataset either from the Apify cloud storage or from the local directory."""
-=begin
-		async def drop(self) -> None:
-			await self._dataset_client.delete()
-			self._remove_from_cache()
-=end
+		def drop
+			@_dataset_client.delete
+			#_remove_from_cache
+		end
 
 		"""Open a dataset.
 

@@ -406,59 +406,47 @@ module Apify
 		Returns:
 			httpx.Response: The dataset items as a context-managed streaming Response
 		"""		
-=begin
-		@contextmanager
-		def stream_items(
-			self,
-			*,
-			item_format: str = 'json',
-			offset: Optional[int] = None,
-			limit: Optional[int] = None,
-			desc: Optional[bool] = None,
-			clean: Optional[bool] = None,
-			bom: Optional[bool] = None,
-			delimiter: Optional[str] = None,
-			fields: Optional[List[str]] = None,
-			omit: Optional[List[str]] = None,
-			unwind: Optional[str] = None,
-			skip_empty: Optional[bool] = None,
-			skip_header_row: Optional[bool] = None,
-			skip_hidden: Optional[bool] = None,
-			xml_root: Optional[str] = None,
-			xml_row: Optional[str] = None,
-		) -> Iterator[httpx.Response]:
-			response = None
-			try:
-				request_params = self._params(
-					format=item_format,
-					offset=offset,
-					limit=limit,
-					desc=desc,
-					clean=clean,
-					bom=bom,
-					delimiter=delimiter,
-					fields=fields,
-					omit=omit,
-					unwind=unwind,
-					skipEmpty=skip_empty,
-					skipHeaderRow=skip_header_row,
-					skipHidden=skip_hidden,
-					xmlRoot=xml_root,
-					xmlRow=xml_row,
-				)
 
-				response = self.http_client.call(
-					url=self._url('items'),
-					method='GET',
-					params=request_params,
-					stream=True,
-					parse_response=False,
-				)
-				yield response
-			finally:
-				if response:
-					response.close()
-=end
+		def stream_items(
+			item_format = 'json',
+			offset: nil,
+			limit: nil,
+			desc: nil,
+			clean: nil,
+			bom: nil,
+			delimiter: nil,
+			fields: nil,
+			omit: nil,
+			unwind: nil,
+			skip_empty: nil,
+			skip_header_row: nil,
+			skip_hidden: nil,
+			xml_root: nil,
+			xml_row: nil
+		)
+			request_params = _params(
+				format: item_format,
+				offset: offset,
+				limit: limit,
+				desc: desc,
+				clean: clean,
+				bom: bom,
+				delimiter: delimiter,
+				fields: fields,
+				omit: omit,
+				unwind: unwind,
+				skipEmpty: skip_empty,
+				skipHeaderRow: skip_header_row,
+				skipHidden: skip_hidden,
+				xmlRoot: xml_root,
+				xmlRow: xml_row,
+			)
+
+			@http_client.call(url: _url('items'), method: 'GET', params: request_params, stream: true, parse_response: false) do |chunk|
+				yield chunk
+			end
+		end
+		
 		"""Push items to the dataset.
 
 		https://docs.apify.com/api/v2#/reference/datasets/item-collection/put-items

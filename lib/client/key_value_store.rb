@@ -4,9 +4,7 @@ module Apify
 	class KeyValueStoreClient < ResourceClient
 
 		"""Initialize the KeyValueStoreClient."""
-		def initialize **kwargs
-			super resource_path: 'key-value-stores', **kwargs
-		end
+		def initialize(**kwargs) = super(resource_path: 'key-value-stores', **kwargs)
 		
 		"""Retrieve the key-value store.
 

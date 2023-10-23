@@ -4,14 +4,11 @@ module Apify
 	class ResourceClient < BaseClient
 
 		def _get		
-			begin
-				res = @http_client.call url: @url, method: 'GET', params: _params
-				return res && res.dig(:parsed, "data")
-				#return parse_date_fields(_pluck_data(response.json()))
-			rescue ApifyApiError => exc
-				Utils::_catch_not_found_or_throw exc
-			end
-			nil
+			res = @http_client.call url: @url, method: 'GET', params: _params
+			return res && res.dig(:parsed, "data")
+			#return parse_date_fields(_pluck_data(response.json()))
+		rescue ApifyApiError => exc
+			Utils::_catch_not_found_or_throw exc
 		end
 		
 		def _update updated_fields
@@ -23,11 +20,9 @@ module Apify
 		end
 		
 		def _delete
-			#try:
-				@http_client.call url: _url, method: 'DELETE', params: _params
-			#except ApifyApiError as exc:
-			#    _catch_not_found_or_throw(exc)
-			nil
+			@http_client.call url: _url, method: 'DELETE', params: _params
+		except ApifyApiError => exc
+			@utils::_catch_not_found_or_throw exc
 		end
 
 	end

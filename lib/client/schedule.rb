@@ -8,14 +8,14 @@ def _get_schedule_representation(
 	timezone: nil,
 	title: nil
 ) = ({
-	'cronExpression' 	=> cron_expression,
-	'isEnabled'			=> is_enabled,
-	'isExclusive'		=> is_exclusive,
-	'name'				=> name,
-	'actions'			=> actions,
-	'description'		=> description,
-	'timezone'			=> timezone,
-	'title'				=> title
+	cronExpression: cron_expression,
+	isEnabled: 		is_enabled,
+	isExclusive:	is_exclusive,
+	name:			name,
+	actions:		actions,
+	description:	description,
+	timezone:		timezone,
+	title:			title
 })
 		
 module Apify
@@ -141,34 +141,30 @@ module Apify
 		Returns:
 			dict: The created schedule.
 		"""
-=begin
 		def create(
-			self,
-			*,
-			cron_expression: str,
-			is_enabled: bool,
-			is_exclusive: bool,
-			name: Optional[str] = None,
-			actions: Optional[List[Dict]] = None,
-			description: Optional[str] = None,
-			timezone: Optional[str] = None,
-			title: Optional[str] = None,
-		) -> Dict:
-			if not actions:
-				actions = []
+			cron_expression,
+			is_enabled,
+			is_exclusive,
+			name: nil,
+			actions: nil,
+			description: nil,
+			timezone: nil,
+			title: nil
+		)
+			actions ||= []
 
-			schedule_representation = _get_schedule_representation(
-				cron_expression=cron_expression,
-				is_enabled=is_enabled,
-				is_exclusive=is_exclusive,
-				name=name,
-				actions=actions,
-				description=description,
-				timezone=timezone,
-				title=title,
+			schedule_representation = Utils::filter_out_none_values_recursively _get_schedule_representation(
+				cron_expression: cron_expression,
+				is_enabled: is_enabled,
+				is_exclusive: is_exclusive,
+				name: name,
+				actions: actions,
+				description: description,
+				timezone: timezone,
+				title: title
 			)
 
-			return self._create(filter_out_none_values_recursively(schedule_representation))
-=end
+			_create schedule_representation
+		end
 	end
 end

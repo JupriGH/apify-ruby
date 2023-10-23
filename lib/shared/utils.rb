@@ -16,9 +16,6 @@ ListOrDict = TypeVar('ListOrDict', List, Dict)
 T = TypeVar('T')
 
 
-def ignore_docs(method: T) -> T:
-    """Mark that a method's documentation should not be rendered. Functionally, this decorator is a noop."""
-    return method
 =end
 
 module Apify
@@ -76,8 +73,6 @@ def is_content_type_text(content_type: str) -> bool:
 	This way should be good enough for the vast majority of use cases, if it causes issues, we can improve it later.
 	"""
 	def self.is_file_or_bytes value
-
-		
 		### TODO
 		#return isinstance(value, (bytes, bytearray, io.IOBase))
 		false
@@ -91,9 +86,9 @@ def json_dumps(obj: Any) -> str:
     return json.dumps(obj, ensure_ascii=False, indent=2, default=str)
 =end
 
+	"""Extract the value of an enumeration member if it is an Enum, otherwise return the original value."""	
 =begin
 	def maybe_extract_enum_member_value maybe_enum_member
-		"""Extract the value of an enumeration member if it is an Enum, otherwise return the original value."""
 		if isinstance(maybe_enum_member, Enum):
 			return maybe_enum_member.value
 		return maybe_enum_member

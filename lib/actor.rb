@@ -7,7 +7,6 @@ module Apify
 
 		#_memory_storage_client: MemoryStorageClient
 		
-
 		"""Create an Actor instance.
 
 		Note that you don't have to do this, all the methods on this class function as classmethods too,
@@ -205,7 +204,8 @@ module Apify
 			if !@_was_final_persist_state_emitted
 				@_event_manager.emit(ActorEventTypes::PERSIST_STATE, {'isMigrating': false})
 				@_was_final_persist_state_emitted = true
-			end			
+			end
+			
 			if status_message
 				set_status_message status_message, is_terminal: true
 			end
@@ -856,14 +856,13 @@ module Apify
 			
 			custom_after_sleep_millis ||= @_config.metamorph_after_sleep_millis
 
-			"""
-			await self._cancel_event_emitting_intervals()
+			_cancel_event_emitting_intervals
 
-			self._event_manager.emit(ActorEventTypes.PERSIST_STATE, {'isMigrating': True})
-			self._was_final_persist_state_emitted = True
+			@_event_manager.emit(ActorEventTypes::PERSIST_STATE, {'isMigrating': true})
+			@_was_final_persist_state_emitted = true
 
-			await self._event_manager.close(event_listeners_timeout_secs=event_listeners_timeout_secs)
-			"""
+			@_event_manager.close event_listeners_timeout_secs: event_listeners_timeout_secs
+			
 			
 			raise unless @_config.actor_run_id
 			@_apify_client.run(@_config.actor_run_id).reboot
@@ -893,57 +892,42 @@ module Apify
 		Returns:
 			dict: The created webhook
 		"""
-=begin
-		@classmethod
-		async def add_webhook(
-			cls,
-			*,
-			event_types: List[WebhookEventType],
-			request_url: str,
-			payload_template: Optional[str] = None,
-			ignore_ssl_errors: Optional[bool] = None,
-			do_not_retry: Optional[bool] = None,
-			idempotency_key: Optional[str] = None,
-		) -> Dict:
 
-			return await cls._get_default_instance().add_webhook(
-				event_types=event_types,
-				request_url=request_url,
-				payload_template=payload_template,
-				ignore_ssl_errors=ignore_ssl_errors,
-				do_not_retry=do_not_retry,
-				idempotency_key=idempotency_key,
+		def self.add_webhook(
+			event_types, request_url,
+			payload_template: nil, ignore_ssl_errors: nil, do_not_retry: nil, idempotency_key: nil
+		)
+
+			_get_default_instance.add_webhook(
+				event_types, request_url,
+				payload_template: payload_template, ignore_ssl_errors: ignore_ssl_errors, do_not_retry: do_not_retry, idempotency_key: idempotency_key
 			)
+		end
+		
+		def add_webhook(
+			event_types, request_url,
+			payload_template: nil, ignore_ssl_errors: nil, do_not_retry: nil, idempotency_key: nil
+		)
+			_raise_if_not_initialized
 
-		async def _add_webhook_internal(
-			self,
-			*,
-			event_types: List[WebhookEventType],
-			request_url: str,
-			payload_template: Optional[str] = None,
-			ignore_ssl_errors: Optional[bool] = None,
-			do_not_retry: Optional[bool] = None,
-			idempotency_key: Optional[str] = None,
-		) -> Optional[Dict]:
-			self._raise_if_not_initialized()
-
-			if not self.is_at_home():
-				self.log.error('Actor.add_webhook() is only supported when running on the Apify platform.')
-				return None
-
+			if !is_at_home
+				Log.error 'Actor.add_webhook() is only supported when running on the Apify platform.'
+				return
+			end
+			
 			# If is_at_home() is True, config.actor_run_id is always set
-			assert self._config.actor_run_id is not None
+			raise unless @_config.actor_run_id
 
-			return await self._apify_client.webhooks().create(
-				actor_run_id=self._config.actor_run_id,
-				event_types=event_types,
-				request_url=request_url,
-				payload_template=payload_template,
-				ignore_ssl_errors=ignore_ssl_errors,
-				do_not_retry=do_not_retry,
-				idempotency_key=idempotency_key,
+			@_apify_client.webhooks.create(
+				event_types,
+				request_url,
+				payload_template: payload_template,
+				actor_run_id: @_config.actor_run_id,
+				ignore_ssl_errors: ignore_ssl_errors,
+				do_not_retry: do_not_retry,
+				idempotency_key: idempotency_key
 			)
-=end
+		end
 
 		"""Set the status message for the current actor run.
 

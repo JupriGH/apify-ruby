@@ -42,7 +42,7 @@ module Apify
 			
 			c = response.body.length
 			e = response['content-encoding']
-			Log.debug "compression: #{e}" if e
+			#Log.debug "compression: #{e}" if e
 			
 			case e
 			when nil
@@ -52,14 +52,14 @@ module Apify
 				#gz 		= Zlib::GzipReader.new sio
 				#response.body = gz.read
 				
-				Log.debug "decompressed: gzip #{c} => #{response.body.length}"
+				#Log.debug "decompressed: gzip #{c} => #{response.body.length}"
 			when "deflate"
 				#response.body = Zlib::Inflate.new(-15).inflate(response.body) # deflate
 				response.body = Zlib::Inflate.inflate(response.body) # deflate	
-				Log.debug "decompressed: deflate #{c} => #{response.body.length}"
+				#Log.debug "decompressed: deflate #{c} => #{response.body.length}"
 			when "br"
 				response.body = Brotli.inflate(response.body)
-				Log.debug "decompressed: brotli #{c} => #{response.body.length}"
+				#Log.debug "decompressed: brotli #{c} => #{response.body.length}"
 			else
 				raise "UNSUPPORTED_ENCODING => #{e}"
 			end
@@ -151,7 +151,7 @@ module Apify
 				data = io.string
 
 				headers['Content-Encoding'] = 'gzip'
-				Log.debug "compressed gzip: #{c} => #{data.length}"
+				#Log.debug "compressed gzip: #{c} => #{data.length}"
 			end
 			
 			#if isinstance(data, (str, bytes, bytearray)):
@@ -181,7 +181,8 @@ module Apify
 		)
 			# log_context.method.set(method)
 			# log_context.url.set(url)
-			Log.debug "#{method} #{url}"
+			
+			#Log.debug "#{method} #{url}"
 			
 			raise 'Cannot stream response and parse it at the same time!' if # ValueError
 				stream && parse_response
@@ -214,7 +215,8 @@ module Apify
 				when 'GET'
 					req = Net::HTTP::Get.new uri
 				when 'DELETE'
-					req = Net::HTTP::Delete.new uri
+					#req = Net::HTTP::Delete.new uri
+					raise "DELETE COMMAND TEMPORARY DISABLED"
 				else
 					raise "UNSUPPORTED_METHOD #{method}"
 				end
@@ -227,9 +229,15 @@ module Apify
 					# Handle the response
 					if res.is_a?(Net::HTTPSuccess)
 						if stream
-							res.read_body do |chunk|
-								yield chunk
-							end
+							
+							### TODO: decompress streams
+							# LINE
+							#res.body.each_line do |line|
+							#	yield line
+							#end
+							
+							# RAW
+							res.read_body { |chunk| yield chunk }
 						else
 							# decompress
 							_decompress res if !stream

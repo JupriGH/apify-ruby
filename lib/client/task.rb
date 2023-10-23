@@ -8,16 +8,16 @@ def _get_task_representation(
     timeout_secs: nil,
     title: nil
 ) = ({
-	'actId': actor_id,
-	'name': name,
-	'options': {
-		'build': build,
-		'maxItems': max_items,
-		'memoryMbytes': memory_mbytes,
-		'timeoutSecs': timeout_secs,
+	actId: actor_id,
+	name: name,
+	options: {
+		build: build,
+		maxItems: max_items,
+		memoryMbytes: memory_mbytes,
+		timeoutSecs: timeout_secs,
 	},
-	'input': task_input,
-	'title': title
+	input: task_input,
+	title: title
 })
 
 module Apify 
@@ -26,9 +26,7 @@ module Apify
 	class TaskClient < ResourceClient
 
 		"""Initialize the TaskClient."""
-		def initialize **kwargs
-			super resource_path: 'actor-tasks', **kwargs
-		end
+		def initialize(**kwargs) = super(resource_path: 'actor-tasks', **kwargs)
 
 		"""Retrieve the task.
 
@@ -67,16 +65,14 @@ module Apify
 			timeout_secs: nil,
 			title: nil
 		)
-			task_representation = Utils::filter_out_none_values_recursively( 
-				_get_task_representation(
-					name: name,
-					task_input: task_input,
-					build: build,
-					max_items: max_items,
-					memory_mbytes: memory_mbytes,
-					timeout_secs: timeout_secs,
-					title: title
-				)
+			task_representation = Utils::filter_out_none_values_recursively _get_task_representation(
+				name: name,
+				task_input: task_input,
+				build: build,
+				max_items: max_items,
+				memory_mbytes: memory_mbytes,
+				timeout_secs: timeout_secs,
+				title: title
 			)
 			_update task_representation
 		end
@@ -303,32 +299,29 @@ module Apify
 		Returns:
 			dict: The created task.
 		"""	
-=begin
 		def create(
-			self,
-			*,
-			actor_id: str,
-			name: str,
-			build: Optional[str] = None,
-			timeout_secs: Optional[int] = None,
-			memory_mbytes: Optional[int] = None,
-			max_items: Optional[int] = None,
-			task_input: Optional[Dict] = None,
-			title: Optional[str] = None,
-		) -> Dict:
-			task_representation = _get_task_representation(
-				actor_id=actor_id,
-				name=name,
-				task_input=task_input,
-				build=build,
-				max_items=max_items,
-				memory_mbytes=memory_mbytes,
-				timeout_secs=timeout_secs,
-				title=title,
+			actor_id,
+			name,
+			build: nil,
+			timeout_secs: nil,
+			memory_mbytes: nil,
+			max_items: nil,
+			task_input: nil,
+			title: nil
+		)
+			task_representation = Utils::filter_out_none_values_recursively _get_task_representation(
+				actor_id: actor_id,
+				name: name,
+				task_input: task_input,
+				build: build,
+				max_items: max_items,
+				memory_mbytes: memory_mbytes,
+				timeout_secs: timeout_secs,
+				title: title
 			)
 
-			return self._create(filter_out_none_values_recursively(task_representation))
-=end
+			_create task_representation
+		end
 	end
 
 end

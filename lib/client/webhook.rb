@@ -1,49 +1,41 @@
-=begin
-from apify_shared.consts import WebhookEventType
-from apify_shared.utils import filter_out_none_values_recursively, ignore_docs, maybe_extract_enum_member_value, parse_date_fields
 
-from ..._errors import ApifyApiError
-from ..._utils import _catch_not_found_or_throw, _pluck_data
-from .webhook_dispatch_collection import WebhookDispatchCollectionClient, WebhookDispatchCollectionClientAsync
-=end
-
-=begin
+"""Prepare webhook dictionary representation for clients."""
 def _get_webhook_representation(
-    *,
-    event_types: Optional[List[WebhookEventType]] = None,
-    request_url: Optional[str] = None,
-    payload_template: Optional[str] = None,
-    actor_id: Optional[str] = None,
-    actor_task_id: Optional[str] = None,
-    actor_run_id: Optional[str] = None,
-    ignore_ssl_errors: Optional[bool] = None,
-    do_not_retry: Optional[bool] = None,
-    idempotency_key: Optional[str] = None,
-    is_ad_hoc: Optional[bool] = None,
-) -> Dict:
-    """Prepare webhook dictionary representation for clients."""
-    webhook: Dict[str, Any] = {
-        'requestUrl': request_url,
-        'payloadTemplate': payload_template,
-        'ignoreSslErrors': ignore_ssl_errors,
-        'doNotRetry': do_not_retry,
-        'idempotencyKey': idempotency_key,
-        'isAdHoc': is_ad_hoc,
-        'condition': {
-            'actorRunId': actor_run_id,
-            'actorTaskId': actor_task_id,
-            'actorId': actor_id,
+    event_types: nil,
+    request_url: nil,
+    payload_template: nil,
+    actor_id: nil,
+    actor_task_id: nil,
+    actor_run_id: nil,
+    ignore_ssl_errors: nil,
+    do_not_retry: nil,
+    idempotency_key: nil,
+    is_ad_hoc: nil
+)
+    webhook = {
+        requestUrl: request_url,
+        payloadTemplate: payload_template,
+        ignoreSslErrors: ignore_ssl_errors,
+        doNotRetry: do_not_retry,
+        idempotencyKey: idempotency_key,
+        isAdHoc: is_ad_hoc,
+        condition: {
+            actorRunId: actor_run_id,
+            actorTaskId: actor_task_id,
+            actorId: actor_id,
         },
     }
 
-    if actor_run_id is not None:
-        webhook['isAdHoc'] = True
+    webhook[:isAdHoc] = true if actor_run_id
 
-    if event_types is not None:
-        webhook['eventTypes'] = [maybe_extract_enum_member_value(event_type) for event_type in event_types]
-
-    return webhook
-=end
+	### TODO:
+	
+    #if event_types
+    #    webhook[:eventTypes] = [maybe_extract_enum_member_value(event_type) for event_type in event_types]
+	#end
+	
+    webhook
+end
 
 module Apify
 
@@ -84,34 +76,31 @@ module Apify
 		Returns:
 			dict: The updated webhook
 		"""
-=begin
 		def update(
-			self,
-			*,
-			event_types: Optional[List[WebhookEventType]] = None,
-			request_url: Optional[str] = None,
-			payload_template: Optional[str] = None,
-			actor_id: Optional[str] = None,
-			actor_task_id: Optional[str] = None,
-			actor_run_id: Optional[str] = None,
-			ignore_ssl_errors: Optional[bool] = None,
-			do_not_retry: Optional[bool] = None,
-			is_ad_hoc: Optional[bool] = None,
-		) -> Dict:
-			webhook_representation = _get_webhook_representation(
-				event_types=event_types,
-				request_url=request_url,
-				payload_template=payload_template,
-				actor_id=actor_id,
-				actor_task_id=actor_task_id,
-				actor_run_id=actor_run_id,
-				ignore_ssl_errors=ignore_ssl_errors,
-				do_not_retry=do_not_retry,
-				is_ad_hoc=is_ad_hoc,
+			event_types: nil,
+			request_url: nil,
+			payload_template: nil,
+			actor_id: nil,
+			actor_task_id: nil,
+			actor_run_id: nil,
+			ignore_ssl_errors: nil,
+			do_not_retry: nil,
+			is_ad_hoc: nil
+		)
+			webhook_representation = Utils::filter_out_none_values_recursively _get_webhook_representation(
+				event_types: event_types,
+				request_url: request_url,
+				payload_template: payload_template,
+				actor_id: actor_id,
+				actor_task_id: actor_task_id,
+				actor_run_id: actor_run_id,
+				ignore_ssl_errors: ignore_ssl_errors,
+				do_not_retry: do_not_retry,
+				is_ad_hoc: is_ad_hoc
 			)
 
-			return self._update(filter_out_none_values_recursively(webhook_representation))
-=end
+			_update webhook_representation
+		end
 
 
 		"""Delete the webhook.
@@ -130,23 +119,15 @@ module Apify
 		Returns:
 			dict, optional: The webhook dispatch created by the test
 		"""
-=begin
-		def test(self) -> Optional[Dict]:
-			try:
-				response = self.http_client.call(
-					url=self._url('test'),
-					method='POST',
-					params=self._params(),
-				)
+		def test
+			res = @http_client.call url: _url('test'), method: 'POST', params: _params
+			res && res.dig(:parsed, 'data')
+			#return parse_date_fields(_pluck_data(response.json()))
 
-				return parse_date_fields(_pluck_data(response.json()))
-
-			except ApifyApiError as exc:
-				_catch_not_found_or_throw(exc)
-
-			return None
-=end
-
+		rescue ApifyApiError => exc
+			Utils::_catch_not_found_or_throw exc
+		end
+		
 		"""Get dispatches of the webhook.
 
 		https://docs.apify.com/api/v2#/reference/webhooks/dispatches-collection/get-collection
@@ -154,24 +135,11 @@ module Apify
 		Returns:
 			WebhookDispatchCollectionClient: A client allowing access to dispatches of this webhook using its list method
 		"""
-=begin
-		def dispatches(self) -> WebhookDispatchCollectionClient:
-			return WebhookDispatchCollectionClient(
-				**self._sub_resource_init_options(resource_path='dispatches'),
-			)
-=end
+		def dispatches = WebhookDispatchCollectionClient(**_sub_resource_init_options(resource_path: 'dispatches'))
+
 	end
 
 	### WebhookCollectionClient
-	
-=begin
-from apify_shared.consts import WebhookEventType
-from apify_shared.models import ListPage
-from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
-
-=end
-	
-	
 	
 	"""Sub-client for manipulating webhooks."""
 	class WebhookCollectionClient < ResourceCollectionClient
@@ -221,35 +189,32 @@ from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
 		Returns:
 			dict: The created webhook
 		"""
-=begin
 		def create(
-			self,
-			*,
-			event_types: List[WebhookEventType],
-			request_url: str,
-			payload_template: Optional[str] = None,
-			actor_id: Optional[str] = None,
-			actor_task_id: Optional[str] = None,
-			actor_run_id: Optional[str] = None,
-			ignore_ssl_errors: Optional[bool] = None,
-			do_not_retry: Optional[bool] = None,
-			idempotency_key: Optional[str] = None,
-			is_ad_hoc: Optional[bool] = None,
-		) -> Dict:
-			webhook_representation = _get_webhook_representation(
-				event_types=event_types,
-				request_url=request_url,
-				payload_template=payload_template,
-				actor_id=actor_id,
-				actor_task_id=actor_task_id,
-				actor_run_id=actor_run_id,
-				ignore_ssl_errors=ignore_ssl_errors,
-				do_not_retry=do_not_retry,
-				idempotency_key=idempotency_key,
-				is_ad_hoc=is_ad_hoc,
+			event_types,
+			request_url,
+			payload_template: nil,
+			actor_id: nil,
+			actor_task_id: nil,
+			actor_run_id: nil,
+			ignore_ssl_errors: nil,
+			do_not_retry: nil,
+			idempotency_key: nil,
+			is_ad_hoc: nil
+		)
+			webhook_representation = Utils::filter_out_none_values_recursively _get_webhook_representation(
+				event_types: event_types,
+				request_url: request_url,
+				payload_template: payload_template,
+				actor_id: actor_id,
+				actor_task_id: actor_task_id,
+				actor_run_id: actor_run_id,
+				ignore_ssl_errors: ignore_ssl_errors,
+				do_not_retry: do_not_retry,
+				idempotency_key: idempotency_key,
+				is_ad_hoc: is_ad_hoc,
 			)
 
-			return self._create(filter_out_none_values_recursively(webhook_representation))
-=end
+			_create webhook_representation
+		end
 	end
 end

@@ -206,15 +206,10 @@ module Apify
 			return storage
 		end
 
-=begin
-
-		def _remove_from_cache(self) -> None:
-			if self.__class__._cache_by_id is not None:
-				del self.__class__._cache_by_id[self._id]
-
-			if self._name and self.__class__._cache_by_name is not None:
-				del self.__class__._cache_by_name[self._name]
-=end
+		def _remove_from_cache
+			@_cache_by_id.delete(@_id) 	if @_cache_by_id
+			@_cache_by_name.delete(@_name) if @_cache_by_name && @_name
+		end
 
 	end
 

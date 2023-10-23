@@ -111,19 +111,19 @@ module Apify
 			record = @_key_value_store_client.get_record key
 			record ? record[:value] : default_value
 		end
-		
+
+		"""Iterate over the keys in the key-value store.
+
+		Args:
+			exclusive_start_key (str, optional): All keys up to this one (including) are skipped from the result.
+
+		Yields:
+			IterateKeysTuple: A tuple `(key, info)`,
+				where `key` is the record key, and `info` is an object that contains a single property `size`
+				indicating size of the record in bytes.
+		"""		
 =begin
 		async def iterate_keys(self, exclusive_start_key: Optional[str] = None) -> AsyncIterator[IterateKeysTuple]:
-			"""Iterate over the keys in the key-value store.
-
-			Args:
-				exclusive_start_key (str, optional): All keys up to this one (including) are skipped from the result.
-
-			Yields:
-				IterateKeysTuple: A tuple `(key, info)`,
-					where `key` is the record key, and `info` is an object that contains a single property `size`
-					indicating size of the record in bytes.
-			"""
 			while True:
 				list_keys = await self._key_value_store_client.list_keys(exclusive_start_key=exclusive_start_key)
 				for item in list_keys['items']:
@@ -160,9 +160,7 @@ module Apify
 		Args:
 			key (str): The key for which the URL should be generated.
 		"""
-		def self.get_public_url key
-			open.get_public_url key
-		end
+		def self.get_public_url(key) = open.get_public_url(key)
 
 		def get_public_url key
 			# if not isinstance(self._key_value_store_client, KeyValueStoreClientAsync):
@@ -170,14 +168,11 @@ module Apify
 			"#{@_config.api_public_base_url}/v2/key-value-stores/#{@_id}/records/#{key}"
 		end
 		
-=begin
-		async def drop(self) -> None:
-			"""Remove the key-value store either from the Apify cloud storage or from the local directory."""
-			await self._key_value_store_client.delete()
-			self._remove_from_cache()
-
-		# async
-=end
+		"""Remove the key-value store either from the Apify cloud storage or from the local directory."""
+		def drop
+			@_key_value_store_client.delete
+			#_remove_from_cache
+		end
 
 		"""Open a key-value store.
 

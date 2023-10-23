@@ -1,7 +1,11 @@
 
 # Apify Ruby SDK Unofficial
 
-![dont be sad readme is here](https://raw.githubusercontent.com/JupriGH/resources/main/cats/catframe.png)<img src="https://upload.wikimedia.org/wikipedia/commons/7/73/Ruby_logo.svg" width="80" height="80">
+![dont be sad readme is here](https://raw.githubusercontent.com/JupriGH/resources/main/cats/catframe.png)
+
+<img src="https://upload.wikimedia.org/wikipedia/commons/2/28/Apify-logo.svg" width="280">
+<img src="https://upload.wikimedia.org/wikipedia/commons/7/73/Ruby_logo.svg" width="80" height="80">
+
 
 ## About  Ruby (programming language)
 

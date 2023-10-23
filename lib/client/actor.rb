@@ -17,26 +17,26 @@ def _get_actor_representation(
     example_run_input_body: nil,
     example_run_input_content_type: nil
 ) = ({
-	'name': name,
-	'title': title,
-	'description': description,
-	'seoTitle': seo_title,
-	'seoDescription': seo_description,
-	'versions': versions,
-	'restartOnError': restart_on_error,
-	'isPublic': is_public,
-	'isDeprecated': is_deprecated,
-	'isAnonymouslyRunnable': is_anonymously_runnable,
-	'categories': categories,
-	'defaultRunOptions': {
-		'build': default_run_build,
-		'maxItems': default_run_max_items,
-		'memoryMbytes': default_run_memory_mbytes,
-		'timeoutSecs': default_run_timeout_secs,
+	name: name,
+	title: title,
+	description: description,
+	seoTitle: seo_title,
+	seoDescription: seo_description,
+	versions: versions,
+	restartOnError: restart_on_error,
+	isPublic: is_public,
+	isDeprecated: is_deprecated,
+	isAnonymouslyRunnable: is_anonymously_runnable,
+	categories: categories,
+	defaultRunOptions: {
+		build: default_run_build,
+		maxItems: default_run_max_items,
+		memoryMbytes: default_run_memory_mbytes,
+		timeoutSecs: default_run_timeout_secs,
 	},
-	'exampleRunInput': {
-		'body': example_run_input_body,
-		'contentType': example_run_input_content_type,
+	exampleRunInput: {
+		body: example_run_input_body,
+		contentType: example_run_input_content_type,
 	},
 })
 
@@ -84,59 +84,53 @@ module Apify
 		Returns:
 			dict: The updated actor
 		"""
-=begin
 		def update(
-			self,
-			*,
-			name: Optional[str] = None,
-			title: Optional[str] = None,
-			description: Optional[str] = None,
-			seo_title: Optional[str] = None,
-			seo_description: Optional[str] = None,
-			versions: Optional[List[Dict]] = None,
-			restart_on_error: Optional[bool] = None,
-			is_public: Optional[bool] = None,
-			is_deprecated: Optional[bool] = None,
-			is_anonymously_runnable: Optional[bool] = None,
-			categories: Optional[List[str]] = None,
-			default_run_build: Optional[str] = None,
-			default_run_max_items: Optional[int] = None,
-			default_run_memory_mbytes: Optional[int] = None,
-			default_run_timeout_secs: Optional[int] = None,
-			example_run_input_body: Optional[Any] = None,
-			example_run_input_content_type: Optional[str] = None,
-		) -> Dict:
-			actor_representation = _get_actor_representation(
-				name=name,
-				title=title,
-				description=description,
-				seo_title=seo_title,
-				seo_description=seo_description,
-				versions=versions,
-				restart_on_error=restart_on_error,
-				is_public=is_public,
-				is_deprecated=is_deprecated,
-				is_anonymously_runnable=is_anonymously_runnable,
-				categories=categories,
-				default_run_build=default_run_build,
-				default_run_max_items=default_run_max_items,
-				default_run_memory_mbytes=default_run_memory_mbytes,
-				default_run_timeout_secs=default_run_timeout_secs,
-				example_run_input_body=example_run_input_body,
-				example_run_input_content_type=example_run_input_content_type,
+			name: nil,
+			title: nil,
+			description: nil,
+			seo_title: nil,
+			seo_description: nil,
+			versions: nil,
+			restart_on_error: nil,
+			is_public: nil,
+			is_deprecated: nil,
+			is_anonymously_runnable: nil,
+			categories: nil,
+			default_run_build: nil,
+			default_run_max_items: nil,
+			default_run_memory_mbytes: nil,
+			default_run_timeout_secs: nil,
+			example_run_input_body: nil,
+			example_run_input_content_type: nil
+		)
+			actor_representation = Utils::filter_out_none_values_recursively _get_actor_representation(
+				name: name,
+				title: title,
+				description: description,
+				seo_title: seo_title,
+				seo_description: seo_description,
+				versions: versions,
+				restart_on_error: restart_on_error,
+				is_public: is_public,
+				is_deprecated: is_deprecated,
+				is_anonymously_runnable: is_anonymously_runnable,
+				categories: categories,
+				default_run_build: default_run_build,
+				default_run_max_items: default_run_max_items,
+				default_run_memory_mbytes: default_run_memory_mbytes,
+				default_run_timeout_secs: default_run_timeout_secs,
+				example_run_input_body: example_run_input_body,
+				example_run_input_content_type: example_run_input_content_type
 			)
 
-			return self._update(filter_out_none_values_recursively(actor_representation))
-=end
+			_update actor_representation
+		end
 
 		"""Delete the actor.
 
 		https://docs.apify.com/api/v2#/reference/actors/actor-object/delete-actor
 		"""
-=begin
-		def delete(self) -> None:
-			return self._delete()
-=end
+		def delete = _delete
 
 		"""Start the actor and immediately return the Run object.
 
@@ -192,7 +186,7 @@ module Apify
 				params: request_params
 			)
 
-			res.dig(:parsed, "data")
+			res && res.dig(:parsed, "data")
 			# parse_date_fields(_pluck_data(response.json()))
 		end
 		
@@ -252,32 +246,25 @@ module Apify
 		Returns:
 			dict: The build object
 		"""	
-=begin
 		def build(
-			self,
-			*,
-			version_number: str,
-			beta_packages: Optional[bool] = None,
-			tag: Optional[str] = None,
-			use_cache: Optional[bool] = None,
-			wait_for_finish: Optional[int] = None,
-		) -> Dict:
-			request_params = self._params(
-				version=version_number,
-				betaPackages=beta_packages,
-				tag=tag,
-				useCache=use_cache,
-				waitForFinish=wait_for_finish,
+			version_number,
+			beta_packages: nil,
+			tag: nil,
+			use_cache: nil,
+			wait_for_finish: nil
+		)
+			request_params = _params(
+				version: version_number,
+				betaPackages: beta_packages,
+				tag: tag,
+				useCache: use_cache,
+				waitForFinish: wait_for_finish
 			)
 
-			response = self.http_client.call(
-				url=self._url('builds'),
-				method='POST',
-				params=request_params,
-			)
-
-			return parse_date_fields(_pluck_data(response.json()))
-=end
+			res = @http_client.call url: _url('builds'), method: 'POST', params: request_params
+			res && res.dig(:parsed, "data")
+			# return parse_date_fields(_pluck_data(response.json()))
+		end
 
 		"""Retrieve a client for the builds of this actor."""
 		def builds = BuildCollectionClient.new(**_sub_resource_init_options(resource_path: 'builds'))

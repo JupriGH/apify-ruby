@@ -4,9 +4,7 @@ module Apify
 	class BuildClient < ActorJobBaseClient
 
 		"""Initialize the BuildClient."""
-		def initialize **kwargs
-			super resource_path: 'actor-builds', **kwargs
-		end
+		def initialize(**kwargs) = super(resource_path: 'actor-builds', **kwargs)
 
 		"""Return information about the actor build.
 
@@ -17,36 +15,32 @@ module Apify
 		"""		
 		def get = _get
 
-=begin
-		def delete(self) -> None:
-			"""Delete the build.
 
-			https://docs.apify.com/api/v2#/reference/actor-builds/delete-build/delete-build
-			"""
-			return self._delete()
+		"""Delete the build.
 
-		def abort(self) -> Dict:
-			"""Abort the actor build which is starting or currently running and return its details.
+		https://docs.apify.com/api/v2#/reference/actor-builds/delete-build/delete-build
+		"""
+		def delete = _delete
 
-			https://docs.apify.com/api/v2#/reference/actor-builds/abort-build/abort-build
+		"""Abort the actor build which is starting or currently running and return its details.
 
-			Returns:
-				dict: The data of the aborted actor build
-			"""
-			return self._abort()
+		https://docs.apify.com/api/v2#/reference/actor-builds/abort-build/abort-build
 
-		def wait_for_finish(self, *, wait_secs: Optional[int] = None) -> Optional[Dict]:
-			"""Wait synchronously until the build finishes or the server times out.
+		Returns:
+			dict: The data of the aborted actor build
+		"""
+		def abort = _abort
 
-			Args:
-				wait_secs (int, optional): how long does the client wait for build to finish. None for indefinite.
+		"""Wait synchronously until the build finishes or the server times out.
 
-			Returns:
-				dict, optional: The actor build data. If the status on the object is not one of the terminal statuses
-					(SUCEEDED, FAILED, TIMED_OUT, ABORTED), then the build has not yet finished.
-			"""
-			return self._wait_for_finish(wait_secs=wait_secs)
-=end
+		Args:
+			wait_secs (int, optional): how long does the client wait for build to finish. None for indefinite.
+
+		Returns:
+			dict, optional: The actor build data. If the status on the object is not one of the terminal statuses
+				(SUCEEDED, FAILED, TIMED_OUT, ABORTED), then the build has not yet finished.
+		"""
+		def wait_for_finish(wait_secs=nil) = _wait_for_finish(wait_secs=wait_secs)
 	end
 
 	### BuildCollectionClient

@@ -1,17 +1,9 @@
 ### APIFY_CLIENT_UTILS
 
 require 'json'
-
 require_relative '../shared/utils'
 
-module Apify
-
 =begin
-import asyncio
-import base64
-import json
-import random
-import time
 from http import HTTPStatus
 from typing import TYPE_CHECKING, Any, Awaitable, Callable, Dict, List, Optional, Tuple, TypeVar, cast
 
@@ -23,16 +15,15 @@ if TYPE_CHECKING:
 PARSE_DATE_FIELDS_MAX_DEPTH = 3
 PARSE_DATE_FIELDS_KEY_SUFFIX = 'At'
 
-
-
 T = TypeVar('T')
 StopRetryingType = Callable[[], None]
 =end
 
+RECORD_NOT_FOUND_EXCEPTION_TYPES = ['record-not-found', 'record-or-token-not-found']
+
+module Apify
 
 module Utils
-
-	RECORD_NOT_FOUND_EXCEPTION_TYPES = ['record-not-found', 'record-or-token-not-found']
 
 	def self._to_safe_id id
 		# Identificators of resources in the API are either in the format `resource_id` or `username/resource_id`.
