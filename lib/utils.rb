@@ -329,14 +329,7 @@ def _wrap_internal(implementation: ImplementationType, metadata_source: Metadata
 
 		# Sadly TS impl returns bool indicating whether the key was already present or not
 		"""Add an item to the cache. Remove least used item if max_length exceeded."""
-		def __setitem__ key, value
-			#self._cache[key] = value
-			#if len(self._cache) > self._max_length:
-			#	self._cache.popitem(last=False)
-
-			# mutate ?
-			# delete key
-			
+		def __setitem__ key, value			
 			self[key] = value
 			shift if length > @_max_length
 		end

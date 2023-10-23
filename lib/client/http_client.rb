@@ -182,7 +182,7 @@ module Apify
 			# log_context.method.set(method)
 			# log_context.url.set(url)
 			
-			#Log.debug "#{method} #{url}"
+			Log.debug "#{method} #{url}"
 			
 			raise 'Cannot stream response and parse it at the same time!' if # ValueError
 				stream && parse_response

@@ -43,7 +43,7 @@ module Apify
 		# If queue was modified (request added/updated/deleted) before more than API_PROCESSED_REQUESTS_DELAY_MILLIS
 		# then we assume the get head operation to be consistent.
 		API_PROCESSED_REQUESTS_DELAY_MILLIS = 10_000
-
+		
 		# How many times we try to get queue head with queueModifiedAt older than API_PROCESSED_REQUESTS_DELAY_MILLIS.
 		MAX_QUERIES_FOR_CONSISTENCY = 6
 
@@ -55,6 +55,10 @@ module Apify
 		# to be available to subsequent reads.
 		STORAGE_CONSISTENCY_DELAY_MILLIS = 3000
 
+		###
+		API_PROCESSED_REQUESTS_DELAY = API_PROCESSED_REQUESTS_DELAY_MILLIS / 1000.0 # 10.0 seconds
+		STORAGE_CONSISTENCY_DELAY = STORAGE_CONSISTENCY_DELAY_MILLIS / 1000.0 # 3.0 seconds
+		
 		"""Create a `RequestQueue` instance.
 
 		Do not use the constructor directly, use the `Actor.open_request_queue()` function instead.
@@ -76,18 +80,16 @@ module Apify
 			# @_queue_head_dict = [] # use array ?
 			
 			@_queue_head_dict = {} # OrderedDict()			
-			@_query_queue_head_task = nil
+			@_query_queue_head_task = nil # task
 			@_in_progress = Set.new
-			@_last_activity = Time.now.utc # datetime.now(timezone.utc)
+			@_last_activity = Time.now # datetime.now(timezone.utc)
 			@_recently_handled = Utils::LRUCache.new RECENTLY_HANDLED_CACHE_SIZE
 			@_requests_cache = Utils::LRUCache.new MAX_CACHED_REQUESTS
 			@_assumed_total_count = 0
 			@_assumed_handled_count = 0
 		end
 		
-		#def self._get_human_friendly_label
-		#    'Request queue'
-		#end
+		#def _get_human_friendly_label = 'Request queue'
 		
 		def self._get_default_id config
 			config.default_request_queue_id
@@ -98,7 +100,6 @@ module Apify
 		end
 		
 =begin
-
 		@classmethod
 		def _get_storage_collection_client(
 			cls,
@@ -120,7 +121,7 @@ module Apify
 		def add_request request, forefront: nil
 			Utils::_budget_ow request, ({'url' => [String, true]})
 			
-			@_last_activity = Time.now.utc # datetime.now(timezone.utc)
+			@_last_activity = Time.now # datetime.now(timezone.utc)
 			
 			# TODO: Check Request class in crawlee and replicate uniqueKey generation logic...
 			request['uniqueKey'] ||= request['url']
@@ -144,15 +145,18 @@ module Apify
 			queue_operation_info['uniqueKey'] = request['uniqueKey']
 
 			_cache_request cache_key, queue_operation_info
-
-			"""
-			request_id, was_already_present = queue_operation_info['requestId'], queue_operation_info['wasAlreadyPresent']
-			is_handled = request.get('handledAt') is not None
-			if !is_handled && !was_already_present && request_id not in self._in_progress and self._recently_handled.get(request_id) is None:
+			
+			request_id, was_already_present = queue_operation_info.values_at('requestId', 'wasAlreadyPresent')			 
+			
+			if	request['handledAt'].nil? &&  #!is_handled
+				!was_already_present  && 
+				!@_in_progress.include?(request_id) && 
+				@_recently_handled[request_id].nil?
+			
 				@_assumed_total_count += 1
-				self._maybe_add_request_to_queue_head(request_id, forefront)
+				_maybe_add_request_to_queue_head request_id, forefront
 			end
-			"""
+
 			queue_operation_info
 		end
 
@@ -204,7 +208,7 @@ module Apify
 			"""
 			
 			@_in_progress.add next_request_id
-			@_last_activity = Time.now.utc # datetime.now(timezone.utc)
+			@_last_activity = Time.now # datetime.now(timezone.utc)
 			
 			begin
 				request = get_request next_request_id				
@@ -222,15 +226,16 @@ module Apify
 					into the queueHeadDict straight again. After the interval expires, fetchNextRequest()
 					will try to fetch this request again, until it eventually appears in the main table.
 			"""
-			
-			p request
-			
-			"""
-			if request is None:
-				logger.debug('Cannot find a request from the beginning of queue, will be retried later', extra={'nextRequestId': next_request_id})
-				asyncio.get_running_loop().call_later(STORAGE_CONSISTENCY_DELAY_MILLIS // 1000, lambda: self._in_progress.remove(next_request_id))
-				return None
-			"""
+
+			if !request
+				Log.debug 'Cannot find a request from the beginning of queue, will be retried later', extra: {'nextRequestId': next_request_id}
+
+				Async { # call later, assume we have async loop
+					Async::Task.current.sleep STORAGE_CONSISTENCY_DELAY
+					@_in_progress.delete next_request_id
+				}				
+				return
+			end
 			
 			""" 2) Queue head index is behind the main table and the underlying request was already handled
 				   (by some other client, since we keep the track of handled requests in recentlyHandled dictionary).
@@ -239,8 +244,7 @@ module Apify
 			"""
 			
 			if request['handledAt']
-				# logger.debug('Request fetched from the beginning of queue was already handled', extra={'nextRequestId': next_request_id})
-				puts "DEBUG", 'Request fetched from the beginning of queue was already handled', {'nextRequestId': next_request_id}
+				Log.debug 'Request fetched from the beginning of queue was already handled', extra: {'nextRequestId': next_request_id}
 				@_recently_handled[next_request_id] = true
 				return
 			end
@@ -262,17 +266,16 @@ module Apify
 		def mark_request_as_handled request
 			Utils::_budget_ow request, ({'id' => [String, true], 'uniqueKey' => [String, true], 'handledAt' => [Time, false]})
 			
-			@_last_activity = Time.now.utc # datetime.now(timezone.utc)
+			@_last_activity = Time.now # datetime.now(timezone.utc)
 
 			rid = request['id']
 			
 			if !@_in_progress.include?(rid)
-				# logger.debug('Cannot mark request as handled, because it is not in progress!', extra={'requestId': request['id']})
-				puts "DEBUG", 'Cannot mark request as handled, because it is not in progress!', {'requestId' => rid}
+				Log.debug 'Cannot mark request as handled, because it is not in progress!', extra: {'requestId' => rid}
 				return
 			end
 
-			request['handledAt'] ||= Time.now.utc # datetime.now(timezone.utc))
+			request['handledAt'] ||= Time.now # datetime.now(timezone.utc))
 			queue_operation_info = @_request_queue_client.update_request({**request})
 			queue_operation_info['uniqueKey'] = request['uniqueKey']
 
@@ -299,12 +302,12 @@ module Apify
 				`None` if the given request was not in progress.
 		"""
 		def reclaim_request request, forefront: nil
-			Utils::_budget_ow request, ({'id': [String, true], 'uniqueKey': [String, true]})
-			@_last_activity = Time.now.utc # datetime.now(timezone.utc)
+			Utils::_budget_ow request, ({'id' => [String, true], 'uniqueKey' => [String, true]})
+			
+			@_last_activity = Time.now # datetime.now(timezone.utc)
 
 			if !@_in_progress.include?(request['id'])
-				# logger.debug('Cannot reclaim request, because it is not in progress!', extra={'requestId': request['id']})
-				puts "DEBUG", 'Cannot reclaim request, because it is not in progress!', {'requestId': request['id']}
+				Log.debug 'Cannot reclaim request, because it is not in progress!', extra: {'requestId': request['id']}
 				return
 			end
 			
@@ -317,19 +320,21 @@ module Apify
 
 			# Wait a little to increase a chance that the next call to fetchNextRequest() will return the request with updated data.
 			# This is to compensate for the limitation of DynamoDB, where writes might not be immediately visible to subsequent reads.
-			"""
-			def callback() -> None:
-				if request['id'] not in self._in_progress:
-					logger.debug('The request is no longer marked as in progress in the queue?!', {'requestId': request['id']})
+			
+			Async { # call later, assume we have async loop
+				Async::Task.current.sleep STORAGE_CONSISTENCY_DELAY
+				# callback
+				if  !@_in_progress.include?(request['id'])
+					Log.debug 'The request is no longer marked as in progress in the queue?!', extra: {'requestId': request['id']}
 					return
-
-				self._in_progress.remove(request['id'])
+				end
+				
+				@_in_progress.delete request['id']
 
 				# Performance optimization: add request straight to head if possible
-				self._maybe_add_request_to_queue_head(request['id'], forefront)
+				_maybe_add_request_to_queue_head request['id'], forefront				
+			}
 
-			asyncio.get_running_loop().call_later(STORAGE_CONSISTENCY_DELAY_MILLIS / 1000, callback)
-			"""
 			return queue_operation_info
 		end
 
@@ -355,11 +360,9 @@ module Apify
 			bool: `True` if all requests were already handled and there are no more left. `False` otherwise.
 		"""
 		def is_finished
-			seconds_since_last_activity = Time.now.utc - @_last_activity
+			seconds_since_last_activity = Time.now - @_last_activity
 			if (_in_progress_count > 0) && (seconds_since_last_activity > @_internal_timeout_seconds)
-				message = "The request queue seems to be stuck for #{@_internal_timeout_seconds}s, resetting internal state."
-				#logger.warning(message)
-				puts "WARNING", message
+				Log.warn "The request queue seems to be stuck for #{@_internal_timeout_seconds}s, resetting internal state."
 				_reset
 			end
 						
@@ -376,13 +379,13 @@ module Apify
 
 		def _reset
 			@_queue_head_dict.clear
-			#@_query_queue_head_task = nil
+			@_query_queue_head_task = nil
 			@_in_progress.clear
 			@_recently_handled.clear
 			@_assumed_total_count = 0
 			@_assumed_handled_count = 0
 			@_requests_cache.clear
-			@_last_activity = Time.now.utc
+			@_last_activity = Time.now
 		end
 		
 		def _cache_request cache_key, queue_operation_info
@@ -395,7 +398,7 @@ module Apify
 		end
 
 		def _queue_query_head limit
-			query_started_at = Time.now.utc # datetime.now(timezone.utc)
+			query_started_at = Time.now # datetime.now(timezone.utc)
 
 			list_head = @_request_queue_client.list_head limit: limit			
 			items = list_head['items']
@@ -417,31 +420,25 @@ module Apify
 			end
 			
 			# This is needed so that the next call to _ensureHeadIsNonEmpty() will fetch the queue head again.
-			# @_query_queue_head_task = nil
+			@_query_queue_head_task = nil
 
 			{
 				'wasLimitReached'		=> (items.length >= limit),
 				'prevLimit' 			=> limit,
-				'queueModifiedAt' 		=> list_head['queueModifiedAt'],
+				'queueModifiedAt' 		=> Time.iso8601(list_head['queueModifiedAt']),
 				'queryStartedAt' 		=> query_started_at,
 				'hadMultipleClients' 	=> list_head['hadMultipleClients'],
 			}
 		end
 
-		def _ensure_head_is_non_empty ensure_consistency: nil, limit: nil, iteration: nil # iteration: 0
+		def _ensure_head_is_non_empty ensure_consistency: nil, limit: nil, iteration: 0 # iteration: 0
 			# If is nonempty resolve immediately.
 			return true if @_queue_head_dict.length > 0
 			
 			limit ||= [_in_progress_count * QUERY_HEAD_BUFFER, QUERY_HEAD_MIN_LENGTH].max
-			
-			# TODO: JUPRI
-			"""
-			if self._query_queue_head_task is None:
-				self._query_queue_head_task = asyncio.Task(self._queue_query_head(limit))
-
-			queue_head = await self._query_queue_head_task
-			"""
-			queue_head = _queue_query_head limit # blocking
+						
+			@_query_queue_head_task ||= Async { _queue_query_head limit }
+			queue_head = @_query_queue_head_task.wait
 			
 			# TODO: I feel this code below can be greatly simplified... (comes from TS implementation *wink*)
 
@@ -454,74 +451,62 @@ module Apify
 
 			# If limit was not reached in the call then there are no more requests to be returned.
 			if queue_head['prevLimit'] >= REQUEST_QUEUE_HEAD_MAX_LIMIT
-				# logger.warning('Reached the maximum number of requests in progress', extra={'limit': REQUEST_QUEUE_HEAD_MAX_LIMIT})
-				puts "WARNING", 'Reached the maximum number of requests in progress', {'limit': REQUEST_QUEUE_HEAD_MAX_LIMIT}		
+				Log.warn 'Reached the maximum number of requests in progress', extra: {'limit': REQUEST_QUEUE_HEAD_MAX_LIMIT}
 			end
 
-			return true
-			
-			#should_repeat_with_higher_limit = 
-			#	(@_queue_head_dict.length == 0) && queue_head['wasLimitReached'] && (queue_head['prevLimit'] < REQUEST_QUEUE_HEAD_MAX_LIMIT)
+			should_repeat_with_higher_limit = 
+				(@_queue_head_dict.length == 0) && queue_head['wasLimitReached'] && (queue_head['prevLimit'] < REQUEST_QUEUE_HEAD_MAX_LIMIT)
 
 			# If ensureConsistency=true then we must ensure that either:
 			# - queueModifiedAt is older than queryStartedAt by at least API_PROCESSED_REQUESTS_DELAY_MILLIS
 			# - hadMultipleClients=false and this.assumedTotalCount<=this.assumedHandledCount
 			
-			#is_database_consistent =
-			#	(queue_head['queryStartedAt'] - queue_head['queueModifiedAt'].replace(tzinfo=timezone.utc)).seconds >= (API_PROCESSED_REQUESTS_DELAY_MILLIS / 1000)
-				
-			#is_locally_consistent = !queue_head['hadMultipleClients'] && (@_assumed_total_count <= @_assumed_handled_count)
+			is_database_consistent = (queue_head['queryStartedAt'] - queue_head['queueModifiedAt']) >= API_PROCESSED_REQUESTS_DELAY
+			is_locally_consistent = !queue_head['hadMultipleClients'] && (@_assumed_total_count <= @_assumed_handled_count)
 			
 			# Consistent information from one source is enough to consider request queue finished.
-			# should_repeat_for_consistency = ensure_consistency && !is_database_consistent && !is_locally_consistent
+			should_repeat_for_consistency = ensure_consistency && !is_database_consistent && !is_locally_consistent
 
 			# If both are false then head is consistent and we may exit.
-			"""
 			if !should_repeat_with_higher_limit && !should_repeat_for_consistency
 				return true
 			end
-			"""
 			
 			# If we are querying for consistency then we limit the number of queries to MAX_QUERIES_FOR_CONSISTENCY.
 			# If this is reached then we return false so that empty() and finished() returns possibly false negative.
-			"""
 			if !should_repeat_with_higher_limit && (iteration > MAX_QUERIES_FOR_CONSISTENCY)
 				return false
 			end
 			
-			next_limit = round(queue_head['prevLimit'] * 1.5) if should_repeat_with_higher_limit else queue_head['prevLimit']
-			"""
+			next_limit = should_repeat_with_higher_limit ? (queue_head['prevLimit'] * 1.5).round : queue_head['prevLimit']
 			
 			# If we are repeating for consistency then wait required time.
-			"""
 			if should_repeat_for_consistency
-				delay_seconds = API_PROCESSED_REQUESTS_DELAY_MILLIS / 1000) - \
-					(datetime.now(timezone.utc) - queue_head['queueModifiedAt']).seconds
-				logger.info(f'Waiting for {delay_seconds}s before considering the queue as finished to ensure that the data is consistent.')
-				await asyncio.sleep(delay_seconds)
+				delay_seconds = API_PROCESSED_REQUESTS_DELAY - (Time.now - queue_head['queueModifiedAt'])
+				Log.info "Waiting for #{delay_seconds}s before considering the queue as finished to ensure that the data is consistent."
+				Async::Task.current.sleep delay_seconds
 			end
-			"""
-			
+
 			### repeat
-			#_ensure_head_is_non_empty ensure_consistency, next_limit, iteration+1
+			_ensure_head_is_non_empty ensure_consistency, next_limit, iteration+1
 		end
 		
-=begin
-		def _maybe_add_request_to_queue_head(self, request_id: str, forefront: bool) -> None:
-			if forefront:
-				self._queue_head_dict[request_id] = request_id
+		def _maybe_add_request_to_queue_head request_id, forefront
+			if forefront				
 				# Move to start, i.e. forefront of the queue
-				self._queue_head_dict.move_to_end(request_id, last=False)
-			elif self._assumed_total_count < QUERY_HEAD_MIN_LENGTH:
-				# OrderedDict puts the item to the end of the queue by default
-				self._queue_head_dict[request_id] = request_id
-
-=end
+				@_queue_head_dict = {request_id => request_id}.merge(@_queue_head_dict) # is this fast ?
+			
+			elsif @_assumed_total_count < QUERY_HEAD_MIN_LENGTH
+				
+				# OrderedDict puts the item to the end of the queue by default				
+				@_queue_head_dict[request_id] = request_id
+			end
+		end
 
 		"""Remove the request queue either from the Apify cloud storage or from the local directory."""
 		def drop
 			@_request_queue_client.delete
-			# self._remove_from_cache()
+			_remove_from_cache
 		end
 		
 		"""Get an object containing general information about the request queue.
