@@ -85,7 +85,7 @@ module Apify
 			do_not_retry: nil,
 			is_ad_hoc: nil
 		)
-			webhook_representation = _get_webhook_representation(
+			_update _get_webhook_representation(
 				event_types: event_types,
 				request_url: request_url,
 				payload_template: payload_template,
@@ -96,8 +96,6 @@ module Apify
 				do_not_retry: do_not_retry,
 				is_ad_hoc: is_ad_hoc
 			)
-
-			_update webhook_representation
 		end
 
 
@@ -118,9 +116,7 @@ module Apify
 			dict, optional: The webhook dispatch created by the test
 		"""
 		def test
-			res = @http_client.call url: _url('test'), method: 'POST', params: _params
-			res && res.dig(:parsed, 'data')
-			#return parse_date_fields(_pluck_data(response.json()))
+			_http_post 'test', params: _params, pluck_data: true
 
 		rescue ApifyApiError => exc
 			Utils::_catch_not_found_or_throw exc
@@ -157,9 +153,7 @@ module Apify
 		Returns:
 			ListPage: The list of available webhooks matching the specified filters.
 		"""
-		def list limit: nil, offset: nil, desc: nil
-			_list limit: limit, offset: offset, desc: desc
-		end
+		def list(limit: nil, offset: nil, desc: nil) = _list limit: limit, offset: offset, desc: desc
 
 		"""Create a new webhook.
 
@@ -197,7 +191,7 @@ module Apify
 			idempotency_key: nil,
 			is_ad_hoc: nil
 		)
-			webhook_representation = _get_webhook_representation(
+			_create _get_webhook_representation(
 				event_types: event_types,
 				request_url: request_url,
 				payload_template: payload_template,
@@ -209,8 +203,6 @@ module Apify
 				idempotency_key: idempotency_key,
 				is_ad_hoc: is_ad_hoc,
 			)
-
-			_create webhook_representation
 		end
 	end
 end
