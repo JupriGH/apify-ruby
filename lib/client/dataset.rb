@@ -44,12 +44,7 @@ module Apify
 		Returns:
 			dict: The updated dataset
 		"""
-		def update name: nil, title: nil
-			updated_fields = Utils::filter_out_none_values_recursively({ 'name': name, 'title': title })
-			
-			# if updated_fields.length > 0
-			_update updated_fields
-		end
+		def update(name: nil, title: nil) = _update({name: name, title: title})
 
 		"""Delete the dataset.
 
@@ -105,7 +100,7 @@ module Apify
 
 			res = @http_client.call url: _url('items'), method: 'GET', params: request_params
 			
-			response = res[:response]		
+			response = res[:response]
 			data = res[:parsed]
 
 			Models::ListPage.new({
@@ -512,9 +507,8 @@ module Apify
 		Returns:
 			dict: The retrieved or newly-created dataset.
 		"""		
-		def get_or_create name: nil, schema: nil
-			resource = Utils::filter_out_none_values_recursively({'schema': schema})			
-			_get_or_create name: name, resource: resource
+		def get_or_create name: nil, schema: nil			
+			_get_or_create name: name, resource: ({'schema': schema})
 		end
 	end
 

@@ -4,9 +4,9 @@ def _get_actor_env_var_representation(
     name: nil,
     value: nil
 ) = ({
-	'isSecret' => is_secret,
-	'name' => name,
-	'value' => value,
+	isSecret: is_secret,
+	name: name,
+	value: value
 })
 
 module Apify
@@ -38,15 +38,8 @@ module Apify
 		Returns:
 			dict: The updated actor environment variable
 		"""
-		def update name, value, is_secret=nil 
-			actor_env_var_representation = Utils::filter_out_none_values_recursively(
-				_get_actor_env_var_representation(
-					is_secret: is_secret,
-					name: name,
-					value: value
-				)
-			)
-			_update actor_env_var_representation
+		def update name, value, is_secret=nil   
+			_update _get_actor_env_var_representation(is_secret: is_secret, name: name, value: value)
 		end
 		
 		"""Delete the actor environment variable.
@@ -84,14 +77,7 @@ module Apify
 			dict: The created actor environment variable
 		"""
 		def create name, value, is_secret=nil  
-			actor_env_var_representation = Utils::filter_out_none_values_recursively(
-				_get_actor_env_var_representation(
-					is_secret: is_secret,
-					name: name,
-					value: value
-				)
-			)
-			_create actor_env_var_representation
+			_create _get_actor_env_var_representation(is_secret: is_secret, name: name, value: value)
 		end
 	end
 end

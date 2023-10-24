@@ -131,7 +131,7 @@ API_VERSION = 'v2'
 		# Args:
 		#	dataset_id (str): ID of the dataset to be manipulated
 		def dataset(dataset_id) = DatasetClient.new(resource_id: dataset_id, **_options)
-
+		
 		# Retrieve the sub-client for manipulating datasets.
 		def datasets = DatasetCollectionClient.new(**_options)
 		

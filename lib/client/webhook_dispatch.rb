@@ -22,9 +22,7 @@ module Apify
 	class WebhookDispatchCollectionClient < ResourceCollectionClient
 
 		"""Initialize the WebhookDispatchCollectionClient."""
-		def initialize **kwargs
-			super resource_path: 'webhook-dispatches', **kwargs
-		end
+		def initialize(**kwargs) = super resource_path: 'webhook-dispatches', **kwargs
 
 		"""List all webhook dispatches of a user.
 

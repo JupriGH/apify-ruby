@@ -63,7 +63,7 @@ module Apify
 			timezone: nil,
 			title: nil
 		)
-			schedule_representation = Utils::filter_out_none_values_recursively _get_schedule_representation(
+			_update _get_schedule_representation(
 				cron_expression: cron_expression,
 				is_enabled: is_enabled,
 				is_exclusive: is_exclusive,
@@ -73,8 +73,6 @@ module Apify
 				timezone: timezone,
 				title: title
 			)
-			
-			_update schedule_representation
 		end
 
 		"""Delete the schedule.
@@ -91,9 +89,7 @@ module Apify
 			list, optional: Retrieved log of the given schedule
 		"""		
 		def get_log
-			res = @http_client.call url: _url('log'), method: 'GET', params: _params
-			res && res.dig(:parsed, "data")
-			#return _pluck_data_as_list(response.json())
+			_http_get 'log', params: _params, pluck_data: true # _pluck_data_as_list
 			
 		rescue ApifyApiError => exc
 			Utils::_catch_not_found_or_throw(exc)
@@ -153,7 +149,7 @@ module Apify
 		)
 			actions ||= []
 
-			schedule_representation = Utils::filter_out_none_values_recursively _get_schedule_representation(
+			_create _get_schedule_representation(
 				cron_expression: cron_expression,
 				is_enabled: is_enabled,
 				is_exclusive: is_exclusive,
@@ -163,8 +159,6 @@ module Apify
 				timezone: timezone,
 				title: title
 			)
-
-			_create schedule_representation
 		end
 	end
 end

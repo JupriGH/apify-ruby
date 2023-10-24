@@ -27,12 +27,7 @@ module Apify
 			dict: The updated run
 		"""
 		def update status_message: nil, is_status_message_terminal: nil
-			updated_fields = Utils::filter_out_none_values_recursively({
-				'statusMessage': status_message,
-				'isStatusMessageTerminal': is_status_message_terminal
-			})
-
-			_update updated_fields
+			_update ({statusMessage: status_message, isStatusMessageTerminal: is_status_message_terminal})
 		end
 
 		"""Delete the run.
@@ -128,15 +123,7 @@ module Apify
 			dict: The actor run data.
 		"""
 		def resurrect build: nil, memory_mbytes: nil, timeout_secs: nil
-			request_params = _params(
-				build: build,
-				memory: memory_mbytes,
-				timeout: timeout_secs,
-			)
-
-			res = @http_client.call url: _url('resurrect'), method: 'POST', params: request_params
-			res && res.dig(:parsed, 'data')
-			#return parse_date_fields(_pluck_data(response.json()))
+			_http_post 'resurrect', params: _params(build: build, memory: memory_mbytes, timeout: timeout_secs), pluck_data: true
 		end
 
 		"""Reboot an Actor run. Only runs that are running, i.e. runs with status RUNNING can be rebooted.
@@ -146,11 +133,7 @@ module Apify
 		Returns:
 			dict: The Actor run data.
 		"""
-		def reboot
-			res = @http_client.call url: _url('reboot'), method: 'POST'
-			res && res.dig(:parsed, 'data')
-			#return parse_date_fields(_pluck_data(response.json()))
-		end
+		def reboot = _http_post 'reboot', pluck_data: true
 
 		"""Get the client for the default dataset of the actor run.
 

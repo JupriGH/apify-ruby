@@ -4,7 +4,7 @@ module Apify
 	class StoreCollectionClient < ResourceCollectionClient
 
 		"""Initialize the StoreCollectionClient."""
-		def initialize(**kwargs) = super(resource_path: 'store', **kwargs)
+		def initialize(**kwargs) = super resource_path: 'store', **kwargs
 
         """List Actors in Apify store.
 

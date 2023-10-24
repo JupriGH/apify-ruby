@@ -43,9 +43,7 @@ module Apify
 	class WebhookClient < ResourceClient
 
 		"""Initialize the WebhookClient."""
-		def initialize **kwargs
-			super resource_path: 'webhooks', **kwargs
-		end
+		def initialize(**kwargs) = super resource_path: 'webhooks', **kwargs
 
 		"""Retrieve the webhook.
 
@@ -87,7 +85,7 @@ module Apify
 			do_not_retry: nil,
 			is_ad_hoc: nil
 		)
-			webhook_representation = Utils::filter_out_none_values_recursively _get_webhook_representation(
+			webhook_representation = _get_webhook_representation(
 				event_types: event_types,
 				request_url: request_url,
 				payload_template: payload_template,
@@ -145,9 +143,7 @@ module Apify
 	class WebhookCollectionClient < ResourceCollectionClient
 
 		"""Initialize the WebhookCollectionClient."""
-		def initialize **kwargs
-			super resource_path: 'webhooks', **kwargs
-		end
+		def initialize(**kwargs) = super resource_path: 'webhooks', **kwargs
 
 		"""List the available webhooks.
 
@@ -201,7 +197,7 @@ module Apify
 			idempotency_key: nil,
 			is_ad_hoc: nil
 		)
-			webhook_representation = Utils::filter_out_none_values_recursively _get_webhook_representation(
+			webhook_representation = _get_webhook_representation(
 				event_types: event_types,
 				request_url: request_url,
 				payload_template: payload_template,

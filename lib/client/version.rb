@@ -26,7 +26,7 @@ module Apify
 	class ActorVersionClient < ResourceClient
 
 		"""Initialize the ActorVersionClient."""
-		def initialize(**kwargs) = super(resource_path:'versions', **kwargs)
+		def initialize(**kwargs) = super resource_path:'versions', **kwargs
 
 		"""Return information about the actor version.
 
@@ -70,20 +70,16 @@ module Apify
 			tarball_url: nil,
 			github_gist_url: nil
 		)
-			actor_version_representation = Utils::filter_out_none_values_recursively( 
-				_get_actor_version_representation(
-					build_tag: build_tag,
-					env_vars: env_vars,
-					apply_env_vars_to_build: apply_env_vars_to_build,
-					source_type: source_type,
-					source_files: source_files,
-					git_repo_url: git_repo_url,
-					tarball_url: tarball_url,
-					github_gist_url: github_gist_url
-				)
+			_update  _get_actor_version_representation(
+				build_tag: build_tag,
+				env_vars: env_vars,
+				apply_env_vars_to_build: apply_env_vars_to_build,
+				source_type: source_type,
+				source_files: source_files,
+				git_repo_url: git_repo_url,
+				tarball_url: tarball_url,
+				github_gist_url: github_gist_url
 			)
-
-			_update actor_version_representation
 		end
 		
 	   """Delete the actor version.
@@ -112,7 +108,7 @@ module Apify
 	class ActorVersionCollectionClient < ResourceCollectionClient
 
 		"""Initialize the ActorVersionCollectionClient with the passed arguments."""
-		def initialize(**kwargs) = super(resource_path: 'versions', **kwargs)
+		def initialize(**kwargs) = super resource_path: 'versions', **kwargs
 
 		"""List the available actor versions.
 
@@ -147,35 +143,29 @@ module Apify
 		Returns:
 			dict: The created actor version
 		"""
-=begin
 		def create(
-			self,
-			*,
-			version_number: str,
-			build_tag: Optional[str] = None,
-			env_vars: Optional[List[Dict]] = None,
-			apply_env_vars_to_build: Optional[bool] = None,
-			source_type: ActorSourceType,
-			source_files: Optional[List[Dict]] = None,
-			git_repo_url: Optional[str] = None,
-			tarball_url: Optional[str] = None,
-			github_gist_url: Optional[str] = None,
-		) -> Dict:
-			actor_version_representation = _get_actor_version_representation(
-				version_number=version_number,
-				build_tag=build_tag,
-				env_vars=env_vars,
-				apply_env_vars_to_build=apply_env_vars_to_build,
-				source_type=source_type,
-				source_files=source_files,
-				git_repo_url=git_repo_url,
-				tarball_url=tarball_url,
-				github_gist_url=github_gist_url,
+			version_number,
+			build_tag: nil,
+			env_vars: nil,
+			apply_env_vars_to_build: nil,
+			source_type: nil, ## ActorSourceType,
+			source_files: nil,
+			git_repo_url: nil,
+			tarball_url: nil,
+			github_gist_url: nil
+		)
+			_create _get_actor_version_representation(
+				version_number: version_number,
+				build_tag: build_tag,
+				env_vars: env_vars,
+				apply_env_vars_to_build: apply_env_vars_to_build,
+				source_type: source_type,
+				source_files: source_files,
+				git_repo_url: git_repo_url,
+				tarball_url: tarball_url,
+				github_gist_url: github_gist_url,
 			)
-
-			return self._create(filter_out_none_values_recursively(actor_version_representation))
-=end
-
+		end
 	end
 
 end

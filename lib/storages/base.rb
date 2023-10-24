@@ -1,5 +1,5 @@
 module Apify
-
+	
 	"""A class for managing storage clients."""
 	class StorageClientManager
 

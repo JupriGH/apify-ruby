@@ -22,9 +22,9 @@ module Apify
 			end
 			
 			is_at_home 		= ENV.include? 'APIFY_IS_AT_HOME'
-			python_version 	= RUBY_VERSION  # '3.11.5' # '.'.join([str(x) for x in sys.version_info[:3]])
+			python_version 	= RUBY_VERSION
 			client_version 	= "9.9.9" # metadata.version('apify-client')
-			platform 		= RbConfig::CONFIG['host_os'] # 'linux' # sys.platform
+			platform 		= RbConfig::CONFIG['host_os']
 			
 			@headers['User-Agent'] = "ApifyClient/#{client_version} (#{platform}; Ruby/#{python_version}); isAtHome/#{is_at_home}"
 			

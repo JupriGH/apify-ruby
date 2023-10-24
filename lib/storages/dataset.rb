@@ -40,7 +40,7 @@ module Apify
 		"""
 		def initialize id=nil, name: nil, client: nil, config: nil
 			super id, name: name, client: client, config: config
-			@_dataset_client = client.dataset(@_id)
+			@_dataset_client = client.dataset @_id
 		end
 		
 		    
@@ -203,51 +203,46 @@ module Apify
 				If you omit both, it uses the default key-value store.
 			content_type (str, optional): Either 'text/csv' or 'application/json'. Defaults to JSON.
 		"""		
-		def export_to key, to_key_value_store_id: nil, to_key_value_store_name: nil, content_type: nil
+		def export_to( 
+			key, 
+			to_key_value_store_id: nil, 
+			to_key_value_store_name: nil, 
+			content_type: nil,
+			force_cloud: nil ### NEW
+		)
 
-			key_value_store = KeyValueStore.open id: to_key_value_store_id, name: to_key_value_store_name
+			key_value_store = KeyValueStore.open to_key_value_store_id, name: to_key_value_store_name, force_cloud: force_cloud
 
 			items, offset, limit = [], 0, 1000
 
 			while true
-				list_items = @_dataset_client.list_items limit: limit, offset: offset			
-				items.push *list_items[:items]
+				list_items = @_dataset_client.list_items limit: limit, offset: offset
+
+				items.push *list_items.items
 				
-				o = offset + list_items[:count]
-				break if list_items[:total] <= o
-				
+				o = offset + list_items.count
+				break if list_items.total <= o				
 				offset = o
 			end
 			
 			raise 'Cannot export an empty dataset' if items.empty? # ValueError
 
-			if content_type == 'text/csv'
-
-				#output = io.StringIO()
-				#writer = csv.writer(output, quoting=csv.QUOTE_MINIMAL)
-				#writer.writerows([items[0].keys(), *[item.values() for item in items]])
-				#value = output.getvalue()
-				#return await key_value_store.set_value(key, value, content_type)
-
-				p "TODO: csv check columns orders!"
-				
+			if ['csv','text/csv'].include?(content_type) 
+				## "TODO: csv check columns orders!"				
 				csv_string = CSV.generate do |csv|
 					csv << items[0].keys
 					items.each { |row| csv << row.values }
 				end
-				p csv_string
-				
-				return key_value_store.set_value key, csv_string, content_type
+				return key_value_store.set_value key, csv_string, 'text/csv'
 			end
 			
-			if content_type == 'application/json'
-				return key_value_store.set_value key, items, content_type
+			if ['json','text/json','application/json'].include?(content_type) 
+				return key_value_store.set_value key, items, 'application/json'
 			end
 			
 			raise "Unsupported content type: #{content_type}" # ValueError
 		end
 
-		###---------------------------------------------------------------------------------------------------------------- export_to_json
 		"""Save the entirety of the dataset's contents into one JSON file within a key-value store.
 
 		Args:
@@ -266,32 +261,33 @@ module Apify
 			from_dataset_id: nil,
 			from_dataset_name: nil,
 			to_key_value_store_id: nil,
-			to_key_value_store_name: nil
+			to_key_value_store_name: nil,
+			force_cloud: nil  ### NEW
 		)
-			dataset = open id: from_dataset_id, name: from_dataset_name
+			dataset = open id: from_dataset_id, name: from_dataset_name, force_cloud: force_cloud
 			dataset.export_to_json(
 				key, 
 				to_key_value_store_id: to_key_value_store_id, 
-				to_key_value_store_name: to_key_value_store_name
+				to_key_value_store_name: to_key_value_store_name,
+				force_cloud: force_cloud
 			)
 		end
 		
 		def export_to_json(
 			key,
-			#from_dataset_id: Optional[str] = None,  # noqa: U100
-			#from_dataset_name: Optional[str] = None,  # noqa: U100
 			to_key_value_store_id: nil,
-			to_key_value_store_name: nil
+			to_key_value_store_name: nil,
+			force_cloud: nil ### NEW
 		)
 			export_to(
 				key, 
 				to_key_value_store_id: to_key_value_store_id, 
-				to_key_value_store_name: to_key_value_store_name, 
+				to_key_value_store_name: to_key_value_store_name,
+				force_cloud: force_cloud,
 				content_type: 'application/json'
 			)
 		end
 		
-		###---------------------------------------------------------------------------------------------------------------- export_to_csv
 		"""Save the entirety of the dataset's contents into one CSV file within a key-value store.
 
 		Args:
@@ -310,27 +306,29 @@ module Apify
 			from_dataset_id: nil,
 			from_dataset_name: nil,
 			to_key_value_store_id: nil,
-			to_key_value_store_name: nil
+			to_key_value_store_name: nil,
+			force_cloud: nil  ### NEW
 		)
-			dataset = open id: from_dataset_id, name: from_dataset_name
+			dataset = open id: from_dataset_id, name: from_dataset_name, force_cloud: force_cloud
 			dataset.export_to_csv(
 				key, 
 				to_key_value_store_id: to_key_value_store_id, 
-				to_key_value_store_name: to_key_value_store_name
+				to_key_value_store_name: to_key_value_store_name,
+				force_cloud: force_cloud
 			)
 		end
 		
 		def export_to_csv(
 			key,
-			#from_dataset_id: Optional[str] = None,  # noqa: U100
-			#from_dataset_name: Optional[str] = None,  # noqa: U100
 			to_key_value_store_id: nil,
-			to_key_value_store_name: nil
+			to_key_value_store_name: nil,
+			force_cloud: nil ### NEW
 		)
 			export_to(
 				key, 
 				to_key_value_store_id: to_key_value_store_id, 
 				to_key_value_store_name: to_key_value_store_name, 
+				force_cloud: force_cloud,
 				content_type: 'text/csv'
 			)
 		end

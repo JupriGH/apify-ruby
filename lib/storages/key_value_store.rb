@@ -48,7 +48,7 @@ module Apify
 
 		def initialize id=nil, name: nil, client: nil, config: nil				
 			super id, name: name, client: client, config: config	
-			@_key_value_store_client = client.key_value_store(@_id)
+			@_key_value_store_client = client.key_value_store @_id
 			
 		end
 

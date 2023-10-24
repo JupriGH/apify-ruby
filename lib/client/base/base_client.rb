@@ -8,13 +8,9 @@ module Apify
 		@http_client
 		@root_client
 
-		def _url path=nil
-			path ? "#{@url}/#{path}" : @url
-		end
+		def _url(path=nil) = path ? "#{@url}/#{path}" : @url
 		
-		def _params **kwargs
-			{ **(@params||{}) ,  **(kwargs||{}) }
-		end
+		def _params(**kwargs) = @param ? {**@params,  **kwargs} : {**kwargs}
 
 		def _sub_resource_init_options **kwargs
 			{ base_url: @url, http_client: @http_client, params: @params, root_client: @root_client, **kwargs }
@@ -59,6 +55,31 @@ module Apify
 				@url << '/' << Utils::_to_safe_id(resource_id)
 			end
 		end
-	end
+		
+		### NEW
+		def _request(
+			method,
+			path=nil, 
+			headers: nil,
+			params: nil, 
+			filter_null: nil, 
+			pluck_data: nil, 
+			data: nil, 
+			json: nil
+		)
+			json = Utils::filter_out_none_values_recursively(json) if json && filter_null
 
+			res = @http_client.call url: _url(path), method: method, headers: headers, params: params, data: data, json: json
+			
+			# assume results is JSON
+			return if !res
+			return res.dig(:parsed, 'data') if pluck_data			
+			return res
+		end
+		
+		def _http_get(*args, **kargs) = _request('GET', *args, **kargs)
+		def _http_put(*args, **kargs) = _request('PUT', *args, **kargs)
+		def _http_post(*args, **kargs) = _request('POST', *args, **kargs)			
+		def _http_del(*args, **kargs) = _request('DELETE', *args, **kargs)			
+	end
 end

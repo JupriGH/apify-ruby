@@ -25,12 +25,7 @@ module Apify
 		Returns:
 			dict: The updated key-value store
 		"""
-		def update name: nil, title: nil
-			updated_fields = Utils::filter_out_none_values_recursively({ name: name, title: title })
-			
-			# if updated_fields.length > 0
-			_update updated_fields
-		end
+		def update(name: nil, title: nil) = _update({name: name, title: title})
 
 		"""Delete the key-value store.
 
@@ -50,12 +45,7 @@ module Apify
 			dict: The list of keys in the key-value store matching the given arguments
 		"""		
 		def list_keys limit: nil, exclusive_start_key: nil
-			request_params = _params limit: limit, exclusiveStartKey: exclusive_start_key
-
-			res = @http_client.call url: _url('keys'), method: 'GET', params: request_params
-
-			res.dig(:parsed, "data")
-			#return parse_date_fields(_pluck_data(response.json()))
+			_http_get 'keys', params: _params(limit: limit, exclusiveStartKey: exclusive_start_key), filter_null: true, pluck_data: true
 		end
 
 		"""Retrieve the given record from the key-value store.
@@ -183,9 +173,7 @@ module Apify
 		Args:
 			key (str): The key of the record which to delete
 		"""		
-		def delete_record key
-			@http_client.call url: _url("records/#{key}"), method: 'DELETE', params: _params
-		end
+		def delete_record(key) = _http_del "records/#{key}", params: _params
 	end
 
 	### KeyValueStoreCollectionClient
@@ -194,9 +182,7 @@ module Apify
 	class KeyValueStoreCollectionClient < ResourceCollectionClient
 
 		"""Initialize the KeyValueStoreCollectionClient with the passed arguments."""
-		def initialize **kwargs
-			super resource_path: 'key-value-stores', **kwargs
-		end
+		def initialize(**kwargs) = super(resource_path: 'key-value-stores', **kwargs)
 
 		"""List the available key-value stores.
 
@@ -226,9 +212,8 @@ module Apify
         Returns:
             dict: The retrieved or newly-created key-value store.
         """
-		def get_or_create name: nil, schema: nil
-			resource = Utils::filter_out_none_values_recursively({'schema': schema})			
-			_get_or_create name: name, resource: resource
+		def get_or_create name: nil, schema: nil	
+			_get_or_create name: name, resource: ({'schema': schema})
 		end
 	end
 

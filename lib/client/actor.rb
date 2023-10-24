@@ -103,7 +103,7 @@ module Apify
 			example_run_input_body: nil,
 			example_run_input_content_type: nil
 		)
-			actor_representation = Utils::filter_out_none_values_recursively _get_actor_representation(
+			actor_representation = _get_actor_representation(
 				name: name,
 				title: title,
 				description: description,
@@ -178,16 +178,13 @@ module Apify
 				webhooks: nil # _encode_webhook_list_to_base64(webhooks) if webhooks is not None else None, # TODO: webhooks
 			)
 
-			res = @http_client.call(
-				url: _url('runs'),
-				method: 'POST',
+			_http_post(
+				'runs',
 				headers: {'content-type' => content_type},
 				data: run_input,
-				params: request_params
+				params: request_params,
+				pluck_data: true
 			)
-
-			res && res.dig(:parsed, "data")
-			# parse_date_fields(_pluck_data(response.json()))
 		end
 		
 		"""Start the actor and wait for it to finish before returning the Run object.
@@ -261,9 +258,7 @@ module Apify
 				waitForFinish: wait_for_finish
 			)
 
-			res = @http_client.call url: _url('builds'), method: 'POST', params: request_params
-			res && res.dig(:parsed, "data")
-			# return parse_date_fields(_pluck_data(response.json()))
+			_http_post 'builds', params: request_params, pluck_data: true
 		end
 
 		"""Retrieve a client for the builds of this actor."""
@@ -382,26 +377,24 @@ module Apify
 			example_run_input_body: nil,
 			example_run_input_content_type: nil
 		)
-			actor_representation = Utils::filter_out_none_values_recursively(
-				_get_actor_representation(
-					name: name,
-					title: title,
-					description: description,
-					seo_title: seo_title,
-					seo_description: seo_description,
-					versions: versions,
-					restart_on_error: restart_on_error,
-					is_public: is_public,
-					is_deprecated: is_deprecated,
-					is_anonymously_runnable: is_anonymously_runnable,
-					categories: categories,
-					default_run_build: default_run_build,
-					default_run_max_items: default_run_max_items,
-					default_run_memory_mbytes: default_run_memory_mbytes,
-					default_run_timeout_secs: default_run_timeout_secs,
-					example_run_input_body: example_run_input_body,
-					example_run_input_content_type: example_run_input_content_type
-				)
+			actor_representation = _get_actor_representation(
+				name: name,
+				title: title,
+				description: description,
+				seo_title: seo_title,
+				seo_description: seo_description,
+				versions: versions,
+				restart_on_error: restart_on_error,
+				is_public: is_public,
+				is_deprecated: is_deprecated,
+				is_anonymously_runnable: is_anonymously_runnable,
+				categories: categories,
+				default_run_build: default_run_build,
+				default_run_max_items: default_run_max_items,
+				default_run_memory_mbytes: default_run_memory_mbytes,
+				default_run_timeout_secs: default_run_timeout_secs,
+				example_run_input_body: example_run_input_body,
+				example_run_input_content_type: example_run_input_content_type
 			)
 			_create actor_representation
 		end

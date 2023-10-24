@@ -116,7 +116,7 @@ async def _retry_with_exp_backoff_async(
     return await async_func(stop_retrying, max_retries + 1)
 =end
 
-	def self._catch_not_found_or_throw exc # 'ApifyApiError'		
+	def self._catch_not_found_or_throw exc # 'ApifyApiError'					
 		is_not_found_status = (exc.status_code == '404') # HTTPStatus.NOT_FOUND
 		is_not_found_type 	= RECORD_NOT_FOUND_EXCEPTION_TYPES.include?(exc.type)
 		

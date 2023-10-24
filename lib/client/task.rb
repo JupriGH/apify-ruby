@@ -26,7 +26,7 @@ module Apify
 	class TaskClient < ResourceClient
 
 		"""Initialize the TaskClient."""
-		def initialize(**kwargs) = super(resource_path: 'actor-tasks', **kwargs)
+		def initialize(**kwargs) = super resource_path: 'actor-tasks', **kwargs
 
 		"""Retrieve the task.
 
@@ -65,7 +65,7 @@ module Apify
 			timeout_secs: nil,
 			title: nil
 		)
-			task_representation = Utils::filter_out_none_values_recursively _get_task_representation(
+			_update _get_task_representation(
 				name: name,
 				task_input: task_input,
 				build: build,
@@ -74,7 +74,6 @@ module Apify
 				timeout_secs: timeout_secs,
 				title: title
 			)
-			_update task_representation
 		end
 
 		"""Delete the task.
@@ -129,15 +128,13 @@ module Apify
 				webhooks: nil #_encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,
 			)
 
-			res = @http_client.call(
-				url: _url('runs'),
-				method: 'POST',
+			res = _http_post(
+				'runs',
 				headers: {'content-type' => 'application/json; charset=utf-8'},
 				json: task_input,
 				params: request_params,
+				pluck_data: true
 			)
-			res.dig(:parsed, "data")
-			#return parse_date_fields(_pluck_data(response.json()))
 		end
 
 		"""Start a task and wait for it to finish before returning the Run object.
@@ -192,9 +189,8 @@ module Apify
 			dict, optional: Retrieved task input
 		"""
 		def get_input
-			res = @http_client.call url: _url('input'), method: 'GET', params: _params
+			res = _http_get 'input', params: _params
 			res && res[:parsed]
-			#return cast(Dict, response.json())
 			
 		rescue ApifyApiError => exc
 			Utils::_catch_not_found_or_throw
@@ -256,12 +252,9 @@ module Apify
 
 	"""Sub-client for manipulating tasks."""
 	class TaskCollectionClient < ResourceCollectionClient
-		# TODO: RESOURCE_PATH = 'actor-tasks'
-		
+
 		"""Initialize the TaskCollectionClient."""
-		def initialize **kwargs
-			super resource_path: 'actor-tasks', **kwargs
-		end
+		def initialize(**kwargs) = super resource_path: 'actor-tasks', **kwargs
 		
 		"""List the available tasks.
 
@@ -275,9 +268,7 @@ module Apify
 		Returns:
 			ListPage: The list of available tasks matching the specified filters.
 		"""	
-		def list limit: nil, offset: nil, desc: nil
-			_list limit: limit, offset: offset, desc: desc
-		end
+		def list(limit: nil, offset: nil, desc: nil) = _list limit: limit, offset: offset, desc: desc
 
 		"""Create a new task.
 
@@ -309,7 +300,7 @@ module Apify
 			task_input: nil,
 			title: nil
 		)
-			task_representation = Utils::filter_out_none_values_recursively _get_task_representation(
+			_create _get_task_representation(
 				actor_id: actor_id,
 				name: name,
 				task_input: task_input,
@@ -319,8 +310,6 @@ module Apify
 				timeout_secs: timeout_secs,
 				title: title
 			)
-
-			_create task_representation
 		end
 	end
 
