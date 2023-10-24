@@ -128,7 +128,7 @@ module Apify
 				webhooks: nil #_encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,
 			)
 
-			res = _http_post(
+			_http_post(
 				'runs',
 				headers: {'content-type' => 'application/json; charset=utf-8'},
 				json: task_input,

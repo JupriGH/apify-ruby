@@ -10,7 +10,7 @@ module Apify
 
 		def _wait_for_finish wait_secs=nil
 
-			started_at = Time.now.utc # datetime.now(timezone.utc)
+			started_at = Time.now
 			job = nil
 			seconds_elapsed = 0
 
@@ -18,13 +18,10 @@ module Apify
 				wait_for_finish = wait_secs ? (wait_secs - seconds_elapsed) : DEFAULT_WAIT_FOR_FINISH_SEC
 				
 				begin
-					res = @http_client.call url: _url, method: 'GET', params: _params(waitForFinish: wait_for_finish)
-			 
-					#job = parse_date_fields(_pluck_data(response.json()))
-					job = res.dig(:parsed, "data")
-		
+					job = _http_get params: _params(waitForFinish: wait_for_finish), pluck_data: true
+
 					#seconds_elapsed = math.floor(((datetime.now(timezone.utc) - started_at).total_seconds()))
-					seconds_elapsed = Time.now.utc - started_at
+					seconds_elapsed = Time.now - started_at
 
 					# Early return here so that we avoid the sleep below if not needed
 					return job if ActorJobStatus::_is_terminal(job['status']) || (wait_secs && (seconds_elapsed >= wait_secs))
@@ -46,9 +43,7 @@ module Apify
 		end
 
 		def _abort gracefully=false
-			res = @http_client.call url: _url('abort'), method: 'POST', params: _params(gracefully: gracefully)
-			res && res.dig(:parsed, "data")
-			#return parse_date_fields(_pluck_data(response.json()))
+			_http_post 'abort', params: _params(gracefully: gracefully), pluck_data: true
 		end
 	end
 

@@ -46,7 +46,7 @@ module Apify
 	class ActorClient < ResourceClient
 
 		"""Initialize the ActorClient."""
-		def initialize(**kwargs) = super(resource_path: 'acts', **kwargs)
+		def initialize(**kwargs) = super resource_path: 'acts', **kwargs
 
 		"""Retrieve the actor.
 
@@ -103,7 +103,7 @@ module Apify
 			example_run_input_body: nil,
 			example_run_input_content_type: nil
 		)
-			actor_representation = _get_actor_representation(
+			_update _get_actor_representation(
 				name: name,
 				title: title,
 				description: description,
@@ -122,8 +122,6 @@ module Apify
 				example_run_input_body: example_run_input_body,
 				example_run_input_content_type: example_run_input_content_type
 			)
-
-			_update actor_representation
 		end
 
 		"""Delete the actor.
@@ -377,7 +375,7 @@ module Apify
 			example_run_input_body: nil,
 			example_run_input_content_type: nil
 		)
-			actor_representation = _get_actor_representation(
+			_create _get_actor_representation(
 				name: name,
 				title: title,
 				description: description,
@@ -396,7 +394,6 @@ module Apify
 				example_run_input_body: example_run_input_body,
 				example_run_input_content_type: example_run_input_content_type
 			)
-			_create actor_representation
 		end
 	end
 
