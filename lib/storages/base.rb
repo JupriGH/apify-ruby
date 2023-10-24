@@ -31,16 +31,15 @@ module Apify
 
 			if default_instance._config.is_at_home || force_cloud
 				# assert default_instance._cloud_client is not None
-				raise if default_instance._cloud_client.nil?
+				raise "Cloud client not set!" if default_instance._cloud_client.nil?
 				return default_instance._cloud_client
 			end
 
-			raise "### TODO: local_client not implemented"
-			
+			# raise "### TODO: local_client not implemented"
 			if !default_instance._local_client
-				# default_instance._local_client = MemoryStorageClient.new(
-				#	persist_storage=default_instance._config.persist_storage, write_metadata=true
-				# )
+				default_instance._local_client = MemoryStorage::MemoryStorageClient.new(
+					persist_storage: default_instance._config.persist_storage, write_metadata: true
+				)
 			end
 
 			default_instance._local_client
@@ -63,11 +62,8 @@ module Apify
 
 		attr_accessor :_id, :_name
 		
-		@_storage_client
-		@_config
 		@_cache_by_id
 		@_cache_by_name
-		
 		# _storage_creating_lock: Optional[asyncio.Lock] = None
 
 		"""Initialize the storage.
@@ -80,7 +76,7 @@ module Apify
 			client (ApifyClientAsync or MemoryStorageClient): The storage client
 			config (Configuration): The configuration
 		"""
-		def initialize id: nil, name: nil, client: nil, config: nil
+		def initialize id=nil, name: nil, client: nil, config: nil
 			@_id = id
 			@_name = name
 			@_storage_client = client
@@ -92,23 +88,24 @@ module Apify
 		def self._get_human_friendly_label
 			raise 'You must override this method in the subclass!' # NotImplementedError
 		end
-
+=end
 		def self._get_default_id config
-			raise 'You must override this method in the subclass!' # NotImplementedError
+			raise NotImplementedError.new 'You must override this method in the subclass!'
 		end
 		
 		def self._get_single_storage_client id, client
-			raise 'You must override this method in the subclass!' # NotImplementedError
+			raise NotImplementedError.new 'You must override this method in the subclass!'
 		end
 
 		def self._get_storage_collection_client client
-			raise 'You must override this method in the subclass!' # NotImplementedError
+			raise NotImplementedError.new 'You must override this method in the subclass!'
 		end
-=end 
+ 
 		###=================================================================================
 
 		def self._ensure_class_initialized
-			@_cache_by_id 		||= {}
+			# TODO: cache type force_cloud / local
+			@_cache_by_id 		||= {} 
 			@_cache_by_name 	||= {}
 
 			#if cls._storage_creating_lock is None:
@@ -133,14 +130,14 @@ module Apify
 
 		Returns:
 			An instance of the storage.
-		""" 
-		def self._open_internal id: nil, name: nil, force_cloud: false, config: nil			
+		"""		
+		def self._open_internal id=nil, name: nil, force_cloud: false, config: nil			
 			_ensure_class_initialized
 
 			raise if !@_cache_by_id
 			raise if !@_cache_by_name
 
-			raise if (id && name)
+			raise "Can't use `id` and `name` at the same time!" if (id && name) # NEW: error message
 			
 			used_config = config || Configuration.get_global_configuration
 			used_client = StorageClientManager.get_storage_client(force_cloud)
@@ -148,14 +145,12 @@ module Apify
 			# Fetch default ID if no ID or name was passed
 			is_default_storage_on_local = false
 			
-			if ! (id || name)
-				#if isinstance(used_client, MemoryStorageClient):
-				#    is_default_storage_on_local = True
-
-				id = _get_default_id used_config # BUG: should be calling abstract implemented method
+			if !(id || name)
+				is_default_storage_on_local = true if used_client.class == MemoryStorage::MemoryStorageClient
+				id = _get_default_id used_config # BUG-RUBY: can't calling abstract implemented method
 			end
 			
-			# Try to get the storage instance from cache		
+			# Try to get the storage instance from cache
 			cached_storage = nil
 			if id
 				cached_storage = @_cache_by_id[id]
@@ -163,12 +158,10 @@ module Apify
 				cached_storage = @_cache_by_name[name]
 			end
 			
-			if cached_storage
-				# This cast is needed since MyPy doesn't understand very well that Self and Storage are the same
-				# return cast(Self, cached_storage)
-				return cached_storage
-			end
-			
+			# This cast is needed since MyPy doesn't understand very well that Self and Storage are the same
+			# return cast(Self, cached_storage)
+			return cached_storage if cached_storage
+
 			# Purge default storages if configured	
 			"""
 			if used_config.purge_on_start && isinstance(used_client, MemoryStorageClient):
@@ -180,25 +173,20 @@ module Apify
 				
 				# Create the storage
 				if id && !is_default_storage_on_local
-					
 					single_storage_client 	= _get_single_storage_client id, used_client				
 					storage_info 			= single_storage_client.get 
 
 					raise "#{self::HUMAN_FRIENDLY_LABEL} with id \"#{id}\" does not exist!" if !storage_info # RuntimeError
-
-				elsif is_default_storage_on_local
-
-					raise "TODO 1"
-					#storage_collection_client = cls._get_storage_collection_client(used_client)
-					#storage_info = await storage_collection_client.get_or_create(name=name, _id=id)
-
-				else
-					
+				else 
 					storage_collection_client = _get_storage_collection_client used_client
-					storage_info = storage_collection_client.get_or_create name: name
+					if is_default_storage_on_local
+						storage_info = storage_collection_client.get_or_create name: name, _id: id
+					else
+						storage_info = storage_collection_client.get_or_create name: name
+					end
 				end
 											
-				storage = new id: storage_info['id'], name: storage_info['name'], client: used_client, config: used_config
+				storage = new storage_info['id'], name: storage_info['name'], client: used_client, config: used_config
 				
 				# Cache by id and name
 				@_cache_by_id[storage._id] = storage
@@ -211,7 +199,5 @@ module Apify
 			@_cache_by_id.delete(@_id) 	if @_cache_by_id
 			@_cache_by_name.delete(@_name) if @_cache_by_name && @_name
 		end
-
 	end
-
 end

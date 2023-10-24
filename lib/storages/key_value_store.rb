@@ -46,16 +46,8 @@ module Apify
 			config (Configuration): The configuration which should be used.
 		"""
 
-		#_id: str
-		#_name: Optional[str]
-		@_key_value_store_client # Union[KeyValueStoreClientAsync, KeyValueStoreClient]
-
-		def initialize id: nil, name: nil, client: nil, config: nil
-					
-			super id: id, name: name, client: client, config: config
-
-			# self._id = id
-			# self._name = name		
+		def initialize id=nil, name: nil, client: nil, config: nil				
+			super id, name: name, client: client, config: config	
 			@_key_value_store_client = client.key_value_store(@_id)
 			
 		end
@@ -194,8 +186,8 @@ module Apify
 		Returns:
 			KeyValueStore: An instance of the `KeyValueStore` class for the given ID or name.
 		"""
-		def self.open id: nil, name: nil, force_cloud: false, config: nil	
-			_open_internal id:id, name:name, force_cloud:force_cloud, config:config
+		def self.open id=nil, name: nil, force_cloud: false, config: nil	
+			_open_internal id, name:name, force_cloud:force_cloud, config:config
 		end
 	end
 

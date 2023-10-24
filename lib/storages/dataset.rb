@@ -28,10 +28,6 @@ module Apify
 		
 		HUMAN_FRIENDLY_LABEL = StorageTypes::DATASET
 		
-		#_id: str
-		#_name: Optional[str]
-		@_dataset_client
-
 		"""Create a `Dataset` instance.
 
 		Do not use the constructor directly, use the `Actor.open_dataset()` function instead.
@@ -42,8 +38,8 @@ module Apify
 			client (ApifyClientAsync or MemoryStorageClient): The storage client which should be used.
 			config (Configuration): The configuration which should be used.
 		"""
-		def initialize id: nil, name: nil, client: nil, config: nil
-			super id: id, name: name, client: client, config: config
+		def initialize id=nil, name: nil, client: nil, config: nil
+			super id, name: name, client: client, config: config
 			@_dataset_client = client.dataset(@_id)
 		end
 		
@@ -428,8 +424,8 @@ module Apify
 		Returns:
 			Dataset: An instance of the `Dataset` class for the given ID or name.
 		"""
-		def self.open id: nil, name: nil, force_cloud: nil, config: nil
-			_open_internal id: id, name: name, force_cloud: force_cloud, config: config
+		def self.open id=nil, name: nil, force_cloud: nil, config: nil
+			_open_internal id, name: name, force_cloud: force_cloud, config: config		
 		end
 	end
 

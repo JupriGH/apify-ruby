@@ -17,6 +17,9 @@ require_relative 'storages/base'
 require_relative 'storages/dataset'
 require_relative 'storages/key_value_store'
 require_relative 'storages/request_queue'
+
+require_relative 'memory/memory'
+
 require_relative 'client/apify_client'
 
 # emulate python with context manager

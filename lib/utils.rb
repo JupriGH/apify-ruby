@@ -164,20 +164,12 @@ class dualproperty(Generic[DualPropertyType]):  # noqa: N801
 		val = ENV[env_var] # ENV(env_var_name)
 		return default if val.nil? || val.empty?
 				
-		return ['true', '1'].include?(val.downcase) if 
-			BOOL_ENV_VARS.include?(env_var)
-		
-		#return Float(val) if 
-		return val.to_f if
-			FLOAT_ENV_VARS.include?(env_var)
-
-		#return Integer(val) if 		
-		return val.to_i if
-			INTEGER_ENV_VARS.include?(env_var)
+		return ['true', '1'].include?(val.downcase) if BOOL_ENV_VARS.include?(env_var)
+		return val.to_f if FLOAT_ENV_VARS.include?(env_var)
+		return val.to_i if INTEGER_ENV_VARS.include?(env_var)
 
 		#return DateTime.iso8601(val).to_time.localtime if # Local time
-		return DateTime.iso8601(val).to_time if # UTC time
-			DATETIME_ENV_VARS.include?(env_var)
+		return DateTime.iso8601(val).to_time if DATETIME_ENV_VARS.include?(env_var)
 		
 		return val # String
 	rescue Exception => exc

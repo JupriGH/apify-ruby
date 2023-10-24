@@ -21,10 +21,14 @@ module Apify
 		# and then in the instance constructor overwrite the `xxx` classmethod with the `_xxx_internal` instance method,
 		# while copying the annotations, types and so on.
 
+		# read-only
+		attr :config, :apify_client, :event_manager
+
 		def initialize config: nil
-			@_config = config || Configuration.new		
-			@_apify_client = new_client
-			@_event_manager = EventManager.new @_config
+			@config = config || Configuration.new		
+			@apify_client = new_client			
+			@event_manager = EventManager.new @config
+			
 			@_is_initialized = false
 			@_is_exiting = false
 			@_send_system_info_interval_task = nil 
@@ -64,17 +68,17 @@ module Apify
 
 		"""The ApifyClientAsync instance the Actor instance uses."""	
 		def self.apify_client = _get_default_instance.apify_client
-		def apify_client = @_apify_client
 
 		"""The Configuration instance the Actor instance uses."""
 		def self.config = _get_default_instance.config
-		def config = @_config
 
 		"""The EventManager instance the Actor instance uses."""  # noqa: D401		
 		def self.event_manager = _get_default_instance.event_manager
-		def event_manager = @_event_manager
 
-
+        """The logging.Logger instance the Actor uses."""  # noqa: D401
+		def self.log = Log
+		def log = Log
+		
 		def _raise_if_not_initialized
 			raise 'The actor was not initialized!' unless @_is_initialized # RuntimeError()
 		end
@@ -104,28 +108,28 @@ module Apify
 
 			# TODO: Print outdated SDK version warning (we need a new env var for this)
 
-			StorageClientManager.set_config(@_config)		
-			StorageClientManager.set_cloud_client(@_apify_client) if @_config.token
+			StorageClientManager.set_config(@config)		
+			StorageClientManager.set_cloud_client(@apify_client) if @config.token
 
 			if Async::Task.current?
-				@_event_manager.init
+				@event_manager.init
 
 				@_send_persist_state_interval_task = Async { #asyncio.create_task(
 					Utils::_run_func_at_interval_async(
-						lambda { @_event_manager.emit(ActorEventTypes::PERSIST_STATE, {'isMigrating': false}) },
-						@_config.persist_state_interval_millis / 1000
+						lambda { @event_manager.emit(ActorEventTypes::PERSIST_STATE, {'isMigrating': false}) },
+						@config.persist_state_interval_millis / 1000
 					)
 				}
 				if !is_at_home
 					@_send_system_info_interval_task = Async { #asyncio.create_task(
 						Utils::_run_func_at_interval_async(
-							lambda { @_event_manager.emit(ActorEventTypes::SYSTEM_INFO, _get_system_info) },
-							@_config.system_info_interval_millis / 1000
+							lambda { @event_manager.emit(ActorEventTypes::SYSTEM_INFO, _get_system_info) },
+							@config.system_info_interval_millis / 1000
 						)
 					}
 				end
 				
-				@_event_manager.on ActorEventTypes::MIGRATING, method(:_respond_to_migrating_event)
+				@event_manager.on ActorEventTypes::MIGRATING, method(:_respond_to_migrating_event)
 			else
 				Log.fatal "No event loop is currently running. EventManager will be disabled."
 			end
@@ -147,8 +151,8 @@ module Apify
 				'cpuCurrentUsage' 	=> cpu_usage_percent,
 				'memCurrentBytes'	=> memory_usage_bytes,
 			}
-			if @_config.max_used_cpu_ratio
-				result['isCpuOverloaded'] = (cpu_usage_percent > 100 * @_config.max_used_cpu_ratio)
+			if @config.max_used_cpu_ratio
+				result['isCpuOverloaded'] = (cpu_usage_percent > 100 * @config.max_used_cpu_ratio)
 			end
 			result
 		end		
@@ -202,7 +206,7 @@ module Apify
 
 			# Send final persist state event
 			if !@_was_final_persist_state_emitted
-				@_event_manager.emit(ActorEventTypes::PERSIST_STATE, {'isMigrating': false})
+				@event_manager.emit(ActorEventTypes::PERSIST_STATE, {'isMigrating': false})
 				@_was_final_persist_state_emitted = true
 			end
 			
@@ -214,7 +218,7 @@ module Apify
 			#await asyncio.sleep(0.1)
 			
 			
-			@_event_manager.close event_listeners_timeout_secs: event_listeners_timeout_secs if
+			@event_manager.close event_listeners_timeout_secs: event_listeners_timeout_secs if
 				Async::Task::current?
 			
 			@_is_initialized = false
@@ -313,7 +317,7 @@ module Apify
 
 		"""Return a new instance of the Apify API client.
 
-		The `ApifyClientAsync` class is provided by the [apify-client](https://github.com/apify/apify-client-python) package,
+		The `ApifyClient` class is provided by the [apify-client](https://github.com/apify/apify-client-python) package,
 		and it is automatically configured using the `APIFY_API_BASE_URL` and `APIFY_TOKEN` environment variables.
 
 		You can override the token via the available options.
@@ -338,8 +342,8 @@ module Apify
 		end
 
 		def new_client token=nil, api_url: nil, max_retries: nil, min_delay_between_retries_millis: nil, timeout_secs: nil
-			token 	||= @_config.token
-			api_url ||= @_config.api_base_url
+			token 	||= @config.token
+			api_url ||= @config.api_base_url
 
 			ApifyClient.new(
 				token, 
@@ -349,7 +353,6 @@ module Apify
 				timeout_secs: timeout_secs 
 			)
 		end
-
 
 =begin
 		def _get_storage_client(self, force_cloud: bool) -> Optional[ApifyClientAsync]:
@@ -374,13 +377,13 @@ module Apify
 			Dataset: An instance of the `Dataset` class for the given ID or name.
 
 		"""
-		def self.open_dataset id: nil, name: nil, force_cloud: false
-			_get_default_instance.open_dataset id: id, name: name, force_cloud: force_cloud
+		def self.open_dataset id=nil, name: nil, force_cloud: false
+			_get_default_instance.open_dataset id, name: name, force_cloud: force_cloud
 		end
 
-		def open_dataset id: nil, name: nil, force_cloud: false
+		def open_dataset id=nil, name: nil, force_cloud: false
 			_raise_if_not_initialized
-			Dataset.open id: id, name: name, force_cloud: force_cloud, config: @_config
+			Dataset.open id, name: name, force_cloud: force_cloud, config: @config
 		end
 
 		"""Open a key-value store.
@@ -400,13 +403,13 @@ module Apify
 		Returns:
 			KeyValueStore: An instance of the `KeyValueStore` class for the given ID or name.
 		"""
-		def self.open_key_value_store id: nil, name: nil, force_cloud: false
-			_get_default_instance.open_key_value_store id: id, name: name, force_cloud: force_cloud
+		def self.open_key_value_store id=nil, name: nil, force_cloud: false
+			_get_default_instance.open_key_value_store id, name: name, force_cloud: force_cloud
 		end
 		
-		def open_key_value_store id: nil, name: nil, force_cloud: false	
+		def open_key_value_store id=nil, name: nil, force_cloud: false	
 			_raise_if_not_initialized
-			KeyValueStore.open id: id, name: name, force_cloud: force_cloud, config: @_config
+			KeyValueStore.open id, name: name, force_cloud: force_cloud, config: @config
 		end
 
 		"""Open a request queue.
@@ -427,13 +430,13 @@ module Apify
 		Returns:
 			RequestQueue: An instance of the `RequestQueue` class for the given ID or name.
 		"""
-		def self.open_request_queue id: nil, name: nil, force_cloud: nil
-			_get_default_instance.open_request_queue id: id, name: name, force_cloud: force_cloud
+		def self.open_request_queue id=nil, name: nil, force_cloud: nil
+			_get_default_instance.open_request_queue id, name: name, force_cloud: force_cloud
 		end
 		
-		def open_request_queue id: nil, name: nil, force_cloud: nil
+		def open_request_queue id=nil, name: nil, force_cloud: nil
 			_raise_if_not_initialized
-			RequestQueue.open id: id, name: name, force_cloud: force_cloud, config: @_config
+			RequestQueue.open id, name: name, force_cloud: force_cloud, config: @config
 		end
 
 		"""Store an object or a list of objects to the default dataset of the current actor run.
@@ -458,10 +461,10 @@ module Apify
 		def get_input
 			_raise_if_not_initialized
 				
-			input_secrets_private_key 		= @_config.input_secrets_private_key_file
-			input_secrets_key_passphrase 	= @_config.input_secrets_private_key_passphrase
+			input_secrets_private_key 		= @config.input_secrets_private_key_file
+			input_secrets_key_passphrase 	= @config.input_secrets_private_key_passphrase
 
-			input_value 					= get_value(@_config.input_key)
+			input_value 					= get_value(@config.input_key)
 			
 			if input_secrets_private_key and input_secrets_key_passphrase
 				private_key = Crypto._load_private_key( input_secrets_private_key, input_secrets_key_passphrase )
@@ -531,7 +534,7 @@ module Apify
 
 		def on event_name, listener
 			_raise_if_not_initialized
-			@_event_manager.on event_name, listener
+			@event_manager.on event_name, listener
 		end
 		
 		"""Remove a listener, or all listeners, from an actor event.
@@ -546,13 +549,13 @@ module Apify
 		
 		def off event_name, listener
 			_raise_if_not_initialized
-			@_event_manager.off event_name, listener
+			@event_manager.off event_name, listener
 		end
 
 		"""Return `True` when the actor is running on the Apify platform, and `False` otherwise (for example when running locally)."""
 		def self.is_at_home = _get_default_instance.is_at_home
 		
-		def is_at_home =  @_config.is_at_home
+		def is_at_home =  @config.is_at_home
 
 		"""Return a dictionary with information parsed from all the `APIFY_XXX` environment variables.
 
@@ -621,7 +624,7 @@ module Apify
 		)
 			_raise_if_not_initialized
 
-			client = token ? new_client(token) : @_apify_client
+			client = token ? new_client(token) : @apify_client
 			client.actor(actor_id).start(
 				run_input,
 				content_type: content_type, build: build, memory_mbytes: memory_mbytes, timeout_secs: timeout_secs, 
@@ -648,7 +651,7 @@ module Apify
 		def abort run_id, token: nil, status_message: nil, gracefully: nil
 			_raise_if_not_initialized
 
-			client = token ? new_client(token) : @_apify_client
+			client = token ? new_client(token) : @apify_client
 
 			run = client.run(run_id)
 			run.update(status_message: status_message) if status_message
@@ -697,7 +700,7 @@ module Apify
 		)
 			_raise_if_not_initialized
 
-			client = token ? new_client(token) : @_apify_client
+			client = token ? new_client(token) : @apify_client
 			client.actor(actor_id).call(
 				run_input,
 				content_type: content_type, build: build, memory_mbytes: memory_mbytes, timeout_secs: timeout_secs, webhooks: webhooks, wait_secs: wait_secs
@@ -751,7 +754,7 @@ module Apify
 		)
 			_raise_if_not_initialized
 
-			client = token ? new_client(token) : @_apify_client
+			client = token ? new_client(token) : @apify_client
 			client.task(task_id).call(
 				task_input,
 				build: build,
@@ -854,18 +857,18 @@ module Apify
 				return
 			end
 			
-			custom_after_sleep_millis ||= @_config.metamorph_after_sleep_millis
+			custom_after_sleep_millis ||= @config.metamorph_after_sleep_millis
 
 			_cancel_event_emitting_intervals
 
-			@_event_manager.emit(ActorEventTypes::PERSIST_STATE, {'isMigrating': true})
+			@event_manager.emit(ActorEventTypes::PERSIST_STATE, {'isMigrating': true})
 			@_was_final_persist_state_emitted = true
 
-			@_event_manager.close event_listeners_timeout_secs: event_listeners_timeout_secs
+			@event_manager.close event_listeners_timeout_secs: event_listeners_timeout_secs
 			
 			
-			raise unless @_config.actor_run_id
-			@_apify_client.run(@_config.actor_run_id).reboot
+			raise unless @config.actor_run_id
+			@apify_client.run(@config.actor_run_id).reboot
 
 			sleep(custom_after_sleep_millis / 1000) if custom_after_sleep_millis
 		end
@@ -916,13 +919,13 @@ module Apify
 			end
 			
 			# If is_at_home() is True, config.actor_run_id is always set
-			raise unless @_config.actor_run_id
+			raise unless @config.actor_run_id
 
-			@_apify_client.webhooks.create(
+			@apify_client.webhooks.create(
 				event_types,
 				request_url,
 				payload_template: payload_template,
-				actor_run_id: @_config.actor_run_id,
+				actor_run_id: @config.actor_run_id,
 				ignore_ssl_errors: ignore_ssl_errors,
 				do_not_retry: do_not_retry,
 				idempotency_key: idempotency_key
@@ -952,9 +955,9 @@ module Apify
 			end
 			
 			# If is_at_home() is True, config.actor_run_id is always set
-			raise unless @_config.actor_run_id
+			raise unless @config.actor_run_id
 
-			@_apify_client.run(@_config.actor_run_id).update status_message: status_message, is_status_message_terminal: is_terminal
+			@apify_client.run(@config.actor_run_id).update status_message: status_message, is_status_message_terminal: is_terminal
 		end
 
 		"""Create a ProxyConfiguration object with the passed proxy configuration.
@@ -1020,8 +1023,8 @@ module Apify
 				country_code: country_code, 
 				proxy_urls: proxy_urls, 
 				new_url_function: new_url_function, 
-				_actor_config: @_config, 
-				_apify_client: @_apify_client
+				_actor_config: @config, 
+				_apify_client: @apify_client
 			)
 			
 			# NOTE: "initialize" is Ruby class constructor

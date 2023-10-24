@@ -69,8 +69,8 @@ module Apify
 			client (ApifyClientAsync or MemoryStorageClient): The storage client which should be used.
 			config (Configuration): The configuration which should be used.
 		"""
-		def initialize id: nil, name: nil, client: nil, config: nil			
-			super id: id, name: name, client: client, config: config
+		def initialize id=nil, name: nil, client: nil, config: nil			
+			super id, name: name, client: client, config: config
 
 			@_request_queue_client = client.request_queue @_id, client_key: @_client_key
 			@_client_key = Crypto._crypto_random_object_id
@@ -522,8 +522,8 @@ module Apify
 		Returns:
 			RequestQueue: An instance of the `RequestQueue` class for the given ID or name.
 		"""
-		def self.open id: nil, name: nil, force_cloud: nil, config: nil
-			queue = _open_internal id: id, name: name, force_cloud: force_cloud, config: config
+		def self.open id=nil, name: nil, force_cloud: nil, config: nil
+			queue = _open_internal id, name: name, force_cloud: force_cloud, config: config
 			queue._ensure_head_is_non_empty
 			return queue
 		end
