@@ -18,10 +18,6 @@ require_relative 'storages/dataset'
 require_relative 'storages/key_value_store'
 require_relative 'storages/request_queue'
 
-require_relative 'memory/memory'
-
-require_relative 'client/apify_client'
-
 # emulate python with context manager
 def with(cls)
 	yield cls.__enter__
@@ -30,4 +26,14 @@ rescue Exception => e
  	exc = e
 ensure
 	cls.__exit__ exc
+end
+
+# Apify main module
+
+module Apify
+	# plug-n-play
+	autoload :MemoryStorage, 	File.expand_path('memory/memory', __dir__)
+	autoload :ApifyClient, 		File.expand_path('client/apify_client', __dir__)
+	
+	# ... TODO: more extensions
 end

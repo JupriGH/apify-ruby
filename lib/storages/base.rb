@@ -37,7 +37,7 @@ module Apify
 
 			# raise "### TODO: local_client not implemented"
 			if !default_instance._local_client
-				default_instance._local_client = MemoryStorage::MemoryStorageClient.new(
+				default_instance._local_client = MemoryStorage::Client.new(
 					persist_storage: default_instance._config.persist_storage, write_metadata: true
 				)
 			end
@@ -146,7 +146,7 @@ module Apify
 			is_default_storage_on_local = false
 			
 			if !(id || name)
-				is_default_storage_on_local = true if used_client.class == MemoryStorage::MemoryStorageClient
+				is_default_storage_on_local = true if used_client.class == MemoryStorage::Client
 				id = _get_default_id used_config # BUG-RUBY: can't calling abstract implemented method
 			end
 			

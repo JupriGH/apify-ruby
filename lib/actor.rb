@@ -1,5 +1,5 @@
 module Apify
-
+	
 	"""The main class of the SDK, through which all the actor operations should be done."""
 	class Actor
 
@@ -75,7 +75,7 @@ module Apify
 		"""The EventManager instance the Actor instance uses."""  # noqa: D401		
 		def self.event_manager = _get_default_instance.event_manager
 
-        """The logging.Logger instance the Actor uses."""  # noqa: D401
+		"""The logging.Logger instance the Actor uses."""  # noqa: D401
 		def self.log = Log
 		def log = Log
 		
@@ -288,28 +288,28 @@ module Apify
 
 		def main main_actor_function
 			
-			raise unless [Method, Proc].include?( main_actor_function.class )
+			raise "First argument passed to Actor.main() must be a function, but instead it was #{main_actor_function.class.name}" unless 
+				[Method, Proc].include?( main_actor_function.class)
 			
 			Async do |task|
-				#if not inspect.isfunction(main_actor_function):
-				#	raise TypeError(f'First argument passed to Actor.main() must be a function, but instead it was {type(main_actor_function)}')
 
 				init
 
 				begin
 					res = main_actor_function.call(self)
+					
+					#if inspect.iscoroutinefunction(main_actor_function):
+					#	res = await main_actor_function()
+					#else:
+					#	res = main_actor_function()
+
 				rescue Exception => e
 					fail_ ActorExitCodes::ERROR_USER_FUNCTION_THREW, exception: e
-					return res
+					yield res
 				end
 				
-				#if inspect.iscoroutinefunction(main_actor_function):
-				#	res = await main_actor_function()
-				#else:
-				#	res = main_actor_function()
-
 				exit_
-				return res
+				#yield res
 				#return cast(MainReturnType, res)
 			end
 		
@@ -1032,5 +1032,4 @@ module Apify
 			proxy_configuration
 		end
 	end
-
 end

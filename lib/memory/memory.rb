@@ -39,7 +39,7 @@ module Apify
 	module MemoryStorage
 	
 	"""Class representing an in-memory storage."""	
-	class MemoryStorageClient
+	class Client
 =begin
 		_local_data_directory: str
 		_datasets_directory: str
