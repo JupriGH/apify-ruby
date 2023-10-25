@@ -182,7 +182,7 @@ module Apify
 			# log_context.method.set(method)
 			# log_context.url.set(url)
 			
-			Log.debug "#{method} #{url}"
+			# Log.debug "#{method} #{url}"
 			
 			raise 'Cannot stream response and parse it at the same time!' if # ValueError
 				stream && parse_response
@@ -201,8 +201,6 @@ module Apify
 				if params && params.length > 0
 					uri.query = URI.encode_www_form params
 				end
-								
-				# raise "TODO: stream" if stream
 
 				# create the request
 				case method
@@ -215,8 +213,8 @@ module Apify
 				when 'GET'
 					req = Net::HTTP::Get.new uri
 				when 'DELETE'
-					#req = Net::HTTP::Delete.new uri
-					raise "DELETE COMMAND TEMPORARY DISABLED"
+					# raise "DELETE COMMAND TEMPORARY DISABLED"
+					req = Net::HTTP::Delete.new uri
 				else
 					raise "UNSUPPORTED_METHOD #{method}"
 				end

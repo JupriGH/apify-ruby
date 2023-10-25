@@ -89,7 +89,7 @@ module Apify
 			end
 =end			
 			res = @http_client.call url: _url("records/#{key}"), method: 'GET', params: _params
-			return { key: key, value: res[:parsed], content_type: res[:response]['content-type'] }
+			return { key: key, value: res[:parsed], content_type: res[:response]['content-type'] } # WARNING: symbolic hash keys!
 				
 		rescue ApifyApiError => exc
 			Utils::_catch_not_found_or_throw exc

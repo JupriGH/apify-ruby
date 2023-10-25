@@ -56,17 +56,16 @@ class RequestQueueClient < BaseResourceClient
 	"""
     # def get = super
 	
+	"""Update the request queue with specified fields.
 
+	Args:
+		name (str, optional): The new name for the request queue
+
+	Returns:
+		dict: The updated request queue
+	"""
 =begin
     async def update(self, *, name: Optional[str] = None) -> Dict:
-        """Update the request queue with specified fields.
-
-        Args:
-            name (str, optional): The new name for the request queue
-
-        Returns:
-            dict: The updated request queue
-        """
         # Check by id
         existing_queue_by_id = self._find_or_create_client_by_id_or_name(
             memory_storage_client=self._memory_storage_client, id=self._id, name=self._name)
@@ -326,18 +325,6 @@ class RequestQueueClient < BaseResourceClient
 	end
 	
 =begin
-    async def _update_timestamps(self, has_been_modified: bool) -> None:
-        self._accessed_at = datetime.now(timezone.utc)
-
-        if has_been_modified:
-            self._modified_at = datetime.now(timezone.utc)
-
-        request_queue_info = self._to_resource_info()
-        await _update_metadata(
-            data=request_queue_info,
-            entity_directory=self._resource_directory,
-            write_metadata=self._memory_storage_client._write_metadata,
-        )
 
     def _json_to_request(self, request_json: Optional[str]) -> Optional[dict]:
         if request_json is None:

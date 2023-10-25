@@ -228,44 +228,35 @@ async def _force_remove(filename: str) -> None:
     """JS-like rm(filename, { force: true })."""
     with contextlib.suppress(FileNotFoundError):
         await remove(filename)
+=end
 
+	def self._raise_on_non_existing_storage client_type, id
+		#client_type = maybe_extract_enum_member_value(client_type)
+		raise "#{client_type} with id \"#{id}\" does not exist." # ValueError
+	end
 
-def _raise_on_non_existing_storage(client_type: _StorageTypes, id: str) -> NoReturn:
-    client_type = maybe_extract_enum_member_value(client_type)
-    raise ValueError(f'{client_type} with id "{id}" does not exist.')
-
-
+=begin
 def _raise_on_duplicate_storage(client_type: _StorageTypes, key_name: str, value: str) -> NoReturn:
     client_type = maybe_extract_enum_member_value(client_type)
     raise ValueError(f'{client_type} with {key_name} "{value}" already exists.')
-
-
-def _guess_file_extension(content_type: str) -> Optional[str]:
-    """Guess the file extension based on content type."""
-    # e.g. mimetypes.guess_extension('application/json ') does not work...
-    actual_content_type = content_type.split(';')[0].strip()
-
-    # mimetypes.guess_extension returns 'xsl' in this case, because 'application/xxx' is "structured"
-    # ('text/xml' would be "unstructured" and return 'xml')
-    # we have to explicitly override it here
-    if actual_content_type == 'application/xml':
-        return 'xml'
-
-    # Guess the extension from the mime type
-    ext = mimetypes.guess_extension(actual_content_type)
-
-    # Remove the leading dot if extension successfully parsed
-    return ext[1:] if ext is not None else ext
-
-
-def _maybe_parse_body(body: bytes, content_type: str) -> Any:
-    if is_content_type_json(content_type):
-        return json.loads(body.decode('utf-8'))  # Returns any
-    elif is_content_type_xml(content_type) or is_content_type_text(content_type):
-        return body.decode('utf-8')
-    return body
-
 =end
+
+	"""Guess the file extension based on content type."""
+	def self._guess_file_extension content_type
+		# Guess the extension from the mime type
+		ext = MIME::Types[content_type].map(&:extensions).flatten # array
+		ext[0]  
+	end
+	
+
+	def self._maybe_parse_body body, content_type
+		if is_content_type_json(content_type)
+			return JSON.parse(body.force_encoding('utf-8'))  # Returns any
+		elsif is_content_type_xml(content_type) || is_content_type_text(content_type)
+			return body.force_encoding('utf-8')
+		end
+		return body
+	end
 
 	"""Generate request ID based on unique key in a deterministic way."""
 	def self._unique_key_to_request_id unique_key

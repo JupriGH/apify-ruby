@@ -1,6 +1,4 @@
 =begin
-import os
-from typing import Dict, List, Tuple
 
 import aiofiles
 from aiofiles.os import makedirs
@@ -12,9 +10,7 @@ from .._utils import _force_remove
 
 module Apify
 
-module MemoryStorage
-
-module Utils
+module MemoryStorage::Utils ### FileUtils
 
 	def self._update_metadata data:, entity_directory:, write_metadata: nil
 		# Skip writing the actual metadata file. This is done after ensuring the directory exists so we have the directory present
@@ -25,10 +21,10 @@ module Utils
 
 		# Write the metadata to the file
 		file_path = File.join(entity_directory, '__metadata__.json')
-		File.open(file_path, 'wb') { |f| f.write JSON.dump(data).encode('utf-8') }
+		File.write file_path, data.to_json, encoding: 'utf-8'
 	end
 	
-	def self._update_dataset_items data:, entity_directory:, persist_storage:nil
+	def self._update_dataset_items data:, entity_directory:, persist_storage: nil
 		# Skip writing files to the disk if the client has the option set to false
 		return if !persist_storage
 
@@ -38,7 +34,7 @@ module Utils
 		# Save all the new items to the disk
 		data.each { |idx, item|
 			file_path = File.join(entity_directory, "#{idx}.json")	
-			File.open(file_path, 'wb') { |f| f.write JSON.dump(data).encode('utf-8') }
+			File.open(file_path, 'wb') { |f| f.write JSON.dump(item).encode('utf-8') }
 		}			
 	end
 	
@@ -71,6 +67,5 @@ module Utils
 		await _force_remove(file_path)
 =end
 
-end
 end
 end

@@ -1,21 +1,3 @@
-=begin
-import asyncio
-import json
-import os
-from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Any, AsyncIterator, Dict, List, Optional, Tuple
-
-import aioshutil
-
-from ..._utils import _force_rename, _raise_on_duplicate_storage, _raise_on_non_existing_storage
-from ...consts import _StorageTypes
-from ..file_storage_utils import _update_dataset_items, _update_metadata
-from .base_resource_client import BaseResourceClient
-
-if TYPE_CHECKING:
-    from ..memory_storage_client import MemoryStorageClient
-=end
-
 module Apify
 
 	module MemoryStorage
@@ -31,7 +13,7 @@ module Apify
 		# E.g.: 000000019.json - 9 digits
 		LOCAL_ENTRY_NAME_DIGITS = 9
 
-		attr_accessor :_created_at, :_accessed_at, :_modified_at, :_item_count, :_dataset_entries
+		attr_accessor :_item_count, :_dataset_entries
 		
 		"""Initialize the DatasetClient."""
 		def initialize memory_storage_client, id: nil, name: nil
@@ -56,17 +38,19 @@ module Apify
 			dict: The updated dataset
 		"""
 =begin
-		async def update(self, *, name: Optional[str] = None) -> Dict:
+		def update name=nil
+			raise
+			
+			#existing_dataset_by_id = @_memory_storage_client._find_or_create_client self.class, id: @_id, name: @_name
 
 			# Check by id
-			existing_dataset_by_id = self._find_or_create_client_by_id_or_name(
-				memory_storage_client=self._memory_storage_client,
-				id=self._id,
-				name=self._name,
-			)
-
-			if existing_dataset_by_id is None:
-				_raise_on_non_existing_storage(_StorageTypes.DATASET, self._id)
+			#existing_dataset_by_id = self._find_or_create_client_by_id_or_name(
+			#	memory_storage_client=self._memory_storage_client,
+			#	id=self._id,
+			#	name=self._name,
+			#)
+			
+			_raise_on_non_existing_storage(StorageTypes.DATASET, @_id) if !existing_dataset_by_id 
 
 			# Skip if no changes
 			if name is None:
@@ -94,8 +78,8 @@ module Apify
 				await existing_dataset_by_id._update_timestamps(True)
 
 			return existing_dataset_by_id._to_resource_info()
+		end
 =end
-
 		"""Delete the dataset."""
 =begin
 		def delete
@@ -141,58 +125,44 @@ module Apify
 		Returns:
 			ListPage: A page of the list of dataset items according to the specified filters.
 		"""
-=begin
-		async def list_items(
-			self,
-			*,
-			offset: Optional[int] = 0,
-			limit: Optional[int] = LIST_ITEMS_LIMIT,
-			clean: Optional[bool] = None,  # noqa: U100
-			desc: Optional[bool] = None,
-			fields: Optional[List[str]] = None,  # noqa: U100
-			omit: Optional[List[str]] = None,  # noqa: U100
-			unwind: Optional[str] = None,  # noqa: U100
-			skip_empty: Optional[bool] = None,  # noqa: U100
-			skip_hidden: Optional[bool] = None,  # noqa: U100
-			flatten: Optional[List[str]] = None,  # noqa: U100
-			view: Optional[str] = None,  # noqa: U100
-		) -> ListPage:
-			# Check by id
-			existing_dataset_by_id = self._find_or_create_client_by_id_or_name(
-				memory_storage_client=self._memory_storage_client,
-				id=self._id,
-				name=self._name,
-			)
+		def list_items(
+			offset: 0,
+			limit: LIST_ITEMS_LIMIT,
+			clean: nil,  # noqa: U100
+			desc: nil,
+			fields: nil,  # noqa: U100
+			omit: nil,  # noqa: U100
+			unwind: nil,  # noqa: U100
+			skip_empty: nil,  # noqa: U100
+			skip_hidden: nil,  # noqa: U100
+			flatten: nil,  # noqa: U100
+			view: nil  # noqa: U100
+		)
+			dataset = @_memory_storage_client._find_or_create_client self.class, id: @_id, name: @_name
+			Apify::Utils::_raise_on_non_existing_storage(StorageTypes::DATASET, @_id) if !dataset
 
-			if existing_dataset_by_id is None:
-				_raise_on_non_existing_storage(_StorageTypes.DATASET, self._id)
-
-			async with existing_dataset_by_id._file_operation_lock:
-				start, end = existing_dataset_by_id._get_start_and_end_indexes(
-					max(existing_dataset_by_id._item_count - (offset or 0) - (limit or LIST_ITEMS_LIMIT), 0) if desc else offset or 0,
-					limit,
+			## async with dataset._file_operation_lock:
+			
+				start, stop = dataset._get_start_and_end_indexes(
+					desc ? [dataset._item_count - (offset||0) - (limit||LIST_ITEMS_LIMIT), 0].max : (offset||0),
+					limit
 				)
 
-				items = []
+				items = (start..stop-1).map { |idx| dataset._dataset_entries[_generate_local_entry_name(idx)] }
+				items.reverse! if desc
 
-				for idx in range(start, end):
-					entry_number = self._generate_local_entry_name(idx)
-					items.append(existing_dataset_by_id._dataset_entries[entry_number])
+				dataset._update_timestamps false
 
-				await existing_dataset_by_id._update_timestamps(False)
-
-				if desc:
-					items.reverse()
-
-				return ListPage({
-					'count': len(items),
-					'desc': desc or False,
-					'items': items,
-					'limit': limit or LIST_ITEMS_LIMIT,
-					'offset': offset or 0,
-					'total': existing_dataset_by_id._item_count,
+				Apify::Models::ListPage.new({
+					'count' => items.length,
+					'desc' => desc||false,
+					'items' => items,
+					'limit' => limit||LIST_ITEMS_LIMIT,
+					'offset' => offset||0,
+					'total' => dataset._item_count
 				})
-=end
+		end
+		
 		"""Iterate over the items in the dataset.
 
 		Args:
@@ -277,34 +247,31 @@ module Apify
 		"""
 		def push_items items
 			# Check by id 
-			#existing_dataset_by_id = self.class::_find_or_create_client_by_id_or_name @_memory_storage_client, id: @_id, name: @_name
-
-			existing_dataset_by_id = @_memory_storage_client._find_or_create_client self.class, id: @_id, name: @_name
-
-			_raise_on_non_existing_storage(StorageTypes.DATASET, @_id) if !existing_dataset_by_id
+			store = @_memory_storage_client._find_or_create_client self.class, id: @_id, name: @_name
+			Apify::Utils::_raise_on_non_existing_storage(StorageTypes::DATASET, @_id) if !store
 
 			normalized = _normalize_items items
 
 			added_ids = []
 			normalized.each { |entry|
-				existing_dataset_by_id._item_count += 1
-				idx = _generate_local_entry_name existing_dataset_by_id._item_count
+				store._item_count += 1
+				idx = _generate_local_entry_name store._item_count
 
-				existing_dataset_by_id._dataset_entries[idx] = entry
+				store._dataset_entries[idx] = entry
 				added_ids << idx
 			}
 			
 			data_entries = []
-			added_ids.each { |id| data_entries << [id, existing_dataset_by_id._dataset_entries[id]] }
+			added_ids.each { |id| data_entries << [id, store._dataset_entries[id]] }
 
-			#existing_dataset_by_id._file_operation_lock.acquire
-			existing_dataset_by_id._update_timestamps true
+			#store._file_operation_lock.acquire
+			store._update_timestamps true
 			Utils::_update_dataset_items(
 				data: data_entries,
-				entity_directory: existing_dataset_by_id._resource_directory,
+				entity_directory: store._resource_directory,
 				persist_storage: @_memory_storage_client._persist_storage
 			)
-			#existing_dataset_by_id._file_operation_lock.release
+			#store._file_operation_lock.release
 		end 
 		
 		"""Retrieve the dataset info."""
@@ -319,26 +286,12 @@ module Apify
 			}
 		end
 
-		"""Update the timestamps of the dataset."""	
-		def _update_timestamps has_been_modified=nil
-			now = Time.now
-			@_accessed_at = now
-			@_modified_at = now if has_been_modified
-				
-			dataset_info = _to_resource_info
-			Utils::_update_metadata(
-				data: dataset_info,
-				entity_directory: @_resource_directory,
-				write_metadata: @_memory_storage_client._write_metadata,
-			)
-		end
-=begin
-		def _get_start_and_end_indexes(self, offset: int, limit: Optional[int] = None) -> Tuple[int, int]:
-			actual_limit = limit or self._item_count
+		def _get_start_and_end_indexes offset, limit=nil
+			actual_limit = limit||@_item_count
 			start = offset + 1
-			end = min(offset + actual_limit, self._item_count) + 1
-			return (start, end)
-=end
+			stop = [offset + actual_limit, @_item_count].min + 1
+			[ start, stop ]
+		end
 
 		def _generate_local_entry_name(idx) = idx.to_s.rjust(LOCAL_ENTRY_NAME_DIGITS, '0')
 
@@ -364,7 +317,7 @@ module Apify
 			items.filter {|item| !item.nil?}
 		end
 
-		def self._create_from_directory storage_directory, memory_storage_client, id, name	
+		def self._create_from_directory storage_directory, memory_storage_client, id, name=nil	
 			item_count = 0
 			created_at = accessed_at = modified_at = Time.now
 			entries = {}
@@ -385,9 +338,9 @@ module Apify
 					id = metadata['id']
 					name = metadata['name']
 					item_count = metadata['itemCount']||0
-					created_at = Time.parse(metadata['createdAt'])
-					accessed_at = Time.parse(metadata['accessedAt'])
-					modified_at = Time.parse(metadata['modifiedAt'])
+					created_at = Time.parse metadata['createdAt']
+					accessed_at = Time.parse metadata['accessedAt']
+					modified_at = Time.parse metadata['modifiedAt']
 					
 					next
 				end

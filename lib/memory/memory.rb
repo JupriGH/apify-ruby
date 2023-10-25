@@ -81,6 +81,14 @@ module Apify
 			RequestQueueClient.new self, id: request_queue_id
 		end
 
+		def _pop_client client_class, id:
+			storage_client_cache = @_cache[client_class]
+			return unless storage_client_cache
+			
+			found = storage_client_cache.find {|s| s._id == id}
+			storage_client_cache.delete(found)
+		end
+		
 		def _find_or_create_client  client_class, id: nil, name: nil  
 			raise "Required `id` or `name`!" unless id || name
 			
@@ -88,7 +96,7 @@ module Apify
 			storages_dir = @_directory[client_class]
 
 			# First check memory cache			
-			found = storage_client_cache.find { |s| s._id == id || (s._name && name && s._name.downcase == name.downcase) }
+			found = storage_client_cache.find {|s| s._id == id || (s._name && name && s._name.downcase == name.downcase)}
 			return found if found
 
 			storage_path = nil

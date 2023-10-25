@@ -47,25 +47,15 @@ module Utils
 		return result
 	end
 
-=begin
-@ignore_docs
-def is_content_type_json(content_type: str) -> bool:
-    """Check if the given content type is JSON."""
-    return bool(re.search(r'^application/json', content_type, flags=re.IGNORECASE))
+	"""Check if the given content type is JSON."""
+	def self.is_content_type_json(content_type) = content_type&.match?(/^(application|text)\/json/i)
 
-
-@ignore_docs
-def is_content_type_xml(content_type: str) -> bool:
-    """Check if the given content type is XML."""
-    return bool(re.search(r'^application/.*xml$', content_type, flags=re.IGNORECASE))
-
-
-@ignore_docs
-def is_content_type_text(content_type: str) -> bool:
-    """Check if the given content type is text."""
-    return bool(re.search(r'^text/', content_type, flags=re.IGNORECASE))
-=end
-
+	"""Check if the given content type is XML."""
+	def self.is_content_type_xml(content_type) = content_type&.match?(/^application\/.*xml$/i)
+	
+	"""Check if the given content type is text."""
+	def self.is_content_type_text(content_type) = content_type&.match?(/^text\//i)
+	
 	"""Check if the input value is a file-like object or bytes.
 
 	The check for IOBase is not ideal, it would be better to use duck typing,

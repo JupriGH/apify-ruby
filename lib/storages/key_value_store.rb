@@ -56,36 +56,12 @@ module Apify
 		#    'Key-value store'
 		#end
 
-		def self._get_default_id config
-			config.default_key_value_store_id
-		end
+		def self._get_default_id(config) = config.default_key_value_store_id
 		
-		def self._get_single_storage_client id, client
-			client.key_value_store id
-		end
+		def self._get_single_storage_client(id, client) = client.key_value_store id
 		
-		def self._get_storage_collection_client client
-			client.key_value_stores
-		end
+		def self._get_storage_collection_client(client) = client.key_value_stores
 			
-		###------------------------------------------------------------------- get_value
-=begin
-		@overload
-		@classmethod
-		async def get_value(cls, key: str) -> Any:
-			...
-
-		@overload
-		@classmethod
-		async def get_value(cls, key: str, default_value: T) -> T:
-			...
-
-		@overload
-		@classmethod
-		async def get_value(cls, key: str, default_value: Optional[T] = None) -> Optional[T]:
-			...
-=end
-
 		"""Get a value from the key-value store.
 
 		Args:
@@ -95,9 +71,7 @@ module Apify
 		Returns:
 			Any: The value associated with the given key. `default_value` is used in case the record does not exist.
 		"""
-		def self.get_value key, default_value=nil
-			open.get_value key, default_value
-		end
+		def self.get_value(key, default_value=nil) = open.get_value key, default_value
 		
 		def get_value key, default_value=nil
 			record = @_key_value_store_client.get_record key
@@ -114,19 +88,21 @@ module Apify
 				where `key` is the record key, and `info` is an object that contains a single property `size`
 				indicating size of the record in bytes.
 		"""		
-=begin
-		async def iterate_keys(self, exclusive_start_key: Optional[str] = None) -> AsyncIterator[IterateKeysTuple]:
-			while True:
-				list_keys = await self._key_value_store_client.list_keys(exclusive_start_key=exclusive_start_key)
-				for item in list_keys['items']:
-					yield IterateKeysTuple(item['key'], {'size': item['size']})
+		def iterate_keys exclusive_start_key: nil
+			while true
+				list_keys = @_key_value_store_client.list_keys exclusive_start_key: exclusive_start_key
 
-				if not list_keys['isTruncated']:
-					break
+				list_keys['items'].each { |item|
+					yield [item['key'], {'size' => item['size']}]
+					# yield IterateKeysTuple(item['key'], {'size': item['size']})
+				}
+				
+				break if !list_keys['isTruncated']
+				
 				exclusive_start_key = list_keys['nextExclusiveStartKey']
-=end
+			end
+		end
 
-		###------------------------------------------------------------------- set_value
 		"""Set or delete a value in the key-value store.
 
 		Args:
@@ -134,9 +110,7 @@ module Apify
 			value (Any, optional): The value to save. If the value is `None`, the corresponding key-value pair will be deleted.
 			content_type (str, optional): The content type of the saved value.
 		"""
-		def self.set_value key, value=nil, content_type=nil
-			open.set_value key, value, content_type
-		end
+		def self.set_value(key, value=nil, content_type=nil) = open.set_value key, value, content_type
 		
 		def set_value key, value=nil, content_type=nil
 			if value.nil?
@@ -146,13 +120,12 @@ module Apify
 			end
 		end
 		
-		###------------------------------------------------------------------- get_public_url
 		"""Get a URL for the given key that may be used to publicly access the value in the remote key-value store.
 
 		Args:
 			key (str): The key for which the URL should be generated.
 		"""
-		def self.get_public_url(key) = open.get_public_url(key)
+		def self.get_public_url(key) = open.get_public_url key
 
 		def get_public_url key
 			# if not isinstance(self._key_value_store_client, KeyValueStoreClientAsync):
@@ -186,9 +159,7 @@ module Apify
 		Returns:
 			KeyValueStore: An instance of the `KeyValueStore` class for the given ID or name.
 		"""
-		def self.open id=nil, name: nil, force_cloud: false, config: nil	
-			_open_internal id, name:name, force_cloud:force_cloud, config:config
-		end
+		def self.open(id=nil, name: nil, force_cloud: false, config: nil) = _open_internal id, name: name, force_cloud: force_cloud, config: config
 	end
 
 end

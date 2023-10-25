@@ -26,7 +26,7 @@ module Apify
 
 		def initialize config: nil
 			@config = config || Configuration.new		
-			@apify_client = new_client			
+			@apify_client = new_client
 			@event_manager = EventManager.new @config
 			
 			
@@ -334,7 +334,7 @@ module Apify
 		"""
 		def self.new_client token=nil, api_url: nil, max_retries: nil, min_delay_between_retries_millis: nil, timeout_secs: nil
 			_get_default_instance.new_client(
-				token, 
+				token,
 				api_url: api_url, 
 				max_retries: max_retries, 
 				in_delay_between_retries_millis: 

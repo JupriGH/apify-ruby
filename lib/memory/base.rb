@@ -5,7 +5,7 @@ module MemoryStorage
 	"""Base class for resource clients."""
 	class BaseResourceClient
 
-		attr_accessor :_id, :_name, :_resource_directory
+		attr_accessor :_id, :_name, :_resource_directory, :_created_at, :_accessed_at, :_modified_at
 		
 		"""Initialize the BaseResourceClient."""
 		def initialize memory_storage_client, id: nil, name: nil
@@ -41,6 +41,20 @@ module MemoryStorage
 		
 		def self._create_from_directory storage_directory, memory_storage_client, id, name
 			raise NotImplementedError.new 'You must override this method in the subclass!'
+		end
+		
+		"""Update the timestamps of the store."""	
+		def _update_timestamps has_been_modified=nil
+			now = Time.now
+			@_accessed_at = now
+			@_modified_at = now if has_been_modified
+				
+			store_info = _to_resource_info
+			Utils::_update_metadata(
+				data: store_info,
+				entity_directory: @_resource_directory,
+				write_metadata: @_memory_storage_client._write_metadata,
+			)
 		end
 	end
 
