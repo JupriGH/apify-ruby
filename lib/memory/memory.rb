@@ -1,63 +1,23 @@
-=begin
-import asyncio
-import contextlib
-import os
-from pathlib import Path
-from typing import List, Optional
-
-import aioshutil
-from aiofiles import ospath
-from aiofiles.os import rename, scandir
-
-from apify_shared.consts import ApifyEnvVars
-from apify_shared.utils import ignore_docs
-
-from .._utils import _maybe_parse_bool
-from .resource_clients.dataset import DatasetClient
-from .resource_clients.dataset_collection import DatasetCollectionClient
-from .resource_clients.key_value_store import KeyValueStoreClient
-from .resource_clients.key_value_store_collection import KeyValueStoreCollectionClient
-from .resource_clients.request_queue import RequestQueueClient
-from .resource_clients.request_queue_collection import RequestQueueCollectionClient
-=end
-
 require_relative 'base'
 require_relative 'dataset'
 require_relative 'key_value_store'
 require_relative 'request_queue'
 require_relative 'utils'
 
-"""
-Memory storage emulates data storages that are available on the Apify platform.
-Specifically, it emulates clients for datasets, key-value stores and request queues.
-The data are held in-memory and persisted locally if `persist_storage` is True.
-The metadata of the storages is also persisted if `write_metadata` is True.
-"""
-
 module Apify
-	
+
+	"""
+	Memory storage emulates data storages that are available on the Apify platform.
+	Specifically, it emulates clients for datasets, key-value stores and request queues.
+	The data are held in-memory and persisted locally if `persist_storage` is True.
+	The metadata of the storages is also persisted if `write_metadata` is True.
+	"""	
 	module MemoryStorage
 	
 	"""Class representing an in-memory storage."""	
 	class Client
-=begin
-		_local_data_directory: str
-		_datasets_directory: str
-		_key_value_stores_directory: str
-		_request_queues_directory: str
-		_write_metadata: bool
-		_persist_storage: bool
-		_datasets_handled: List[DatasetClient]
-		_key_value_stores_handled: List[KeyValueStoreClient]
-		_request_queues_handled: List[RequestQueueClient]
 
-		_purged_on_start: bool = False
-		_purge_lock: asyncio.Lock
-
-		"""Indicates whether a purge was already performed on this instance"""
-=end
-
-		attr_accessor :_datasets_handled, :_datasets_directory, :_write_metadata, :_persist_storage
+		attr_accessor :_cache, :_directory, :_write_metadata, :_persist_storage
 
 		"""Initialize the MemoryStorageClient.
 
@@ -68,55 +28,48 @@ module Apify
 		"""
 
 		def initialize local_data_directory: nil, write_metadata: nil, persist_storage: nil
-			@_local_data_directory = local_data_directory || ENV[ApifyEnvVars::LOCAL_STORAGE_DIR] || './storage'
-			
-			@_datasets_directory = File.join(@_local_data_directory, 'datasets')
-			@_key_value_stores_directory = File.join(@_local_data_directory, 'key_value_stores')
-			@_request_queues_directory = File.join(@_local_data_directory, 'request_queues')
-			
+			@_local_data_directory = local_data_directory || ENV[ApifyEnvVars::LOCAL_STORAGE_DIR] || './storage'			
 			@_write_metadata = !write_metadata.nil? ? write_metadata : ENV['DEBUG']&.include("*")
 			@_persist_storage = !persist_storage.nil? ? persist_storage : ['true', nil].include?( ENV[ApifyEnvVars::PERSIST_STORAGE] ) 
-			# _maybe_parse_bool(os.getenv(ApifyEnvVars.PERSIST_STORAGE, 'true'))
 			
-			@_datasets_handled = []
-			@_key_value_stores_handled = []
-			@_request_queues_handled = []
+			@_directory = {
+				DatasetClient => File.join(@_local_data_directory, 'datasets'),
+				KeyValueStoreClient => File.join(@_local_data_directory, 'key_value_stores'),
+				RequestQueueClient => File.join(@_local_data_directory, 'request_queues')		
+			}			
+			@_cache = {
+				DatasetClient => [],
+				KeyValueStoreClient => [],
+				RequestQueueClient => [],
+			}
 			
-			#self._purge_lock = asyncio.Lock()
+			# Indicates whether a purge was already performed on this instance
+			#@_purged_on_start = false
+			#@_purge_lock = asyncio.Lock()
 		end
 
 		"""Retrieve the sub-client for manipulating datasets."""		
-		def datasets
-			DatasetCollectionClient.new @_datasets_directory, self
-		end
+		def datasets = DatasetCollectionClient.new self
 
 		"""Retrieve the sub-client for manipulating a single dataset.
 
 		Args:
 			dataset_id (str): ID of the dataset to be manipulated
 		"""		
-		def dataset dataset_id
-			DatasetClient.new @_datasets_directory, self, id: dataset_id
-		end
+		def dataset(dataset_id) = DatasetClient.new self, id: dataset_id
 
 		"""Retrieve the sub-client for manipulating key-value stores."""
-		def key_value_stores
-			KeyValueStoreCollectionClient.new @_key_value_stores_directory, self
-		end
+		def key_value_stores = KeyValueStoreCollectionClient.new self
 
 		"""Retrieve the sub-client for manipulating a single key-value store.
 
 		Args:
 			key_value_store_id (str): ID of the key-value store to be manipulated
 		"""
-		def key_value_store key_value_store_id
-			KeyValueStoreClient.new @_key_value_stores_directory, self, id: key_value_store_id
-		end
+		def key_value_store(key_value_store_id) = KeyValueStoreClient.new self, id: key_value_store_id
 
 		"""Retrieve the sub-client for manipulating request queues."""
-		def request_queues
-			RequestQueueCollectionClient.new @_request_queues_directory, self
-		end
+		def request_queues = RequestQueueCollectionClient.new self
 		
 		"""Retrieve the sub-client for manipulating a single request queue.
 
@@ -125,9 +78,66 @@ module Apify
 			client_key (str): A unique identifier of the client accessing the request queue
 		"""
 		def request_queue request_queue_id, client_key: nil  # noqa: U100
-			RequestQueueClient.new @_request_queues_directory, self, id: request_queue_id
+			RequestQueueClient.new self, id: request_queue_id
 		end
 
+		def _find_or_create_client  client_class, id: nil, name: nil  
+			raise "Required `id` or `name`!" unless id || name
+			
+			storage_client_cache = @_cache[client_class]
+			storages_dir = @_directory[client_class]
+
+			# First check memory cache			
+			found = storage_client_cache.find { |s| s._id == id || (s._name && name && s._name.downcase == name.downcase) }
+			return found if found
+
+			storage_path = nil
+
+			# First try to find the storage by looking up the directory by name			
+			if name
+				storage_path = File.join(storages_dir, name)
+				storage_path = nil if !File.directory?(storage_path)
+			end
+			
+			# As a last resort, try to check if the accessed storage is the default one,
+			# and the folder has no metadata
+			# TODO: make this respect the APIFY_DEFAULT_XXX_ID env var
+			if !storage_path && id == 'default'
+				storage_path = File.join(storages_dir, id)
+				storage_path = nil if !File.directory?(storage_path)
+			end
+			
+			# If it's not found, try going through the storages dir and finding it by metadata			
+			if !storage_path && File.exist?(storages_dir)
+				Dir.foreach(storages_dir) do |entry_name|
+					entry_path = File.join(storages_dir, entry_name)
+					next unless File.directory?(entry_path)
+
+					metadata_path = File.join(entry_path, '__metadata__.json')
+					next unless File.exist?(metadata_path)
+
+					metadata = JSON.parse(File.read(metadata_path, encoding: 'utf-8'))
+
+					if id && id == metadata['id']
+						storage_path = entry_path
+						name = metadata['name']
+						break
+					end
+					if name && name == metadata['name']
+						storage_path = entry_path
+						id = metadata['id']
+						break
+					end
+				end		
+			end
+
+			return if !storage_path
+
+			resource_client = client_class._create_from_directory storage_path, self, id, name
+			storage_client_cache << resource_client
+
+			return resource_client
+		end
 =begin
 		async def _purge_on_start(self) -> None:
 			# Optimistic, non-blocking check
@@ -230,7 +240,7 @@ module Apify
 
 				await aioshutil.rmtree(temporary_folder, ignore_errors=True)
 =end
-	end
 	
+	end
 	end
 end

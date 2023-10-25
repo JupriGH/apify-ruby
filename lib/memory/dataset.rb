@@ -7,11 +7,6 @@ from typing import TYPE_CHECKING, Any, AsyncIterator, Dict, List, Optional, Tupl
 
 import aioshutil
 
-from apify_shared.models import ListPage
-from apify_shared.types import JSONSerializable
-from apify_shared.utils import ignore_docs
-
-from ..._crypto import _crypto_random_object_id
 from ..._utils import _force_rename, _raise_on_duplicate_storage, _raise_on_non_existing_storage
 from ...consts import _StorageTypes
 from ..file_storage_utils import _update_dataset_items, _update_metadata
@@ -39,17 +34,10 @@ class DatasetClient < BaseResourceClient
 	attr_accessor :_created_at, :_accessed_at, :_modified_at, :_item_count, :_dataset_entries
 	
 	"""Initialize the DatasetClient."""
-    def initialize base_storage_directory, memory_storage_client, id: nil, name: nil
-        @_id = id || Crypto::_crypto_random_object_id
-        @_resource_directory = File.join(base_storage_directory, name || @_id)
-        @_memory_storage_client = memory_storage_client
-        @_name = name
-        @_dataset_entries = {}
-        @_created_at = 
-        @_accessed_at = 
-        @_modified_at = Time.now
+    def initialize memory_storage_client, id: nil, name: nil
+		super
+        @_dataset_entries = {}		
 		@_item_count = 0
-        @_file_operation_lock = Async::Semaphore.new(1) # lock
 	end
 	
 	"""Retrieve the dataset.
@@ -57,15 +45,7 @@ class DatasetClient < BaseResourceClient
 	Returns:
 		dict, optional: The retrieved dataset, or None, if it does not exist
 	"""
-    def get
-		found = self.class::_find_or_create_client_by_id_or_name @_memory_storage_client, id: @_id, name: @_name
-
-        if found
-            #async with found._file_operation_lock:
-                found._update_timestamps false
-                found._to_resource_info
-		end
-	end
+    #def get = super
 
 	"""Update the dataset with specified fields.
 
@@ -291,7 +271,9 @@ class DatasetClient < BaseResourceClient
 	"""
     def push_items items
         # Check by id 
-        existing_dataset_by_id = self.class::_find_or_create_client_by_id_or_name @_memory_storage_client, id: @_id, name: @_name
+        #existing_dataset_by_id = self.class::_find_or_create_client_by_id_or_name @_memory_storage_client, id: @_id, name: @_name
+
+		existing_dataset_by_id = @_memory_storage_client._find_or_create_client self.class, id: @_id, name: @_name
 
 		_raise_on_non_existing_storage(StorageTypes.DATASET, @_id) if !existing_dataset_by_id
 
@@ -320,15 +302,16 @@ class DatasetClient < BaseResourceClient
 	end 
 	
 	"""Retrieve the dataset info."""
-    def _to_resource_info = ({
-		'id' => @_id,
-		'name' => @_name,
-		'itemCount' => @_item_count,
-		'accessedAt' => @_accessed_at,
-		'createdAt' => @_created_at,
-		'modifiedAt' => @_modified_at,
-	})
-
+    def _to_resource_info
+		{
+			'id' => @_id,
+			'name' => @_name,
+			'itemCount' => @_item_count,
+			'accessedAt' => @_accessed_at,
+			'createdAt' => @_created_at,
+			'modifiedAt' => @_modified_at,
+		}
+	end
 
 	"""Update the timestamps of the dataset."""	
 	def _update_timestamps has_been_modified=nil
@@ -374,16 +357,8 @@ class DatasetClient < BaseResourceClient
 		#return list(filter(None, result))
         items.filter {|item| !item.nil?}
 	end
-	
-    def self._get_storages_dir memory_storage_client
-        memory_storage_client._datasets_directory
-	end
-	
-    def self._get_storage_client_cache memory_storage_client
-        memory_storage_client._datasets_handled
-	end
-	
-    def self._create_from_directory storage_directory, memory_storage_client, id, name
+
+	def self._create_from_directory storage_directory, memory_storage_client, id, name	
 		item_count = 0
         created_at = accessed_at = modified_at = Time.now
         entries = {}
@@ -418,7 +393,7 @@ class DatasetClient < BaseResourceClient
 			item_count += 1 if !has_seen_metadata_file
 		end
 
-        new_client = new memory_storage_client._datasets_directory, memory_storage_client, id: id, name: name
+		new_client = new memory_storage_client, id: id, name: name
 
         # Overwrite properties
         new_client._accessed_at = accessed_at
@@ -435,17 +410,15 @@ end
 	
 	class DatasetCollectionClient < BaseResourceCollectionClient
 		"""Sub-client for manipulating datasets."""
-		CLIENT_CLASS = DatasetClient
 		
-		def _get_storage_client_cache = @_memory_storage_client._datasets_handled
-		# def _get_resource_client_class = DatasetClient
+		CLIENT_CLASS = DatasetClient
 		
 		"""List the available datasets.
 
 		Returns:
 			ListPage: The list of available datasets matching the specified filters.
 		"""
-		#def list = super
+		# def list = super
 
 		"""Retrieve a named dataset, or create a new one when it doesn't exist.
 
@@ -456,10 +429,8 @@ end
 		Returns:
 			dict: The retrieved or newly-created dataset.
 		"""
-		#def get_or_create name: nil, schema: nil, _id: nil
-		#	super name: name, schema: schema, _id: _id		
-		#end
+		# def get_or_create (name: nil, schema: nil, _id: nil) = super name: name, schema: schema, _id: _id		
 	end
-
+	
 end
 end

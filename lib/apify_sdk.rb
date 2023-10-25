@@ -4,8 +4,9 @@ require 'csv'
 require 'net/http'
 
 # Apify Internal Modules
-require_relative 'consts'
 require_relative 'shared/consts'
+require_relative 'shared/models'
+require_relative 'consts'
 require_relative 'log'
 require_relative 'utils'
 require_relative 'config'

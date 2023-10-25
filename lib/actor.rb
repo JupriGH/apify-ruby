@@ -29,6 +29,7 @@ module Apify
 			@apify_client = new_client			
 			@event_manager = EventManager.new @config
 			
+			
 			@_is_initialized = false
 			@_is_exiting = false
 			@_send_system_info_interval_task = nil 

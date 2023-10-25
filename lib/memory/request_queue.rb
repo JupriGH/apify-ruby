@@ -41,41 +41,23 @@ class RequestQueueClient < BaseResourceClient
     _pending_request_count = 0
     _last_used_timestamp = Decimal(0.0)
     _file_operation_lock: asyncio.Lock
+=end
 
-    def __init__(
-        self,
-        *,
-        base_storage_directory: str,
-        memory_storage_client: 'MemoryStorageClient',
-        id: Optional[str] = None,
-        name: Optional[str] = None,
-    ) -> None:
-        """Initialize the RequestQueueClient."""
-        self._id = id or _crypto_random_object_id()
-        self._resource_directory = os.path.join(base_storage_directory, name or self._id)
-        self._memory_storage_client = memory_storage_client
-        self._name = name
-        self._requests = ValueSortedDict(lambda req: req.get('orderNo') or -float('inf'))
-        self._created_at = datetime.now(timezone.utc)
-        self._accessed_at = datetime.now(timezone.utc)
-        self._modified_at = datetime.now(timezone.utc)
-        self._file_operation_lock = asyncio.Lock()
+	"""Initialize the RequestQueueClient."""
+    def initialize memory_storage_client, id: nil, name: nil
+		super
+        @_requests = {} ### ValueSortedDict(lambda req: req.get('orderNo') or -float('inf'))
+	end
 
-    async def get(self) -> Optional[Dict]:
-        """Retrieve the request queue.
+	"""Retrieve the request queue.
 
-        Returns:
-            dict, optional: The retrieved request queue, or None, if it does not exist
-        """
-        found = self._find_or_create_client_by_id_or_name(memory_storage_client=self._memory_storage_client, id=self._id, name=self._name)
+	Returns:
+		dict, optional: The retrieved request queue, or None, if it does not exist
+	"""
+    #def get = super
+	
 
-        if found:
-            async with found._file_operation_lock:
-                await found._update_timestamps(False)
-                return found._to_resource_info()
-
-        return None
-
+=begin
     async def update(self, *, name: Optional[str] = None) -> Dict:
         """Update the request queue with specified fields.
 
@@ -324,23 +306,26 @@ class RequestQueueClient < BaseResourceClient
                     existing_queue_by_id._pending_request_count -= 1
                 await existing_queue_by_id._update_timestamps(True)
                 await _delete_request(entity_directory=existing_queue_by_id._resource_directory, request_id=request_id)
+=end
 
-    def _to_resource_info(self) -> Dict:
-        """Retrieve the request queue store info."""
-        return {
-            'accessedAt': self._accessed_at,
-            'createdAt': self._created_at,
-            'hadMultipleClients': False,
-            'handledRequestCount': self._handled_request_count,
-            'id': self._id,
-            'modifiedAt': self._modified_at,
-            'name': self._name,
-            'pendingRequestCount': self._pending_request_count,
+	"""Retrieve the request queue store info."""
+    def _to_resource_info
+		{
+            'accessedAt': @_accessed_at,
+            'createdAt': @_created_at,
+            'hadMultipleClients': false,
+            'handledRequestCount': @_handled_request_count,
+            'id': @_id,
+            'modifiedAt': @_modified_at,
+            'name': @_name,
+            'pendingRequestCount': @_pending_request_count,
             'stats': {},
-            'totalRequestCount': len(self._requests),
+            'totalRequestCount': @_requests.length,
             'userId': '1',
         }
-
+	end
+	
+=begin
     async def _update_timestamps(self, has_been_modified: bool) -> None:
         self._accessed_at = datetime.now(timezone.utc)
 
@@ -393,15 +378,10 @@ class RequestQueueClient < BaseResourceClient
         self._last_used_timestamp = timestamp
 
         return -timestamp if forefront else timestamp
+=end
 
-    @classmethod
-    def _get_storages_dir(cls, memory_storage_client: 'MemoryStorageClient') -> str:
-        return memory_storage_client._request_queues_directory
 
-    @classmethod
-    def _get_storage_client_cache(cls, memory_storage_client: 'MemoryStorageClient') -> List['RequestQueueClient']:
-        return memory_storage_client._request_queues_handled
-
+=begin
     @classmethod
     def _create_from_directory(
         cls,
@@ -461,53 +441,29 @@ class RequestQueueClient < BaseResourceClient
 =end
 end
 
-=begin
-from typing import Dict, List, Optional, Type
-
-from apify_shared.models import ListPage
-from apify_shared.utils import ignore_docs
-
-from .base_resource_collection_client import BaseResourceCollectionClient
-from .request_queue import RequestQueueClient
-=end
-
-class RequestQueueCollectionClient < BaseResourceCollectionClient
     """Sub-client for manipulating request queues."""
-=begin
-    def _get_storage_client_cache(self) -> List[RequestQueueClient]:
-        return self._memory_storage_client._request_queues_handled
+	class RequestQueueCollectionClient < BaseResourceCollectionClient
+		
+		CLIENT_CLASS = RequestQueueClient
+		
+		"""List the available request queues.
 
-    def _get_resource_client_class(self) -> Type[RequestQueueClient]:
-        return RequestQueueClient
+		Returns:
+			ListPage: The list of available request queues matching the specified filters.
+		"""
+		# def list = super
 
-    async def list(self) -> ListPage:
-        """List the available request queues.
+		"""Retrieve a named request queue, or create a new one when it doesn't exist.
 
-        Returns:
-            ListPage: The list of available request queues matching the specified filters.
-        """
-        return await super().list()
+		Args:
+			name (str, optional): The name of the request queue to retrieve or create.
+			schema (Dict, optional): The schema of the request queue
 
-    async def get_or_create(
-        self,
-        *,
-        name: Optional[str] = None,
-        schema: Optional[Dict] = None,
-        _id: Optional[str] = None,
-    ) -> Dict:
-        """Retrieve a named request queue, or create a new one when it doesn't exist.
-
-        Args:
-            name (str, optional): The name of the request queue to retrieve or create.
-            schema (Dict, optional): The schema of the request queue
-
-        Returns:
-            dict: The retrieved or newly-created request queue.
-        """
-        return await super().get_or_create(name=name, schema=schema, _id=_id)
-=end
-
-end
+		Returns:
+			dict: The retrieved or newly-created request queue.
+		"""
+		# def get_or_create(name: nil, schema: nil, _id: nil) = super name: name, schema: schema, _id: _id
+	end
 
 end
 end

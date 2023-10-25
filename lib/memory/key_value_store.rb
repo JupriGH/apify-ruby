@@ -56,8 +56,9 @@ module Apify
 
 module MemoryStorage
 
+"""Sub-client for manipulating a single key-value store."""
 class KeyValueStoreClient < BaseResourceClient
-    """Sub-client for manipulating a single key-value store."""
+    
 =begin
     _id: str
     _resource_directory: str
@@ -68,41 +69,22 @@ class KeyValueStoreClient < BaseResourceClient
     _accessed_at: datetime
     _modified_at: datetime
     _file_operation_lock: asyncio.Lock
+=end
 
-    def __init__(
-        self,
-        *,
-        base_storage_directory: str,
-        memory_storage_client: 'MemoryStorageClient',
-        id: Optional[str] = None,
-        name: Optional[str] = None,
-    ) -> None:
-        """Initialize the KeyValueStoreClient."""
-        self._id = id or _crypto_random_object_id()
-        self._resource_directory = os.path.join(base_storage_directory, name or self._id)
-        self._memory_storage_client = memory_storage_client
-        self._name = name
-        self._records = {}
-        self._created_at = datetime.now(timezone.utc)
-        self._accessed_at = datetime.now(timezone.utc)
-        self._modified_at = datetime.now(timezone.utc)
-        self._file_operation_lock = asyncio.Lock()
+	"""Initialize the KeyValueStoreClient."""
+    def initialize memory_storage_client, id: nil, name: nil
+		super
+        @_records = {}
+	end
+	
+	"""Retrieve the key-value store.
 
-    async def get(self) -> Optional[Dict]:
-        """Retrieve the key-value store.
-
-        Returns:
-            dict, optional: The retrieved key-value store, or None if it does not exist
-        """
-        found = self._find_or_create_client_by_id_or_name(memory_storage_client=self._memory_storage_client, id=self._id, name=self._name)
-
-        if found:
-            async with found._file_operation_lock:
-                await found._update_timestamps(False)
-                return found._to_resource_info()
-
-        return None
-
+	Returns:
+		dict, optional: The retrieved key-value store, or None if it does not exist
+	"""
+    #def get = super
+ 	
+=begin
     async def update(self, *, name: Optional[str] = None) -> Dict:
         """Update the key-value store with specified fields.
 
@@ -384,18 +366,19 @@ class KeyValueStoreClient < BaseResourceClient
 
         await _force_remove(record_path)
         await _force_remove(record_metadata_path)
-
-    def _to_resource_info(self) -> Dict:
-        """Retrieve the key-value store info."""
-        return {
-            'id': self._id,
-            'name': self._name,
-            'accessedAt': self._accessed_at,
-            'createdAt': self._created_at,
-            'modifiedAt': self._modified_at,
-            'userId': '1',
+=end
+    """Retrieve the key-value store info."""
+    def _to_resource_info
+        {
+            'id' => @_id,
+            'name' => @_name,
+            'accessedAt' => @_accessed_at,
+            'createdAt' => @_created_at,
+            'modifiedAt' => @_modified_at,
+            'userId' => '1',
         }
-
+	end
+=begin
     async def _update_timestamps(self, has_been_modified: bool) -> None:
         self._accessed_at = datetime.now(timezone.utc)
 
@@ -408,15 +391,10 @@ class KeyValueStoreClient < BaseResourceClient
             entity_directory=self._resource_directory,
             write_metadata=self._memory_storage_client._write_metadata,
         )
+=end
 
-    @classmethod
-    def _get_storages_dir(cls, memory_storage_client: 'MemoryStorageClient') -> str:
-        return memory_storage_client._key_value_stores_directory
 
-    @classmethod
-    def _get_storage_client_cache(cls, memory_storage_client: 'MemoryStorageClient') -> List['KeyValueStoreClient']:
-        return memory_storage_client._key_value_stores_handled
-
+=begin
     @classmethod
     def _create_from_directory(
         cls,
@@ -509,54 +487,30 @@ class KeyValueStoreClient < BaseResourceClient
 =end
 end
 
-=begin
-from typing import Dict, List, Optional, Type
 
-from apify_shared.models import ListPage
-from apify_shared.utils import ignore_docs
+	"""Sub-client for manipulating key-value stores."""
+	class KeyValueStoreCollectionClient < BaseResourceCollectionClient
+		
+		CLIENT_CLASS = KeyValueStoreClient
 
-from .base_resource_collection_client import BaseResourceCollectionClient
-from .key_value_store import KeyValueStoreClient
-=end
+		"""List the available key-value stores.
 
-class KeyValueStoreCollectionClient < BaseResourceCollectionClient
-    """Sub-client for manipulating key-value stores."""
-=begin
-    def _get_storage_client_cache(self) -> List[KeyValueStoreClient]:
-        return self._memory_storage_client._key_value_stores_handled
+		Returns:
+			ListPage: The list of available key-value stores matching the specified filters.
+		"""
+		# def list = super
 
-    def _get_resource_client_class(self) -> Type[KeyValueStoreClient]:
-        return KeyValueStoreClient
+		"""Retrieve a named key-value store, or create a new one when it doesn't exist.
 
-    async def list(self) -> ListPage:
-        """List the available key-value stores.
+		Args:
+			name (str, optional): The name of the key-value store to retrieve or create.
+			schema (Dict, optional): The schema of the key-value store
 
-        Returns:
-            ListPage: The list of available key-value stores matching the specified filters.
-        """
-        return await super().list()
-
-    async def get_or_create(
-        self,
-        *,
-        name: Optional[str] = None,
-        schema: Optional[Dict] = None,
-        _id: Optional[str] = None,
-    ) -> Dict:
-        """Retrieve a named key-value store, or create a new one when it doesn't exist.
-
-        Args:
-            name (str, optional): The name of the key-value store to retrieve or create.
-            schema (Dict, optional): The schema of the key-value store
-
-        Returns:
-            dict: The retrieved or newly-created key-value store.
-        """
-        return await super().get_or_create(name=name, schema=schema, _id=_id)
-
-=end
-
-end
+		Returns:
+			dict: The retrieved or newly-created key-value store.
+		"""
+		# def get_or_create(name: nil, schema: nil, _id: nil) = super name: name, schema: schema, _id: _id
+	end
 
 end
 end
