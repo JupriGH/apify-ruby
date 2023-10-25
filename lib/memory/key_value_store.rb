@@ -74,7 +74,7 @@ class KeyValueStoreClient < BaseResourceClient
 	"""Initialize the KeyValueStoreClient."""
     def initialize memory_storage_client, id: nil, name: nil
 		super
-        @_records = {}
+		@_records = {}
 	end
 	
 	"""Retrieve the key-value store.
@@ -82,7 +82,7 @@ class KeyValueStoreClient < BaseResourceClient
 	Returns:
 		dict, optional: The retrieved key-value store, or None if it does not exist
 	"""
-    #def get = super
+    # def get = super
  	
 =begin
     async def update(self, *, name: Optional[str] = None) -> Dict:

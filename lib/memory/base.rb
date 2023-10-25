@@ -7,15 +7,10 @@ module MemoryStorage
 
 		attr_accessor :_id, :_name, :_resource_directory
 		
-		### @abstractmethod
-		
 		"""Initialize the BaseResourceClient."""
-		#def initialize base_storage_directory, memory_storage_client, id: nil, name: nil
 		def initialize memory_storage_client, id: nil, name: nil
 			@_id = id || Crypto::_crypto_random_object_id
-			
 			@_resource_directory = File.join(memory_storage_client._directory[self.class], name || @_id)
-	
 			@_memory_storage_client = memory_storage_client
 			@_name = name
 			@_created_at = @_accessed_at = @_modified_at = Time.now.utc
@@ -31,10 +26,6 @@ module MemoryStorage
 		#	raise NotImplementedError.new 'You must override this method in the subclass!'
 		#end
 		def get
-			#found = self.class._find_or_create_client_by_id_or_name @_memory_storage_client, id: @_id, name: @_name
-			
-			#p self.class
-			#raise
 			found = @_memory_storage_client._find_or_create_client self.class, id: @_id, name: @_name
 			
 			if found
@@ -43,15 +34,7 @@ module MemoryStorage
 					found._to_resource_info
 			end
 		end
-	
-		def self._get_storages_dir memory_storage_client
-			raise NotImplementedError.new 'You must override this method in the subclass!'
-		end
-		
-		def self._get_storage_client_cache memory_storage_client
-			raise NotImplementedError.new 'You must override this method in the subclass!'
-		end
-		
+			
 		def _to_resource_info
 			raise NotImplementedError.new 'You must override this method in the subclass!'
 		end
@@ -61,7 +44,6 @@ module MemoryStorage
 		end
 	end
 
-
 	### BaseResourceCollectionClient
 
 	"""Base class for resource collection clients."""
@@ -70,9 +52,7 @@ module MemoryStorage
 		# CLIENT_CLASS = "...."
 		
 		"""Initialize the DatasetCollectionClient with the passed arguments."""
-		def initialize memory_storage_client
-			@_memory_storage_client = memory_storage_client
-		end
+		def initialize(memory_storage_client) = (@_memory_storage_client = memory_storage_client)
 		
 		def _get_storage_client_cache = @_memory_storage_client._cache[self.class::CLIENT_CLASS]
 		

@@ -46,7 +46,7 @@ class RequestQueueClient < BaseResourceClient
 	"""Initialize the RequestQueueClient."""
     def initialize memory_storage_client, id: nil, name: nil
 		super
-        @_requests = {} ### ValueSortedDict(lambda req: req.get('orderNo') or -float('inf'))
+		@_requests = {} ### ValueSortedDict(lambda req: req.get('orderNo') or -float('inf'))
 	end
 
 	"""Retrieve the request queue.
@@ -54,7 +54,7 @@ class RequestQueueClient < BaseResourceClient
 	Returns:
 		dict, optional: The retrieved request queue, or None, if it does not exist
 	"""
-    #def get = super
+    # def get = super
 	
 
 =begin
