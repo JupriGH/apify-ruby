@@ -72,10 +72,11 @@ module Apify
 		def initialize id=nil, name: nil, client: nil, config: nil			
 			super id, name: name, client: client, config: config
 
-			@_request_queue_client = client.request_queue @_id, client_key: @_client_key
 			@_client_key = Crypto._crypto_random_object_id
-			@_internal_timeout_seconds = 5 * 60
+			@_request_queue_client = client.request_queue @_id, client_key: @_client_key
 			
+			@_internal_timeout_seconds = 5 * 60
+
 			### ChatGPT: array => they are stored in the order you added them
 			# @_queue_head_dict = [] # use array ?
 			
@@ -91,17 +92,11 @@ module Apify
 		
 		#def _get_human_friendly_label = 'Request queue'
 		
-		def self._get_default_id config
-			config.default_request_queue_id
-		end
+		def self._get_default_id(config) = config.default_request_queue_id
 		
-		def self._get_single_storage_client id, client
-			client.request_queue id
-		end
+		def self._get_single_storage_client(id, client) = client.request_queue id
 		
-		def self._get_storage_collection_client client
-			client.request_queues
-		end
+		def self._get_storage_collection_client(client) = client.request_queues
 		
 		"""Add a request to the queue.
 

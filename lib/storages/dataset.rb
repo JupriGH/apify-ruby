@@ -423,7 +423,7 @@ module Apify
 			Dataset: An instance of the `Dataset` class for the given ID or name.
 		"""
 		def self.open id=nil, name: nil, force_cloud: nil, config: nil
-			_open_internal id, name: name, force_cloud: force_cloud, config: config		
+			_open_internal id, name: name, force_cloud: force_cloud, config: config
 		end
 	end
 

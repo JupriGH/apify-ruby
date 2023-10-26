@@ -57,7 +57,7 @@ module Apify
 			dataset_id (str): ID of the dataset to be manipulated
 		"""		
 		def dataset(dataset_id) = DatasetClient.new self, id: dataset_id
-
+		
 		"""Retrieve the sub-client for manipulating key-value stores."""
 		def key_value_stores = KeyValueStoreCollectionClient.new self
 
@@ -91,7 +91,7 @@ module Apify
 		
 		def _find_or_create_client  client_class, id: nil, name: nil  
 			raise "Required `id` or `name`!" unless id || name
-			
+						
 			storage_client_cache = @_cache[client_class]
 			storages_dir = @_directory[client_class]
 
@@ -143,7 +143,7 @@ module Apify
 
 			resource_client = client_class._create_from_directory storage_path, self, id, name
 			storage_client_cache << resource_client
-
+						
 			return resource_client
 		end
 =begin

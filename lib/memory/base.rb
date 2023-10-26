@@ -5,15 +5,17 @@ module MemoryStorage
 	"""Base class for resource clients."""
 	class BaseResourceClient
 
+		# STORAGE_TYPE = "..."
+		
 		attr_accessor :_id, :_name, :_resource_directory, :_created_at, :_accessed_at, :_modified_at
 		
 		"""Initialize the BaseResourceClient."""
 		def initialize memory_storage_client, id: nil, name: nil
-			@_id = id || Crypto::_crypto_random_object_id
-			@_resource_directory = File.join(memory_storage_client._directory[self.class], name || @_id)
 			@_memory_storage_client = memory_storage_client
+			@_id = id || Crypto::_crypto_random_object_id
 			@_name = name
-			@_created_at = @_accessed_at = @_modified_at = Time.now.utc
+			@_resource_directory = File.join(memory_storage_client._directory[self.class], name||@_id)
+			@_created_at = @_accessed_at = @_modified_at = Time.now
 			@_file_operation_lock = Async::Semaphore.new(1) # lock
 		end
 
@@ -27,7 +29,6 @@ module MemoryStorage
 		#end
 		def get
 			found = @_memory_storage_client._find_or_create_client self.class, id: @_id, name: @_name
-			
 			if found
 				#async with found._file_operation_lock:
 					found._update_timestamps false
@@ -55,6 +56,12 @@ module MemoryStorage
 				entity_directory: @_resource_directory,
 				write_metadata: @_memory_storage_client._write_metadata,
 			)
+		end
+
+		def _check_id
+			store = @_memory_storage_client._find_or_create_client self.class, id: @_id, name: @_name
+			Apify::Utils::_raise_on_non_existing_storage(self.class::STORAGE_TYPE, @_id) if !store
+			return store	
 		end
 	end
 
@@ -99,11 +106,9 @@ module MemoryStorage
 		Returns:
 			dict: The retrieved or newly-created storage.
 		"""		
-		def get_or_create name: nil, schema: nil, _id: nil
-
+		def get_or_create name: nil, schema: nil, _id: nil	
 			resource_client_class = self.class::CLIENT_CLASS #_get_resource_client_class
 			storage_client_cache = _get_storage_client_cache
-
 
 			if name || _id
 				found =  @_memory_storage_client._find_or_create_client resource_client_class, name: name, id: _id

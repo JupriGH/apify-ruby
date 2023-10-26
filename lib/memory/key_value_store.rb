@@ -3,8 +3,8 @@ require 'mime/types'
 def _filename_from_record record
 	return record[:filename] if record[:filename]
 
-    content_type = record[:contentType]
-    return record[:key] if !content_type || content_type == 'application/octet-stream'
+	content_type = record[:contentType]
+	return record[:key] if !content_type || content_type == 'application/octet-stream'
 
 	extension = Apify::Utils::_guess_file_extension content_type
 	return record[:key] if record[:key].end_with?(".#{extension}")
@@ -18,12 +18,14 @@ module Apify
 
 	"""Sub-client for manipulating a single key-value store."""
 	class KeyValueStoreClient < BaseResourceClient
-		
+
+		STORAGE_TYPE = StorageTypes::KEY_VALUE_STORE
+
 		attr_accessor :_records
 		
 		"""Initialize the KeyValueStoreClient."""
 		def initialize memory_storage_client, id: nil, name: nil
-			super
+			super memory_storage_client, id: id, name: name
 			@_records = {}
 		end
 		
@@ -292,12 +294,6 @@ module Apify
 			File.delete(record_metadata_path)
 		end
 
-		def _check_id
-			store = @_memory_storage_client._find_or_create_client self.class, id: @_id, name: @_name
-			Apify::Utils::_raise_on_non_existing_storage(StorageTypes::KEY_VALUE_STORE, @_id) if !store
-			return store
-		end	
-		
 		"""Retrieve the key-value store info."""
 		def _to_resource_info
 			{

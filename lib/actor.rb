@@ -431,7 +431,7 @@ module Apify
 		Returns:
 			RequestQueue: An instance of the `RequestQueue` class for the given ID or name.
 		"""
-		def self.open_request_queue id=nil, name: nil, force_cloud: nil
+		def self.open_request_queue id=nil, name: nil, force_cloud: false
 			_get_default_instance.open_request_queue id, name: name, force_cloud: force_cloud
 		end
 		

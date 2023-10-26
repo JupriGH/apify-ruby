@@ -131,7 +131,7 @@ module Apify
 		Returns:
 			An instance of the storage.
 		"""		
-		def self._open_internal id=nil, name: nil, force_cloud: false, config: nil			
+		def self._open_internal id=nil, name: nil, force_cloud: false, config: nil
 			_ensure_class_initialized
 
 			raise if !@_cache_by_id
@@ -146,16 +146,15 @@ module Apify
 			is_default_storage_on_local = false
 			
 			if !(id || name)
-				is_default_storage_on_local = true if used_client.class == MemoryStorage::Client
+				is_default_storage_on_local = used_client.class == MemoryStorage::Client
 				id = _get_default_id used_config # BUG-RUBY: can't calling abstract implemented method
 			end
 			
 			# Try to get the storage instance from cache
-			cached_storage = nil
-			if id
-				cached_storage = @_cache_by_id[id]
+			cached_storage = if id
+				@_cache_by_id[id]
 			elsif name
-				cached_storage = @_cache_by_name[name]
+				@_cache_by_name[name]
 			end
 			
 			# This cast is needed since MyPy doesn't understand very well that Self and Storage are the same
@@ -163,11 +162,10 @@ module Apify
 			return cached_storage if cached_storage
 
 			# Purge default storages if configured	
-			"""
-			if used_config.purge_on_start && isinstance(used_client, MemoryStorageClient):
-				await used_client._purge_on_start()
-			"""
 			
+			used_client._purge_on_start if
+				used_config.purge_on_start && used_client.class == MemoryStorage::Client
+
 			#assert cls._storage_creating_lock is not None
 			#async with cls._storage_creating_lock:
 				
@@ -193,7 +191,7 @@ module Apify
 				# Cache by id and name
 				@_cache_by_id[storage._id] = storage
 				@_cache_by_name[storage._name] = storage if storage._name
-		
+
 			return storage
 		end
 

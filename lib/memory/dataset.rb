@@ -5,6 +5,8 @@ module Apify
 	"""Sub-client for manipulating a single dataset."""
 	class DatasetClient < BaseResourceClient
 
+		STORAGE_TYPE = StorageTypes::DATASET
+		
 		# This is what API returns in the x-apify-pagination-limit
 		# header when no limit query parameter is used.
 		LIST_ITEMS_LIMIT = 999_999_999_999
@@ -17,7 +19,7 @@ module Apify
 		
 		"""Initialize the DatasetClient."""
 		def initialize memory_storage_client, id: nil, name: nil
-			super
+			super memory_storage_client, id: id, name: name
 			@_dataset_entries = {}		
 			@_item_count = 0
 		end
@@ -138,8 +140,7 @@ module Apify
 			flatten: nil,  # noqa: U100
 			view: nil  # noqa: U100
 		)
-			dataset = @_memory_storage_client._find_or_create_client self.class, id: @_id, name: @_name
-			Apify::Utils::_raise_on_non_existing_storage(StorageTypes::DATASET, @_id) if !dataset
+			dataset = _check_id
 
 			## async with dataset._file_operation_lock:
 			
@@ -247,8 +248,7 @@ module Apify
 		"""
 		def push_items items
 			# Check by id 
-			store = @_memory_storage_client._find_or_create_client self.class, id: @_id, name: @_name
-			Apify::Utils::_raise_on_non_existing_storage(StorageTypes::DATASET, @_id) if !store
+			store = _check_id
 
 			normalized = _normalize_items items
 
@@ -318,8 +318,8 @@ module Apify
 		end
 
 		def self._create_from_directory storage_directory, memory_storage_client, id, name=nil	
-			item_count = 0
 			created_at = accessed_at = modified_at = Time.now
+			item_count = 0
 			entries = {}
 
 			has_seen_metadata_file = false
@@ -329,26 +329,26 @@ module Apify
 				entry_path = File.join(storage_directory, entry_name)
 				next unless File.file?(entry_path)
 				
+				content = JSON.parse(File.read(entry_path, encoding: 'utf-8'))
+				
 				if entry_name == '__metadata__.json'
 					has_seen_metadata_file = true
 
 					# We have found the dataset's metadata file, build out information based on it
-					metadata = JSON.parse(File.read(entry_path, encoding: 'utf-8'))
-					
-					id = metadata['id']
-					name = metadata['name']
-					item_count = metadata['itemCount']||0
-					created_at = Time.parse metadata['createdAt']
-					accessed_at = Time.parse metadata['accessedAt']
-					modified_at = Time.parse metadata['modifiedAt']
+
+					id = content['id']
+					name = content['name']
+					item_count = content['itemCount']||0
+					created_at = Time.parse content['createdAt']
+					accessed_at = Time.parse content['accessedAt']
+					modified_at = Time.parse content['modifiedAt']
 					
 					next
 				end
-				
-				entry_content = JSON.parse(File.read(entry_path, encoding: 'utf-8'))
+
 				entry_name = entry_name.split('.')[0]
 
-				entries[entry_name] = entry_content
+				entries[entry_name] = content
 				item_count += 1 if !has_seen_metadata_file
 			end
 
@@ -359,19 +359,19 @@ module Apify
 			new_client._created_at = created_at
 			new_client._modified_at = modified_at
 			new_client._item_count = item_count
+			new_client._dataset_entries = entries
 
-			entries.each { |entry_id, content| new_client._dataset_entries[entry_id] = content }
 			return new_client
 		end
 	end
 
 	### DatasetCollectionClient
-	
+
+	"""Sub-client for manipulating datasets."""	
 	class DatasetCollectionClient < BaseResourceCollectionClient
-		"""Sub-client for manipulating datasets."""
-		
+
 		CLIENT_CLASS = DatasetClient
-		
+
 		"""List the available datasets.
 
 		Returns:
@@ -390,6 +390,5 @@ module Apify
 		"""
 		# def get_or_create (name: nil, schema: nil, _id: nil) = super name: name, schema: schema, _id: _id		
 	end
-	
 end
 end
