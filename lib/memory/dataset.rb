@@ -314,7 +314,7 @@ module Apify
 		end
 
 		def self._create_from_directory storage_directory, memory_storage_client, id, name=nil	
-			created_at = accessed_at = modified_at = Time.now
+			created_at = accessed_at = modified_at = Time.now.utc
 			item_count = 0
 			entries = {}
 
@@ -326,7 +326,7 @@ module Apify
 				next unless File.file?(entry_path)
 				
 				content = JSON.parse(File.read(entry_path, encoding: 'utf-8'))
-				
+
 				if entry_name == '__metadata__.json'
 					has_seen_metadata_file = true
 
@@ -386,5 +386,6 @@ module Apify
 		"""
 		# def get_or_create (name: nil, schema: nil, _id: nil) = super name: name, schema: schema, _id: _id		
 	end
-end
+	
+	end
 end

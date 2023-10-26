@@ -301,21 +301,20 @@ module Apify
 		end
 
 		def self._create_from_directory storage_directory, memory_storage_client, id, name=nil
-			created_at = accessed_at = modified_at = Time.now
+			created_at = accessed_at = modified_at = Time.now.utc
 
 			store_metadata_path = File.join storage_directory, '__metadata__.json'
-			if File.file?(store_metadata_path)
-				metadata = File.read(store_metadata_path, encoding: 'utf-8')
-				metadata = JSON.parse metadata
+			if File.file?(store_metadata_path) 
+				metadata = JSON.parse File.read(store_metadata_path, encoding: 'utf-8'), symbolize_names: true
 
-				id = metadata['id']
-				name = metadata['name']
-				created_at = Time.parse metadata['createdAt']
-				accessed_at = Time.parse metadata['accessedAt']
-				modified_at = Time.parse metadata['modifiedAt']
+				id = metadata[:id]
+				name = metadata[:name]
+				created_at = Time.parse metadata[:createdAt]
+				accessed_at = Time.parse metadata[:accessedAt]
+				modified_at = Time.parse metadata[:modifiedAt]
 			end
 			
-			new_client = new  memory_storage_client, id: id, name: name
+			new_client = new memory_storage_client, id: id, name: name
 
 			# Overwrite internal properties
 			new_client._accessed_at = accessed_at

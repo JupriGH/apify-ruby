@@ -332,7 +332,7 @@ module Apify
 		end
 	
 		def self._create_from_directory storage_directory, memory_storage_client, id, name=nil		
-			created_at = accessed_at = modified_at = Time.now
+			created_at = accessed_at = modified_at = Time.now.utc
 			handled_request_count = 0
 			pending_request_count = 0
 			
