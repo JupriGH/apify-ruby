@@ -399,7 +399,7 @@ module Apify
 		"""Remove the dataset either from the Apify cloud storage or from the local directory."""
 		def drop
 			@_dataset_client.delete
-			#_remove_from_cache
+			_remove_from_cache
 		end
 
 		"""Open a dataset.

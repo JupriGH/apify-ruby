@@ -1,6 +1,6 @@
 module Apify
 
-module MemoryStorage
+	module MemoryStorage
 
 	"""Base class for resource clients."""
 	class BaseResourceClient
@@ -51,6 +51,8 @@ module MemoryStorage
 			@_modified_at = now if has_been_modified
 				
 			store_info = _to_resource_info
+			['createdAt', 'accessedAt', 'modifiedAt'].each {|x| store_info[x] = store_info[x].utc.iso8601 if store_info[x]}
+
 			Utils::_update_metadata(
 				data: store_info,
 				entity_directory: @_resource_directory,
@@ -130,5 +132,5 @@ module MemoryStorage
 		end
 	end
 
-end
+	end
 end

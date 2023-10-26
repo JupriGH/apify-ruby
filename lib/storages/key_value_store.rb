@@ -136,7 +136,7 @@ module Apify
 		"""Remove the key-value store either from the Apify cloud storage or from the local directory."""
 		def drop
 			@_key_value_store_client.delete
-			#_remove_from_cache
+			_remove_from_cache
 		end
 
 		"""Open a key-value store.

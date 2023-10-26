@@ -83,21 +83,17 @@ module Apify
 		end
 =end
 		"""Delete the dataset."""
-=begin
 		def delete
-			dataset = next((dataset for dataset in self._memory_storage_client._datasets_handled if dataset._id == self._id), None)
-			return unless dataset
+			store = @_memory_storage_client._pop_client self.class, id: @_id
+			return unless store
 
 			# async with dataset._file_operation_lock:
+				store._item_count = 0
+				store._dataset_entries.clear
 
-				self._memory_storage_client._datasets_handled.remove(dataset)
-				dataset._item_count = 0
-				dataset._dataset_entries.clear()
-
-				if os.path.exists(dataset._resource_directory):
-					await aioshutil.rmtree(dataset._resource_directory)
+				FileUtils.rm_rf store._resource_directory
 		end
-=end
+
 		"""List the items of the dataset.
 
 		Args:

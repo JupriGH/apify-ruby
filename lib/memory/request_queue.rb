@@ -70,19 +70,14 @@ module Apify
 
 		"""Delete the request queue."""
 		def delete
-			#queue = next((queue for queue in self._memory_storage_client._request_queues_handled if queue._id == self._id), None)
-			
-			store =  @_memory_storage_client._pop_client self.class, id: @_id
+			store = @_memory_storage_client._pop_client self.class, id: @_id
 			return unless store
 			
 			# async with store._file_operation_lock:
-				#self._memory_storage_client._request_queues_handled.remove(queue)
 				store._pending_request_count = 0
 				store._handled_request_count = 0
 				store._requests.clear
 
-				#if os.path.exists(store._resource_directory):
-				#	await aioshutil.rmtree(store._resource_directory)
 				FileUtils.rm_rf store._resource_directory
 		end
 		

@@ -84,18 +84,12 @@ module Apify
 		"""Delete the key-value store."""
 		def delete
 			store = @_memory_storage_client._pop_client self.class, id: @_id
-			#store = next((store for store in self._memory_storage_client._key_value_stores_handled if store._id == self._id), None)
+			return unless store
 
-			if store
-				#async with store._file_operation_lock:
-					#self._memory_storage_client._key_value_stores_handled.remove(store)
-					store._records.clear
+			#async with store._file_operation_lock:
+				store._records.clear
 
-					if File.directory?(store._resource_directory)
-					#	await aioshutil.rmtree(store._resource_directory)
-						Log.fatal("TODO: FileUtils.rm_rf #{store._resource_directory}")
-					end
-			end
+				FileUtils.rm_rf store._resource_directory
 		end
 			
 		"""List the keys in the key-value store.
