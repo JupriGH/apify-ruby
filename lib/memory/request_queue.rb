@@ -1,19 +1,3 @@
-=begin
-import aioshutil
-from sortedcollections import ValueSortedDict  # type: ignore
-
-from apify_shared.utils import filter_out_none_values_recursively, ignore_docs, json_dumps
-
-from ..._crypto import _crypto_random_object_id
-from ..._utils import _force_rename, _raise_on_duplicate_storage, _raise_on_non_existing_storage, _unique_key_to_request_id
-from ...consts import _StorageTypes
-from ..file_storage_utils import _delete_request, _update_metadata, _update_request_queue_item
-from .base_resource_client import BaseResourceClient
-
-if TYPE_CHECKING:
-    from ..memory_storage_client import MemoryStorageClient
-=end
-
 module Apify
 
 	module MemoryStorage
@@ -84,7 +68,6 @@ module Apify
 				return existing_queue_by_id._to_resource_info()
 =end
 
-
 		"""Delete the request queue."""
 		def delete
 			#queue = next((queue for queue in self._memory_storage_client._request_queues_handled if queue._id == self._id), None)
@@ -100,8 +83,7 @@ module Apify
 
 				#if os.path.exists(store._resource_directory):
 				#	await aioshutil.rmtree(store._resource_directory)
-				Log.fatal("TODO: FileUtils.rm_rf #{store._resource_directory}")
-			 
+				FileUtils.rm_rf store._resource_directory
 		end
 		
 		"""Retrieve a given number of requests from the beginning of the queue.
