@@ -16,8 +16,6 @@ just_fix_windows_console()
 require 'logger'
 require 'colorize'
 
-
-
 =begin
 	_LOG_NAME_COLOR = Fore.LIGHTBLACK_EX
 =end
@@ -68,14 +66,11 @@ end
 
 module Apify
 
-
-
 	# Name of the logger used throughout the library (resolves to 'apify')
 	# logger_name = __name__.split('.')[0]
 
 	# Logger used throughout the library
 	# logger = logging.getLogger(logger_name)
-
 
 
 	"""Log formatter that prints out the log message nicely formatted, with colored level and stringified extra fields.
@@ -176,7 +171,8 @@ module Apify
 		#end
 	end
 	
-	Log = LoggerExtra.new STDOUT, progname: 'apify'
-	Log.formatter = ActorLogFormatter.new
-	
+	Log = LoggerExtra.new STDOUT, progname: 'apify', level: Logger::UNKNOWN
+
+	#Log.level = Logger::DEBUG
+	#Log.formatter= ActorLogFormatter.new
 end
