@@ -40,7 +40,7 @@ Inspired by [Apify Python SDK](https://docs.apify.com/sdk/python/)
 ```ruby
 logger = Apify::Log
 
-# level: INFO | WARN | ERROR | FATAL | UNKNOWN
+# level: DEBUG=0 | INFO=1 | WARN=2 | ERROR=3 | FATAL=4 | UNKNOWN=5
 logger.level = Logger::DEBUG 
 
 # Formatter

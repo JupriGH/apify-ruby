@@ -1,18 +1,3 @@
-=begin
-import json
-import logging
-import textwrap
-import traceback
-from typing import Any, Dict
-
-from colorama import Fore, Style, just_fix_windows_console
-
-from apify_shared.utils import ignore_docs
-
-just_fix_windows_console()
-
-=end
-
 require 'logger'
 require 'colorize'
 
@@ -39,7 +24,6 @@ LOG_LEVEL_SHORT_ALIAS = {
 =begin
 	# So that all the log messages have the same alignment
 	_LOG_MESSAGE_INDENT = ' ' * 6
-
 =end
 
 ### process extra info's
@@ -49,12 +33,15 @@ class LoggerExtra < Logger
 			msg << "(#{extra.to_json})".light_black
 		end
 		if exc_info
+			#p exc_info.backtrace
+			
 			#p "TODO: Log Traceback"
 			#p exc_info
-			msg << "\n" << exc_info.message
-			msg << "\n" << exc_info.backtrace.join("\n\t")
+			msg << exc_info.message.red
+			#msg << "\n" << exc_info.backtrace.join("\n\t")
+			msg.push *exc_info.backtrace.map {|x| x.light_black}
 		end
-		msg.join " "
+		msg.join "\n#{" "*4}| "
 	end
 	
 	def info(*args, **kwargs) = super(__extra(*args, **kwargs))
@@ -71,7 +58,10 @@ module Apify
 
 	# Logger used throughout the library
 	# logger = logging.getLogger(logger_name)
+	Log = LoggerExtra.new STDOUT, progname: 'apify', level: Logger::UNKNOWN
 
+	#Log.level = Logger::DEBUG
+	#Log.formatter= ActorLogFormatter.new
 
 	"""Log formatter that prints out the log message nicely formatted, with colored level and stringified extra fields.
 
@@ -90,16 +80,17 @@ module Apify
 		# with properties present in an empty log record,
 		# and extract all the extra ones not present in the empty log record
 		empty_record = logging.LogRecord('dummy', 0, 'dummy', 0, 'dummy', None, None)
+=end
+		"""Create an instance of the ActorLogFormatter.
 
-		def __init__(self, include_logger_name: bool = False, *args: tuple, **kwargs: dict) -> None:
-			"""Create an instance of the ActorLogFormatter.
-
-			Args:
-				include_logger_name: Include logger name at the beginning of the log line. Defaults to False.
-			"""
-			super().__init__(*args, **kwargs)  # type: ignore
-			self.include_logger_name = include_logger_name
-
+		Args:
+			include_logger_name: Include logger name at the beginning of the log line. Defaults to False.
+		"""
+		def initialize *args, include_logger_name: nil, **kwargs
+			super *args, **kwargs
+			@include_logger_name = include_logger_name
+		end
+=begin
 		def _get_extra_fields(self, record: logging.LogRecord) -> Dict[str, Any]:
 			extra_fields: Dict[str, Any] = {}
 			for key, value in record.__dict__.items():
@@ -127,9 +118,7 @@ module Apify
 			level_short_alias = _LOG_LEVEL_SHORT_ALIAS.get(record.levelno, record.levelname)
 			level_string = f'{level_color_code}{level_short_alias}{Style.RESET_ALL} '
 			"""
-
 			level_string = (LOG_LEVEL_SHORT_ALIAS[severity]||severity).colorize(LOG_LEVEL_COLOR[severity])
-			
 			# Format the exception, if there is some
 			# Basically just print the traceback and indent it a bit
 			
@@ -165,14 +154,5 @@ module Apify
 			
 			[level_string, log_string, extra_string, exception_string, "\n"].join
 		end
-		
-		#def format_datetime time
-		#	"FORMAT"
-		#end
 	end
-	
-	Log = LoggerExtra.new STDOUT, progname: 'apify', level: Logger::UNKNOWN
-
-	#Log.level = Logger::DEBUG
-	#Log.formatter= ActorLogFormatter.new
 end
