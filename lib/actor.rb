@@ -194,7 +194,7 @@ module Apify
 			_get_default_instance.exit_ exit_code,  status_message: status_message, event_listeners_timeout_secs: event_listeners_timeout_secs
 		end
 
-		def exit_ exit_code = 0, status_message: nil, event_listeners_timeout_secs: EVENT_LISTENERS_TIMEOUT_SECS
+		def exit_ exit_code=0, status_message: nil, event_listeners_timeout_secs: EVENT_LISTENERS_TIMEOUT_SECS
 			_raise_if_not_initialized
 
 			@_is_exiting = true
@@ -228,9 +228,9 @@ module Apify
 				Log.debug "Not calling sys.exit(#{exit_code}) because actor is running in IRB"
 			elsif nil # os.getenv('PYTEST_CURRENT_TEST', False):
 				#self.log.debug(f'Not calling sys.exit({exit_code}) because actor is running in an unit test')
-			#elsif Async::Task.current? && Async::Task.current.parent 
+			elsif Async::Task.current? # && Async::Task.current.parent 
 			#	#nil # hasattr(asyncio, '_nest_patched'):
-			#	Log.debug "Not calling sys.exit(#{exit_code}) because actor is running in a nested event loop"
+				Log.debug "Not calling sys.exit(#{exit_code}) because actor is running in a nested event loop"
 			else
 				exit exit_code
 			end
@@ -288,31 +288,39 @@ module Apify
 		end
 
 		def main main_actor_function
-			
+						
 			raise "First argument passed to Actor.main() must be a function, but instead it was #{main_actor_function.class.name}" unless 
-				[Method, Proc].include?( main_actor_function.class)
+				[Method, Proc].include?(main_actor_function.class)
+
 			
-			Async do |task|
+			#Async do |task|
 
 				init
-
+			
 				begin
-					res = main_actor_function.call(self)
+					if main_actor_function.arity >= 1
+					
+						res = main_actor_function.call(self)
+					else
+						res = main_actor_function.call
+					end
 					
 					#if inspect.iscoroutinefunction(main_actor_function):
 					#	res = await main_actor_function()
 					#else:
 					#	res = main_actor_function()
 
-				rescue Exception => e
-					fail_ ActorExitCodes::ERROR_USER_FUNCTION_THREW, exception: e
-					yield res
+				rescue Exception => exc
+					fail_ ActorExitCodes::ERROR_USER_FUNCTION_THREW, exception: exc
+					return
 				end
 				
-				exit_
-				#yield res
+				exit_ (res.nil? ? 0 : res.is_a?(Integer) ? res : 0)
+				
+				return res
 				#return cast(MainReturnType, res)
-			end
+			
+			#end
 		
 		end
 
@@ -1008,7 +1016,7 @@ module Apify
 		)
 			_raise_if_not_initialized
 
-			if (actor_proxy_input.class == Hash) && (actor_proxy_input.length > 0)
+			if (actor_proxy_input.class == Hash) && actor_proxy_input.any?
 				if actor_proxy_input['useApifyProxy'] # bool
 					country_code 	||= actor_proxy_input['apifyProxyCountry']
 					groups 			||= actor_proxy_input['apifyProxyGroups']

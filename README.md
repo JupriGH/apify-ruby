@@ -39,38 +39,44 @@ Inspired by [Apify Python SDK](https://docs.apify.com/sdk/python/)
 
 ```ruby
 # SYNC Mode
-# 1 - manually init and exit_/fail_
-# 2 - won't be able to receive platform events (aborting, migration, etc.)
-actor = Apify::Actor
-actor.init
-actor.exit_ 0
+# won't be able to receive platform events (aborting, migration, etc.)
+# for testing on local development (eg: IRB)
+Apify::Actor.main(<callable>)
 
 # ASYNC Mode
-# 1 - automatic init and exit_/fail_
-# 2 - use on apify platform to receive platform events
-Apify::Actor.main( <callable> ).wait
+# use on apify platform to receive platform events
+Async do
+	Apify::Actor.main(<callable>)
+end
 ```
 
 ***Example #1***
 
 ```ruby
-Apify::Actor.main( proc { |actor| 
+Apify::Actor.main( lambda { |actor|
 	input = actor.get_input
-	# ... scraping codes ...
-}).wait
+	0 # optional exit code
+})
 ```
-
+or
+```ruby
+actor = Apify::Actor
+actor.main( lambda {
+	input = actor.get_input
+	0 # optional exit code
+})
+```
 
 ***Example #2***
 
 ```ruby
 def main(actor)
 	input = actor.get_input
-	# ... scraping codes ...
 end
 
-Apify::Actor.main( method(:main) ).wait
+Apify::Actor.main( method(:main) )
 ```
+
 ### Using "with" *emulator*
 
 Use `with` function to emulate **Python** `context manager`

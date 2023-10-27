@@ -109,12 +109,12 @@ module Apify
 			end
 			
 			# Validation
-			if proxy_urls and new_url_function
+			if proxy_urls && new_url_function
 				# ValueError
 				raise 'Cannot combine custom proxies in "proxy_urls" with custom generating function in "new_url_function".' 
 			end
 			
-			if (proxy_urls or new_url_function) and (groups or country_code)
+			if (proxy_urls || new_url_function) && (groups || country_code)
 				# ValueError
 				raise 	'Cannot combine custom proxies with Apify Proxy! ' \
 						'It is not allowed to set "proxy_urls" or "new_url_function" combined with ' \
@@ -127,7 +127,7 @@ module Apify
 			#                   'See https://sdk.apify.com/docs/guides/proxy-management#apify-proxy-configuration')
 			# end
 			
-			@_actor_config = _actor_config or Configuration._get_default_instance
+			@_actor_config = _actor_config || Configuration._get_default_instance
 			@_apify_client = _apify_client
 
 			@_hostname 		= @_actor_config.proxy_hostname
@@ -205,7 +205,7 @@ module Apify
 			
 			username = _get_username session_id
 
-			p "http://#{username}:#{@_password}@#{@_hostname}:#{@_port}"
+			"http://#{username}:#{@_password}@#{@_hostname}:#{@_port}"
 		end
 
 		'''Create a new ProxyInfo object.
@@ -261,7 +261,7 @@ module Apify
 		def _maybe_fetch_password
 			token = @_actor_config.token
 
-			if token and @_apify_client
+			if token && @_apify_client
 				user_info = @_apify_client.user.get
 				if user_info
 					password = user_info.dig("proxy", "password")
@@ -280,8 +280,8 @@ module Apify
 			
 			if not @_password
 				# ValueError
-				raise  	"Apify Proxy password must be provided using the \"password\" constructor argument " \
-						"or the \"#{ApifyEnvVars::PROXY_PASSWORD}\" environment variable. " \
+				raise  	"Apify Proxy password must be provided using the \"password\" constructor argument "\
+						"or the \"#{ApifyEnvVars::PROXY_PASSWORD}\" environment variable. "\
 						"If you add the \"#{ApifyEnvVars::TOKEN}\" environment variable, the password will be automatically inferred."
 			end
 		end
@@ -325,9 +325,8 @@ module Apify
 				raise status['connectionError'] if !status['connected']
 				@is_man_in_the_middle = status['isManInTheMiddle']
 			else 
-				Log.warn \
-					"Apify Proxy access check timed out. Watch out for errors with status code 407. " \
-					"If you see some, it most likely means you don't have access to either all or some of the proxies you're trying to use."
+				Log.warn	"Apify Proxy access check timed out. Watch out for errors with status code 407. " \
+							"If you see some, it most likely means you don't have access to either all or some of the proxies you're trying to use."
 			end
 		end
 		

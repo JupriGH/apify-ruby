@@ -8,9 +8,12 @@ from apify_shared.utils import json_dumps
 from .._utils import _force_remove
 =end
 
+require 'fileutils'
+
 module Apify
 
-	module MemoryStorage::Utils ### FileUtils
+	### FileUtils
+	module MemoryStorage::Utils 
 
 		def self._update_metadata data:, entity_directory:, write_metadata: nil
 			# Skip writing the actual metadata file. This is done after ensuring the directory exists so we have the directory present
