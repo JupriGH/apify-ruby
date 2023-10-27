@@ -37,9 +37,9 @@ class LoggerExtra < Logger
 			
 			#p "TODO: Log Traceback"
 			#p exc_info
-			msg << exc_info.message.red
+			msg << "#{exc_info.message} (#{exc_info.class.name.underline})".red 
 			#msg << "\n" << exc_info.backtrace.join("\n\t")
-			msg.push *exc_info.backtrace.map {|x| x.light_black}
+			msg.push *exc_info.backtrace.map {|x| x.light_black.italic}
 		end
 		msg.join "\n#{" "*4}| "
 	end

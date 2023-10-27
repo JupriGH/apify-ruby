@@ -316,7 +316,6 @@ module Apify
 				end
 				
 				exit_ (res.nil? ? 0 : res.is_a?(Integer) ? res : 0)
-				
 				return res
 				#return cast(MainReturnType, res)
 			

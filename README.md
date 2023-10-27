@@ -7,6 +7,15 @@
 <img src="https://upload.wikimedia.org/wikipedia/commons/7/73/Ruby_logo.svg" width="80" height="80">
 
 
+
+# Apify Ruby SDK Unofficial
+
+![dont be sad readme is here](https://raw.githubusercontent.com/JupriGH/resources/main/cats/catframe.png)
+
+<img src="https://upload.wikimedia.org/wikipedia/commons/2/28/Apify-logo.svg" width="280">
+<img src="https://upload.wikimedia.org/wikipedia/commons/7/73/Ruby_logo.svg" width="80" height="80">
+
+
 ## About  Ruby (programming language)
 
 **Ruby** is an [interpreted](https://en.wikipedia.org/wiki/Interpreted_language "Interpreted language"), [high-level](https://en.wikipedia.org/wiki/High-level_programming_language "High-level programming language"), [general-purpose programming language](https://en.wikipedia.org/wiki/General-purpose_programming_language "General-purpose programming language") which supports multiple [programming paradigms](https://en.wikipedia.org/wiki/Programming_paradigm "Programming paradigm"). It was designed with an emphasis on programming productivity and simplicity. In Ruby, everything is an object, including [primitive data types](https://en.wikipedia.org/wiki/Primitive_data_type "Primitive data type"). It was developed in the mid-1990s by [Yukihiro "Matz" Matsumoto](https://en.wikipedia.org/wiki/Yukihiro_Matsumoto "Yukihiro Matsumoto") in [Japan](https://en.wikipedia.org/wiki/Japan "Japan").
@@ -35,12 +44,22 @@ Inspired by [Apify Python SDK](https://docs.apify.com/sdk/python/)
 
 - Some method is conflicting with Ruby internal method such as: `.initialize`, `.exit`, `.fail`, etc. Renamed to:  `.initialize_`, `.exit_`, `.fail_` etc.
 
+## Installation
+
+```bash
+git clone https://github.com/JupriGH/apify-ruby-sdk.git
+```
+```ruby
+# import inside script
+require_relative './apify-ruby-sdk/lib/apify_sdk'
+```
+
 ## Enable Logging
 
 ```ruby
 logger = Apify::Log
 
-# level: DEBUG=0 | INFO=1 | WARN=2 | ERROR=3 | FATAL=4 | UNKNOWN=5
+# level: INFO | WARN | ERROR | FATAL | UNKNOWN
 logger.level = Logger::DEBUG 
 
 # Formatter
