@@ -35,6 +35,18 @@ Inspired by [Apify Python SDK](https://docs.apify.com/sdk/python/)
 
 - Some method is conflicting with Ruby internal method such as: `.initialize`, `.exit`, `.fail`, etc. Renamed to:  `.initialize_`, `.exit_`, `.fail_` etc.
 
+## Enable Logging
+
+```ruby
+logger = Apify::Log
+
+# level: INFO | WARN | ERROR | FATAL | UNKNOWN
+logger.level = Logger::DEBUG 
+
+# Formatter
+logger.formatter = Apify::ActorLogFormatter.new
+```
+
 ## Basic Usage
 
 ```ruby
