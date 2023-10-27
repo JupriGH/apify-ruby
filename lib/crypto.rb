@@ -1,22 +1,17 @@
 require 'openssl'
 require 'base64'
-require 'securerandom' # Python secrets.choice
-
-=begin
-from cryptography.exceptions import InvalidTag as InvalidTagException
-from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.asymmetric import padding, rsa
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-=end
-
-ENCRYPTION_KEY_LENGTH = 32
-ENCRYPTION_IV_LENGTH = 16
-ENCRYPTION_AUTH_TAG_LENGTH = 16
+#require 'securerandom' # Python secrets.choice
 
 module Apify
 
 	class Crypto
-	
+
+		ENCRYPTION_KEY_LENGTH = 32
+		ENCRYPTION_IV_LENGTH = 16
+		ENCRYPTION_AUTH_TAG_LENGTH = 16
+
+		SECURE_CHARS = [*'a'..'z', *'A'..'Z', *'0'..'9']
+		
 		"""Encrypts the given value using AES cipher and the password for encryption using the public key.
 
 		The encryption password is a string of encryption key and initial vector used for cipher.
@@ -29,33 +24,30 @@ module Apify
 		Returns:
 			disc: Encrypted password and value.
 		"""
-=begin
-	@ignore_docs
-	def public_encrypt(value: str, *, public_key: rsa.RSAPublicKey) -> dict:
+		def self.public_encrypt value, public_key
+			encryption_key = _crypto_random_object_id ENCRYPTION_KEY_LENGTH
+			initialized_vector = _crypto_random_object_id ENCRYPTION_IV_LENGTH
 
-		key_bytes = _crypto_random_object_id(ENCRYPTION_KEY_LENGTH).encode('utf-8')
-		initialized_vector_bytes = _crypto_random_object_id(ENCRYPTION_IV_LENGTH).encode('utf-8')
-		value_bytes = value.encode('utf-8')
+			password_bytes = encryption_key + initialized_vector
 
-		password_bytes = key_bytes + initialized_vector_bytes
+			# NOTE: Auth Tag is appended to the end of the encrypted data, it has length of 16 bytes and ensures integrity of the data.
 
-		# NOTE: Auth Tag is appended to the end of the encrypted data, it has length of 16 bytes and ensures integrity of the data.
-		cipher = Cipher(algorithms.AES(key_bytes), modes.GCM(initialized_vector_bytes, min_tag_length=ENCRYPTION_AUTH_TAG_LENGTH))
-		encryptor = cipher.encryptor()
-		encrypted_value_bytes = encryptor.update(value_bytes) + encryptor.finalize()
-		encrypted_password_bytes = public_key.encrypt(
-			password_bytes,
-			padding.OAEP(
-				mgf=padding.MGF1(algorithm=hashes.SHA1()),
-				algorithm=hashes.SHA1(),
-				label=None,
-			),
-		)
-		return {
-			'encrypted_value': base64.b64encode(encrypted_value_bytes + encryptor.tag).decode('utf-8'),
-			'encrypted_password': base64.b64encode(encrypted_password_bytes).decode('utf-8'),
-		}
-=end
+			cipher = OpenSSL::Cipher.new('aes-256-gcm')
+			cipher.encrypt
+			cipher.key = encryption_key
+			cipher.iv_len = ENCRYPTION_IV_LENGTH # 16
+			cipher.iv = initialized_vector
+			
+			encrypted_value = cipher.update(value) + cipher.final
+			encrypted_password = public_key.public_encrypt(password_bytes, OpenSSL::PKey::RSA::PKCS1_OAEP_PADDING)
+			
+			# Base64 encode NOTE:
+			# https://stackoverflow.com/questions/2620975/strange-n-in-base64-encoded-string-in-ruby
+			return {
+				encrypted_value: Base64.strict_encode64(encrypted_value + cipher.auth_tag),
+				encrypted_password: Base64.strict_encode64(encrypted_password),
+			}
+		end
 
 		"""Decrypts the given encrypted value using the private key and password.
 
@@ -66,46 +58,40 @@ module Apify
 
 		Returns:
 			str: Decrypted value.
-		"""
+		"""		
 		def self.private_decrypt encrypted_password, encrypted_value, private_key
-			encrypted_password 	= Base64.decode64(encrypted_password) # .encode('utf-8')
-			encrypted_value		= Base64.decode64(encrypted_value) # .encode('utf-8')
+			encrypted_password 	= Base64.decode64(encrypted_password)
+			encrypted_value		= Base64.decode64(encrypted_value)
 
 			# Decrypt the password
 			password = private_key.private_decrypt(encrypted_password, OpenSSL::PKey::RSA::PKCS1_OAEP_PADDING)
 
-			raise 'Decryption failed, invalid password length!' if password.length != (ENCRYPTION_KEY_LENGTH + ENCRYPTION_IV_LENGTH) # ValueError
+			raise 'Decryption failed, invalid password length!' unless # ValueError
+				password.length == (ENCRYPTION_KEY_LENGTH + ENCRYPTION_IV_LENGTH) 
 			
 			# Slice the encrypted into cypher and authentication tag
-			authentication_tag		= encrypted_value[-ENCRYPTION_AUTH_TAG_LENGTH ..]
+			authentication_tag 		= encrypted_value[-ENCRYPTION_AUTH_TAG_LENGTH ..]
 			encrypted_data 			= encrypted_value[.. -ENCRYPTION_AUTH_TAG_LENGTH-1]
 			encryption_key 			= password[0, ENCRYPTION_KEY_LENGTH]
 			initialization_vector 	= password[ENCRYPTION_KEY_LENGTH ..]
-
-			#try:
-				#cipher = Cipher(algorithms.AES(encryption_key_bytes), modes.GCM(initialization_vector_bytes, authentication_tag_bytes))
-				#decryptor = cipher.decryptor()
-				#decipher_bytes = decryptor.update(encrypted_data_bytes) + decryptor.finalize()
-
-				cipher = OpenSSL::Cipher.new("aes-256-gcm")
+			
+			begin
+				cipher = OpenSSL::Cipher.new('aes-256-gcm')
 				cipher.decrypt
-				cipher.key 			= encryption_key
-				cipher.iv_len		= ENCRYPTION_IV_LENGTH # 16
-				cipher.iv 			= initialization_vector
-				cipher.auth_tag 	= authentication_tag
+				cipher.key  	= encryption_key
+				cipher.iv_len	= ENCRYPTION_IV_LENGTH # 16
+				cipher.iv   	= initialization_vector
+				cipher.auth_tag	= authentication_tag
 
 				# Perform decryption
 				decipher_bytes = cipher.update(encrypted_data) + cipher.final
-				
-				# .decode('utf-8')
+
 				return decipher_bytes
 
-			#except InvalidTagException:
-			#    raise ValueError('Decryption failed, malformed encrypted value or password.')
-			#except Exception as err:
-			#    raise err
+			rescue OpenSSL::Cipher::CipherError => exc # InvalidTagException:
 
-			# return decipher_bytes.decode('utf-8')
+			    raise 'Decryption failed, malformed encrypted value or password.' # ValueError
+			end
 		end
 
 		def self._load_private_key private_key_file_base64, private_key_password # rsa.RSAPrivateKey    
@@ -113,23 +99,22 @@ module Apify
 				Base64.urlsafe_decode64( private_key_file_base64 ), 
 				private_key_password
 			)
-			# if not isinstance(private_key, rsa.RSAPrivateKey):
-			#    raise ValueError('Invalid private key.')
+		rescue OpenSSL::PKey::RSAError
+			raise 'Invalid public key.' # ValueError
 		end
 
-=begin
-		def _load_public_key(public_key_file_base64: str) -> rsa.RSAPublicKey:
-			public_key = serialization.load_pem_public_key(base64.b64decode(public_key_file_base64.encode('utf-8')))
-			if not isinstance(public_key, rsa.RSAPublicKey):
-				raise ValueError('Invalid public key.')
-
-			return public_key
+		def self._load_public_key public_key_file_base64 # rsa.RSAPrivateKey 
+			OpenSSL::PKey::RSA.new(
+				Base64.urlsafe_decode64( public_key_file_base64 ), 
+			)
+		rescue OpenSSL::PKey::RSAError
+			raise 'Invalid public key.' # ValueError
 		end
-=end
 
 		"""Python reimplementation of cryptoRandomObjectId from `@apify/utilities`."""
 		def self._crypto_random_object_id length=17
-			SecureRandom.send(:choose, [*'a'..'z', *'A'..'Z', *'0'..'9'], length)
+			# SecureRandom.send(:choose, SECURE_CHARS, length)
+			length.times.map { SECURE_CHARS[OpenSSL::Random.random_bytes(1).unpack1('C') % SECURE_CHARS.length] }.join
 		end
 
 		"""Decrypt input secrets."""
