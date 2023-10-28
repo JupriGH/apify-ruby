@@ -4,7 +4,7 @@ module Apify
 	class DatasetClient < ResourceClient
 
 		"""Initialize the DatasetClient."""		
-		def initialize(**kwargs) = super(resource_path: 'datasets', **kwargs) 
+		def initialize(**kwargs) = super resource_path: 'datasets', **kwargs
 
 		"""Retrieve the dataset.
 
@@ -79,7 +79,7 @@ module Apify
 				view: view
 			)
 
-			res = @http_client.call url: _url('items'), method: 'GET', params: request_params
+			res = _http_get 'items', params: request_params
 			
 			response = res[:response]
 			data = res[:parsed]
@@ -339,8 +339,9 @@ module Apify
 				flatten: 		flatten
 			)
 
-			res = @http_client.call url: _url('items'), method: 'GET', params: request_params, parse_response: false		
-			res[:response].body
+			#res = @http_client.call url: _url('items'), method: 'GET', params: request_params, parse_response: false	
+			res = _http_get 'items', params: request_params, parse_response: false
+			res&.dig(:response).body
 		end
 
 		"""Retrieve the items in the dataset as a stream.
@@ -381,8 +382,7 @@ module Apify
 
 		Returns:
 			httpx.Response: The dataset items as a context-managed streaming Response
-		"""		
-
+		"""	
 		def stream_items(
 			item_format = 'json',
 			offset: nil,
@@ -431,23 +431,16 @@ module Apify
 			items: The items which to push in the dataset. Either a stringified JSON, a dictionary, or a list of strings or dictionaries.
 		"""
 		def push_items items			
-			data = nil
-			json = nil
+			data = json = nil
 
 			if items.class == String
 				data = items
 			else # Hash/dict
 				json = items
 			end
-			
-			@http_client.call(
-				url: _url('items'),
-				method: 'POST',
-				headers: {'content-type': 'application/json; charset=utf-8'},
-				params: _params,
-				data: data,
-				json: json
-			)[:parsed]
+
+			res = _http_post 'items', headers: {'content-type': 'application/json; charset=utf-8'}, params: _params, data: data, json: json
+			res&.dig(:parsed)
 		end
 		
 	end
@@ -458,7 +451,7 @@ module Apify
 	class DatasetCollectionClient < ResourceCollectionClient
 
 		"""Initialize the DatasetCollectionClient with the passed arguments."""
-		def initialize(**kwargs) = super(resource_path: 'datasets', **kwargs)
+		def initialize(**kwargs) = super resource_path: 'datasets', **kwargs
 
 		"""List the available datasets.
 

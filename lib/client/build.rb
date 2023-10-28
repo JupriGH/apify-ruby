@@ -4,7 +4,7 @@ module Apify
 	class BuildClient < ActorJobBaseClient
 
 		"""Initialize the BuildClient."""
-		def initialize(**kwargs) = super(resource_path: 'actor-builds', **kwargs)
+		def initialize(**kwargs) = super resource_path: 'actor-builds', **kwargs
 
 		"""Return information about the actor build.
 
@@ -40,7 +40,7 @@ module Apify
 			dict, optional: The actor build data. If the status on the object is not one of the terminal statuses
 				(SUCEEDED, FAILED, TIMED_OUT, ABORTED), then the build has not yet finished.
 		"""
-		def wait_for_finish(wait_secs=nil) = _wait_for_finish(wait_secs=wait_secs)
+		def wait_for_finish(wait_secs=nil) = _wait_for_finish wait_secs
 	end
 
 	### BuildCollectionClient
@@ -49,7 +49,7 @@ module Apify
 	class BuildCollectionClient < ResourceCollectionClient
 
 		"""Initialize the BuildCollectionClient."""
-		def initialize(**kwargs) = super(resource_path: 'actor-builds', **kwargs)
+		def initialize(**kwargs) = super resource_path: 'actor-builds', **kwargs
 
 		"""List all actor builds (either of a single actor, or all user's actors, depending on where this client was initialized from).
 
@@ -64,9 +64,7 @@ module Apify
 		Returns:
 			ListPage: The retrieved actor builds
 		"""	
-		def list limit: nil, offset: nil, desc: nil
-			_list limit: limit, offset: offset, desc: desc
-		end
+		def list(limit: nil, offset: nil, desc: nil) = _list limit: limit, offset: offset, desc: desc
 	end
 
 end

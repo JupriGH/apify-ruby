@@ -33,6 +33,8 @@ module Apify
 		end
 		
 		def _get_or_create name:, resource: nil
+			#raise "### _get_or_create name #{name}"
+		
 			_http_post params: _params(name: name), json: resource, filter_null: true, pluck_data: true # parse_date
 		end
 	end

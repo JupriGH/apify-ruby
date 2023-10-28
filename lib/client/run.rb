@@ -4,7 +4,7 @@ module Apify
 	class RunClient < ActorJobBaseClient
 
 		"""Initialize the RunClient."""
-		def initialize(**kwargs) = super(resource_path: 'actor-runs', **kwargs)
+		def initialize(**kwargs) = super resource_path: 'actor-runs', **kwargs
 
 		"""Return information about the actor run.
 
@@ -48,7 +48,7 @@ module Apify
 		Returns:
 			dict: The data of the aborted actor run
 		"""		
-		def abort(gracefully=false) = _abort(gracefully)
+		def abort(gracefully=false) = _abort gracefully
 
 		"""Wait synchronously until the run finishes or the server times out.
 
@@ -59,7 +59,7 @@ module Apify
 			dict, optional: The actor run data. If the status on the object is not one of the terminal statuses
 				(SUCEEDED, FAILED, TIMED_OUT, ABORTED), then the run has not yet finished.
 		"""		
-		def wait_for_finish(wait_secs=nil) = _wait_for_finish(wait_secs)
+		def wait_for_finish(wait_secs=nil) = _wait_for_finish wait_secs
 
 		"""Transform an actor run into a run of another actor with a new input.
 
@@ -186,7 +186,7 @@ module Apify
 	class RunCollectionClient < ResourceCollectionClient
 
 		"""Initialize the RunCollectionClient."""
-		def initialize(**kwargs) = super(resource_path: 'actor-runs', **kwargs)
+		def initialize(**kwargs) = super resource_path: 'actor-runs', **kwargs
 
 		"""List all actor runs (either of a single actor, or all user's actors, depending on where this client was initialized from).
 

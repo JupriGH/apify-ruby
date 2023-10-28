@@ -33,7 +33,8 @@ end
 
 module Apify
 	Log = LoggerExtra.new STDOUT, progname: 'apify', level: Logger::WARN # Logger::UNKNOWN
-	#Log.level = Logger::DEBUG
+	
+	Log.level = Logger::DEBUG
 	Log.formatter= ActorLogFormatter.new	
 
 	# plug-n-play

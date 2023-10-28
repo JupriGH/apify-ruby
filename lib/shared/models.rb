@@ -17,6 +17,10 @@ module Apify
 				@desc 	= data['desc'] || false
 			end
 		end
+		
+		
+		
+		
 	end
 
 end

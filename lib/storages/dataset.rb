@@ -26,6 +26,8 @@ module Apify
 
 	class Dataset < BaseStorage
 		
+		attr :_dataset_client
+		
 		HUMAN_FRIENDLY_LABEL = StorageTypes::DATASET
 		
 		"""Create a `Dataset` instance.
@@ -48,17 +50,11 @@ module Apify
 		#    'Dataset'
 		# end
 
-		def self._get_default_id config
-			config.default_dataset_id
-		end
+		def self._get_default_id(config) = config.default_dataset_id
 
-		def self._get_single_storage_client id, client
-			client.dataset id
-		end
+		def self._get_single_storage_client(id, client) = client.dataset id
 
-		def self._get_storage_collection_client client
-			client.datasets
-		end
+		def self._get_storage_collection_client(client) = client.datasets
 
 		"""Store an object or an array of objects to the dataset.
 
@@ -70,9 +66,7 @@ module Apify
 			data (JSONSerializable): dict or array of dicts containing data to be stored in the default dataset.
 				The JSON representation of each item must be smaller than 9MB.
 		"""
-		def self.push_data data
-			open.push_data data
-		end
+		def self.push_data(data) = open.push_data data
 
 		def push_data data
 			# Handle singular items
@@ -94,22 +88,20 @@ module Apify
 			
 			data.each_with_index do |item, index|
 				item = _check_and_serialize(item: item, index: index)
+				tail = 1 + item.length # comma + item
 				
-				if (size + 1 + item.length) > EFFECTIVE_LIMIT_BYTES			
+				if (size + tail) > EFFECTIVE_LIMIT_BYTES			
 					# SEND
 					part << "]"
-					@_dataset_client.push_items(part)
+					@_dataset_client.push_items part
 					
 					# RESET
 					part, size = "[", 2
 				end
 
-				if size > 2
-					part << ","
-				end	
-				
+				part << "," if size > 2
 				part << item
-				size += 1 + item.length
+				size += tail
 			end
 			# LAST
 			if size > 2
@@ -338,9 +330,7 @@ module Apify
 		Returns:
 			dict: Object returned by calling the GET dataset API endpoint.
 		"""		
-		def get_info
-			@_dataset_client.get
-		end
+		def get_info = @_dataset_client.get
 
 		"""Iterate over the items in the dataset.
 
@@ -425,33 +415,33 @@ module Apify
 		def self.open id=nil, name: nil, force_cloud: nil, config: nil
 			_open_internal id, name: name, force_cloud: force_cloud, config: config
 		end
+		
+		### Helpers
+		
+		MAX_PAYLOAD_SIZE_BYTES = Apify::MAX_PAYLOAD_SIZE_BYTES
+		SAFETY_BUFFER_PERCENT = 0.01 / 100
+		EFFECTIVE_LIMIT_BYTES = MAX_PAYLOAD_SIZE_BYTES - (MAX_PAYLOAD_SIZE_BYTES * SAFETY_BUFFER_PERCENT).ceil
+
+		"""Accept a JSON serializable object as an input, validate its serializability and its serialized size against `EFFECTIVE_LIMIT_BYTES`."""
+		def _check_and_serialize item: nil, index: nil
+			_it = lambda {index ? " at index #{index}" : ""}
+
+			begin
+				payload = item.to_json
+			rescue Exception => e
+			    raise "Data item#{_it.call} is not serializable to JSON." # from e # ValueError
+			end
+			
+			if payload.length > EFFECTIVE_LIMIT_BYTES
+				raise "Data item#{_it.call} is too large (size: #{payload.length} bytes, limit: #{EFFECTIVE_LIMIT_BYTES} bytes)" # ValueError
+			end
+			
+			payload
+		end
 	end
 
 end
 
-
-### Helpers
-
-MAX_PAYLOAD_SIZE_BYTES = Apify::MAX_PAYLOAD_SIZE_BYTES
-SAFETY_BUFFER_PERCENT = 0.01 / 100
-EFFECTIVE_LIMIT_BYTES = MAX_PAYLOAD_SIZE_BYTES - (MAX_PAYLOAD_SIZE_BYTES * SAFETY_BUFFER_PERCENT).ceil
-
-"""Accept a JSON serializable object as an input, validate its serializability and its serialized size against `EFFECTIVE_LIMIT_BYTES`."""
-def _check_and_serialize item: nil, index: nil
-    s = index ? " at index #{index} " : " "
-
-    #try:
-        payload = item.to_json
-    #except Exception as e:
-    #    raise ValueError(f'Data item{s}is not serializable to JSON.') from e
-
-    length_bytes = payload.length # len(payload.encode('utf-8'))
-    if length_bytes > EFFECTIVE_LIMIT_BYTES
-        raise "Data item#{s}is too large (size: #{length_bytes} bytes, limit: #{EFFECTIVE_LIMIT_BYTES} bytes)" # ValueError
-	end
-	
-    return payload
-end
 
 """Take an array of JSONs, produce iterator of chunked JSON arrays respecting `EFFECTIVE_LIMIT_BYTES`.
 

@@ -168,20 +168,22 @@ module Apify
 
 			#assert cls._storage_creating_lock is not None
 			#async with cls._storage_creating_lock:
-				
+
+
 				# Create the storage
 				if id && !is_default_storage_on_local
+
 					single_storage_client 	= _get_single_storage_client id, used_client				
 					storage_info 			= single_storage_client.get 
 
 					### Utils::_raise_on_non_existing_storage(self::HUMAN_FRIENDLY_LABEL, id) if !storage_info
 					raise "#{self::HUMAN_FRIENDLY_LABEL} with id \"#{id}\" does not exist!" if !storage_info # RuntimeError
 					
-				else 
+				else 					
 					storage_collection_client = _get_storage_collection_client used_client
 					if is_default_storage_on_local
 						storage_info = storage_collection_client.get_or_create name: name, _id: id
-					else
+					else					
 						storage_info = storage_collection_client.get_or_create name: name
 					end
 				end
