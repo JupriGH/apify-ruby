@@ -1,6 +1,6 @@
 require 'openssl'
 require 'base64'
-#require 'securerandom' # Python secrets.choice
+require 'securerandom' # Python secrets.choice
 
 module Apify
 
@@ -43,7 +43,7 @@ module Apify
 			
 			# Base64 encode NOTE:
 			# https://stackoverflow.com/questions/2620975/strange-n-in-base64-encoded-string-in-ruby
-			return {
+			{
 				encrypted_value: Base64.strict_encode64(encrypted_value + cipher.auth_tag),
 				encrypted_password: Base64.strict_encode64(encrypted_password),
 			}
@@ -95,26 +95,21 @@ module Apify
 		end
 
 		def self._load_private_key private_key_file_base64, private_key_password # rsa.RSAPrivateKey    
-			OpenSSL::PKey::RSA.new(
-				Base64.urlsafe_decode64( private_key_file_base64 ), 
-				private_key_password
-			)
+			OpenSSL::PKey::RSA.new  Base64.urlsafe_decode64(private_key_file_base64),  private_key_password
 		rescue OpenSSL::PKey::RSAError
 			raise 'Invalid public key.' # ValueError
 		end
 
 		def self._load_public_key public_key_file_base64 # rsa.RSAPrivateKey 
-			OpenSSL::PKey::RSA.new(
-				Base64.urlsafe_decode64( public_key_file_base64 ), 
-			)
+			OpenSSL::PKey::RSA.new Base64.urlsafe_decode64(public_key_file_base64)
 		rescue OpenSSL::PKey::RSAError
 			raise 'Invalid public key.' # ValueError
 		end
 
 		"""Python reimplementation of cryptoRandomObjectId from `@apify/utilities`."""
 		def self._crypto_random_object_id length=17
-			# SecureRandom.send(:choose, SECURE_CHARS, length)
-			length.times.map { SECURE_CHARS[OpenSSL::Random.random_bytes(1).unpack1('C') % SECURE_CHARS.length] }.join
+			SecureRandom.send(:choose, SECURE_CHARS, length)
+			#length.times.map { SECURE_CHARS[OpenSSL::Random.random_bytes(1).unpack1('C') % SECURE_CHARS.length] }.join
 		end
 
 		"""Decrypt input secrets."""

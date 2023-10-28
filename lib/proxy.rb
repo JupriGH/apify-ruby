@@ -1,43 +1,3 @@
-# Regular expression pattern to match an IPv4 or IPv6 address
-IP_PATTERN = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$|^
-              (?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$|^
-              ::(?:[0-9a-fA-F]{1,4}:){0,6}[0-9a-fA-F]{1,4}$|^
-              (?:[0-9a-fA-F]{1,4}:){1,6}:$|^
-              (?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}$/
-
-def _is_url url
-	parsed_url 		= URI(url)
-	host 			= parsed_url.host
-	
-	has_all_parts 	= parsed_url.scheme && host && parsed_url.path
-	is_domain 		= host.include?('.')
-	is_localhost 	= host == 'localhost'
-	is_ip_address 	= IP_PATTERN.match?(host)
-
-	has_all_parts && ( is_domain || is_localhost || is_ip_address )
-end
-
-def _check value, label: nil, pattern: nil, min_length: nil, max_length: nil
-    error_str = "Value #{value}"
-	label && error_str << " of argument #{label}"
-
-    if min_length && value.length < min_length
-		raise "#{error_str} is shorter than minimum allowed length #{min_length}" # ValueError
-	end
-	
-    if max_length && value.length > max_length
-		raise "#{error_str} is longer than maximum allowed length #{max_length}" # ValueError
-	end
-	
-    if pattern && !pattern.match?(value)
-        raise "#{error_str} does not match pattern #{pattern.source}"
-	end
-end
-
-APIFY_PROXY_VALUE_REGEX = /^[\w._~]+$/
-COUNTRY_CODE_REGEX = /^[A-Z]{2}$/
-SESSION_ID_MAX_LENGTH = 50
-		
 module Apify
 
 	"""Configures a connection to a proxy server with the provided options.
@@ -51,6 +11,18 @@ module Apify
 	Your list of proxy URLs will be rotated by the configuration, if this option is provided.
 	"""
 	class ProxyConfiguration
+
+		# Regular expression pattern to match an IPv4 or IPv6 address
+		IP_PATTERN = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$|^
+					  (?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$|^
+					  ::(?:[0-9a-fA-F]{1,4}:){0,6}[0-9a-fA-F]{1,4}$|^
+					  (?:[0-9a-fA-F]{1,4}:){1,6}:$|^
+					  (?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}$/
+
+
+		APIFY_PROXY_VALUE_REGEX = /^[\w._~]+$/
+		COUNTRY_CODE_REGEX = /^[A-Z]{2}$/
+		SESSION_ID_MAX_LENGTH = 50
 
 		@is_man_in_the_middle = false
 
@@ -90,21 +62,20 @@ module Apify
 			if groups
 				raise "groups must be an array!" if groups.class != Array
 				groups.each do |group|
-					raise "group is not string" if group.class != String
+					raise "group must be a string!" if group.class != String
 					_check group, label: 'groups', pattern: APIFY_PROXY_VALUE_REGEX
 				end
 			end
 			
 			if country_code
-				raise "country_code must be a string" if country_code.class != String
+				raise "country_code must be a string!" if country_code.class != String
 				_check country_code, label: 'country_code', pattern: COUNTRY_CODE_REGEX
 			end
 			
 			if proxy_urls
-				raise "proxy_urls is not array" if proxy_urls.class != Array
+				raise "proxy_urls must be an array!" if proxy_urls.class != Array
 				proxy_urls.each_with_index do |url, i|
-					# ValueError
-					raise "proxy_urls[#{i}] (\"#{url}\") is not a valid URL" unless _is_url(url)
+					raise "proxy_urls[#{i}] (\"#{url}\") is not a valid URL" unless _is_url(url) # ValueError
 				end
 			end
 			
@@ -122,10 +93,10 @@ module Apify
 			end
 			
 			# mypy has a bug with narrowing types for filter (https://github.com/python/mypy/issues/12682)
-			# if proxy_urls and next(filter(lambda url: 'apify.com' in url, proxy_urls), None):  # type: ignore
-			#    Log.warning('Some Apify proxy features may work incorrectly. Please consider setting up Apify properties instead of `proxy_urls`.\n'
-			#                   'See https://sdk.apify.com/docs/guides/proxy-management#apify-proxy-configuration')
-			# end
+			if proxy_urls && proxy_urls.find {|url| url.include?('apify.com')}  # type: ignore
+			    Log.warn 'Some Apify proxy features may work incorrectly. Please consider setting up Apify properties instead of `proxy_urls`.',
+						 'See https://sdk.apify.com/docs/guides/proxy-management#apify-proxy-configuration'
+			end
 			
 			@_actor_config = _actor_config || Configuration._get_default_instance
 			@_apify_client = _apify_client
@@ -176,16 +147,15 @@ module Apify
 			end
 			
 			if @_new_url_function
-				raise 
-=begin			
-				try:
-					res = self._new_url_function(session_id)
-					if inspect.isawaitable(res):
-						res = await res
-					return str(res)
-				except Exception as e:
-					raise ValueError('The provided "new_url_function" did not return a valid URL') from e
-=end
+				raise "`new_url_function` is not a function!" unless @_new_url_function.respond_to?(:call)			
+				begin	
+					res = @_new_url_function.call session_id
+					#if inspect.isawaitable(res):
+					#	res = await res
+					return res.to_s
+				rescue Exception => exc
+					raise 'The provided "new_url_function" did not return a valid URL' # ValueError
+				end
 			end
 			
 			if @_proxy_urls
@@ -325,7 +295,7 @@ module Apify
 				raise status['connectionError'] if !status['connected']
 				@is_man_in_the_middle = status['isManInTheMiddle']
 			else 
-				Log.warn	"Apify Proxy access check timed out. Watch out for errors with status code 407. " \
+				Log.warn	"Apify Proxy access check timed out. Watch out for errors with status code 407. "\
 							"If you see some, it most likely means you don't have access to either all or some of the proxies you're trying to use."
 			end
 		end
@@ -343,5 +313,37 @@ module Apify
 			
 			parts.empty? ? 'auto' : parts.join(",")
 		end
+		
+		
+		# UTILS
+		def _is_url url
+			parsed_url 		= URI(url)
+			host 			= parsed_url.host
+			
+			return unless parsed_url.scheme && host && parsed_url.path # has_all_parts
+			return true if host.include?('.') || host == 'localhost' || IP_PATTERN.match?(host) 
+		end
+
+		def _check value, label: nil, pattern: nil, min_length: nil, max_length: nil
+			error_str = "Value #{value}"
+			label && error_str << " of argument #{label}"
+
+			if min_length && value.length < min_length
+				raise "#{error_str} is shorter than minimum allowed length #{min_length}" # ValueError
+			end
+			
+			if max_length && value.length > max_length
+				raise "#{error_str} is longer than maximum allowed length #{max_length}" # ValueError
+			end
+			
+			if pattern && !pattern.match?(value)
+				raise "#{error_str} does not match pattern #{pattern.source}"
+			end
+		end	
+		
 	end
 end
+
+
+
+	

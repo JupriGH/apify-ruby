@@ -58,10 +58,6 @@ module Apify
 
 	# Logger used throughout the library
 	# logger = logging.getLogger(logger_name)
-	Log = LoggerExtra.new STDOUT, progname: 'apify', level: Logger::UNKNOWN
-
-	#Log.level = Logger::DEBUG
-	#Log.formatter= ActorLogFormatter.new
 
 	"""Log formatter that prints out the log message nicely formatted, with colored level and stringified extra fields.
 
@@ -155,4 +151,5 @@ module Apify
 			[level_string, log_string, extra_string, exception_string, "\n"].join
 		end
 	end
+
 end
