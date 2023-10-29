@@ -144,14 +144,15 @@ module Apify
 		def _get_system_info
 			cpu_usage_percent 	= Utils::_get_cpu_usage_percent
 			memory_usage_bytes 	= Utils::_get_memory_usage_bytes
+			
 			# This is in camel case to be compatible with the events from the platform
 			result = {
-				'createdAt'			=> Time.now.utc, # datetime.now(timezone.utc),
-				'cpuCurrentUsage' 	=> cpu_usage_percent,
-				'memCurrentBytes'	=> memory_usage_bytes,
+				'createdAt' => Time.now.utc,
+				'cpuCurrentUsage' => cpu_usage_percent,
+				'memCurrentBytes' => memory_usage_bytes,
 			}
 			if @config.max_used_cpu_ratio
-				result['isCpuOverloaded'] = (cpu_usage_percent > 100 * @config.max_used_cpu_ratio)
+				result['isCpuOverloaded'] = cpu_usage_percent > (100 * @config.max_used_cpu_ratio)
 			end
 			result
 		end		
@@ -171,7 +172,7 @@ module Apify
 		end
 		
 		def _cancel_event_emitting_intervals
-			[@_send_persist_state_interval_task, @_send_system_info_interval_task].each {|task| task.stop if task && !task.stopped?}
+			[@_send_persist_state_interval_task, @_send_system_info_interval_task].each {|task| task.stop if (task && !task.stopped?)}
 		end
 		
 		"""Exit the actor instance.
@@ -202,7 +203,7 @@ module Apify
 
 			# Send final persist state event
 			if !@_was_final_persist_state_emitted
-				@event_manager.emit(ActorEventTypes::PERSIST_STATE, {'isMigrating': false})
+				@event_manager.emit ActorEventTypes::PERSIST_STATE, {'isMigrating': false}
 				@_was_final_persist_state_emitted = true
 			end
 			
@@ -213,7 +214,6 @@ module Apify
 			# Sleep for a bit so that the listeners have a chance to trigger
 			#await asyncio.sleep(0.1)
 			
-			
 			@event_manager.close event_listeners_timeout_secs: event_listeners_timeout_secs if
 				Async::Task::current?
 			
@@ -222,9 +222,9 @@ module Apify
 			if defined?(IRB)
 				Log.debug "Not calling sys.exit(#{exit_code}) because actor is running in IRB"
 			elsif nil # os.getenv('PYTEST_CURRENT_TEST', False):
-				#self.log.debug(f'Not calling sys.exit({exit_code}) because actor is running in an unit test')
+				# self.log.debug(f'Not calling sys.exit({exit_code}) because actor is running in an unit test')
 			elsif Async::Task.current? # && Async::Task.current.parent 
-			#	#nil # hasattr(asyncio, '_nest_patched'):
+				# hasattr(asyncio, '_nest_patched'):
 				Log.debug "Not calling sys.exit(#{exit_code}) because actor is running in a nested event loop"
 			else
 				exit exit_code
