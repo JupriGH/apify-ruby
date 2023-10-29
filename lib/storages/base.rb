@@ -175,10 +175,10 @@ module Apify
 					
 				else 					
 					storage_collection_client = _get_storage_collection_client used_client
-					if is_default_storage_on_local
-						storage_info = storage_collection_client.get_or_create name: name, _id: id
+					storage_info = if is_default_storage_on_local
+						storage_collection_client.get_or_create name: name, _id: id
 					else					
-						storage_info = storage_collection_client.get_or_create name: name
+						storage_collection_client.get_or_create name: name
 					end
 				end
 											
