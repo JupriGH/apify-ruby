@@ -146,15 +146,15 @@ module Apify
 			end
 			
 			# Try to get the storage instance from cache
-			cached_storage = if id
+			storage = if id
 				@_cache_by_id[id]
 			elsif name
 				@_cache_by_name[name]
 			end
 			
 			# This cast is needed since MyPy doesn't understand very well that Self and Storage are the same
-			# return cast(Self, cached_storage)
-			return cached_storage if cached_storage
+			# return cast(Self, storage)
+			return storage if storage
 
 			# Purge default storages if configured				
 			used_client._purge_on_start if
@@ -187,9 +187,7 @@ module Apify
 				# Cache by id and name
 				@_cache_by_id[storage._id] = storage
 				@_cache_by_name[storage._name] = storage if storage._name
-			
-			rescue => exc
-				Log.error exc.to_s
+
 			ensure
 				@_storage_creating_lock.release
 			end
