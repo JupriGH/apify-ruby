@@ -337,10 +337,10 @@ module Apify
 			)
 		end
 
-=begin
-		def _get_storage_client(self, force_cloud: bool) -> Optional[ApifyClientAsync]:
-			return self._apify_client if force_cloud else None
-=end
+		# TODO: who call this ?
+		#def _get_storage_client(self, force_cloud: bool) -> Optional[ApifyClientAsync]:
+		#	return self._apify_client if force_cloud else None
+
 
 		"""Open a dataset.
 
