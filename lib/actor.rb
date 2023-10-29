@@ -358,7 +358,6 @@ module Apify
 
 		Returns:
 			Dataset: An instance of the `Dataset` class for the given ID or name.
-
 		"""
 		def self.open_dataset(*args, **kwargs) = _get_default_instance.open_dataset *args, **kwargs 
 
