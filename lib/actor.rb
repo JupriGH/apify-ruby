@@ -28,8 +28,6 @@ module Apify
 			@config = config || Configuration.new		
 			@apify_client = new_client
 			@event_manager = EventManager.new @config
-			
-			
 			@_is_initialized = false
 			@_is_exiting = false
 			@_send_system_info_interval_task = nil 
@@ -173,8 +171,7 @@ module Apify
 		end
 		
 		def _cancel_event_emitting_intervals
-			[	@_send_persist_state_interval_task, 
-				@_send_system_info_interval_task	].each { |task| task.stop if task && !task.stopped? }
+			[@_send_persist_state_interval_task, @_send_system_info_interval_task].each {|task| task.stop if task && !task.stopped?}
 		end
 		
 		"""Exit the actor instance.
@@ -190,9 +187,7 @@ module Apify
 			event_listeners_timeout_secs (float, optional): How long should the actor wait for actor event listeners to finish before exiting.
 			status_message (str, optional): The final status message that the actor should display.
 		"""	
-		def self.exit_ exit_code=0, status_message: nil, event_listeners_timeout_secs: EVENT_LISTENERS_TIMEOUT_SECS
-			_get_default_instance.exit_ exit_code,  status_message: status_message, event_listeners_timeout_secs: event_listeners_timeout_secs
-		end
+		def self.exit_(*args, **kwargs) = _get_default_instance.exit_ *args, **kwargs
 
 		def exit_ exit_code=0, status_message: nil, event_listeners_timeout_secs: EVENT_LISTENERS_TIMEOUT_SECS
 			_raise_if_not_initialized
@@ -246,9 +241,7 @@ module Apify
 			exception (BaseException, optional): The exception with which the actor failed.
 			status_message (str, optional): The final status message that the actor should display.
 		"""	
-		def self.fail_ exit_code=1, exception: nil, status_message: nil
-			_get_default_instance.fail_ exit_code, exception: exception, status_message: status_message
-		end
+		def self.fail_(*args, **kwargs) = _get_default_instance.fail_ *args, **kwargs
 
 		def fail_ exit_code=1, exception: nil, status_message: nil
 			_raise_if_not_initialized
@@ -283,44 +276,34 @@ module Apify
 		Args:
 			main_actor_function (Callable): The user function which should be run in the actor
 		"""
-		def self.main main_actor_function
-			_get_default_instance.main main_actor_function
-		end
+		def self.main(main_actor_function) = _get_default_instance.main main_actor_function
 
 		def main main_actor_function
 						
 			raise "First argument passed to Actor.main() must be a function, but instead it was #{main_actor_function.class.name}" unless 
-				[Method, Proc].include?(main_actor_function.class)
+				main_actor_function.respond_to?(:call) # [Method, Proc].include?(main_actor_function.class)
 
-			
-			#Async do |task|
-
-				init
-			
-				begin
-					if main_actor_function.arity >= 1
-					
-						res = main_actor_function.call(self)
-					else
-						res = main_actor_function.call
-					end
-					
-					#if inspect.iscoroutinefunction(main_actor_function):
-					#	res = await main_actor_function()
-					#else:
-					#	res = main_actor_function()
-
-				rescue Exception => exc
-					fail_ ActorExitCodes::ERROR_USER_FUNCTION_THREW, exception: exc
-					return
+			init
+		
+			begin
+				res = if main_actor_function.arity >= 1
+					main_actor_function.call(self)
+				else
+					main_actor_function.call
 				end
+
+				#if inspect.iscoroutinefunction(main_actor_function):
+				#	res = await main_actor_function()
+				#else:
+				#	res = main_actor_function()
 				
 				exit_ (res.nil? ? 0 : res.is_a?(Integer) ? res : 0)
 				return res
-				#return cast(MainReturnType, res)
-			
-			#end
-		
+
+			rescue Exception => exc
+				fail_ ActorExitCodes::ERROR_USER_FUNCTION_THREW, exception: exc
+			end
+			#return cast(MainReturnType, res)		
 		end
 
 		"""Return a new instance of the Apify API client.
@@ -339,16 +322,8 @@ module Apify
 				(increases exponentially from this value)
 			timeout_secs (int, optional): The socket timeout of the HTTP requests sent to the Apify API
 		"""
-		def self.new_client token=nil, api_url: nil, max_retries: nil, min_delay_between_retries_millis: nil, timeout_secs: nil
-			_get_default_instance.new_client(
-				token,
-				api_url: api_url, 
-				max_retries: max_retries, 
-				in_delay_between_retries_millis: 
-				min_delay_between_retries_millis, 
-				timeout_secs: timeout_secs )
-		end
-
+		def self.new_client(*args, **kwargs) = _get_default_instance.new_client *args, **kwargs
+		
 		def new_client token=nil, api_url: nil, max_retries: nil, min_delay_between_retries_millis: nil, timeout_secs: nil
 			token 	||= @config.token
 			api_url ||= @config.api_base_url
@@ -385,9 +360,7 @@ module Apify
 			Dataset: An instance of the `Dataset` class for the given ID or name.
 
 		"""
-		def self.open_dataset id=nil, name: nil, force_cloud: false
-			_get_default_instance.open_dataset id, name: name, force_cloud: force_cloud
-		end
+		def self.open_dataset(*args, **kwargs) = _get_default_instance.open_dataset *args, **kwargs 
 
 		def open_dataset id=nil, name: nil, force_cloud: false
 			_raise_if_not_initialized
@@ -411,10 +384,8 @@ module Apify
 		Returns:
 			KeyValueStore: An instance of the `KeyValueStore` class for the given ID or name.
 		"""
-		def self.open_key_value_store id=nil, name: nil, force_cloud: false
-			_get_default_instance.open_key_value_store id, name: name, force_cloud: force_cloud
-		end
-		
+		def self.open_key_value_store(*args, **kwargs) = _get_default_instance.open_key_value_store *args, **kwargs 
+	
 		def open_key_value_store id=nil, name: nil, force_cloud: false	
 			_raise_if_not_initialized
 			KeyValueStore.open id, name: name, force_cloud: force_cloud, config: @config
@@ -438,9 +409,7 @@ module Apify
 		Returns:
 			RequestQueue: An instance of the `RequestQueue` class for the given ID or name.
 		"""
-		def self.open_request_queue id=nil, name: nil, force_cloud: false
-			_get_default_instance.open_request_queue id, name: name, force_cloud: force_cloud
-		end
+		def self.open_request_queue(*args, **kwargs) = _get_default_instance.open_request_queue *args, **kwargs
 		
 		def open_request_queue id=nil, name: nil, force_cloud: nil
 			_raise_if_not_initialized
@@ -452,9 +421,7 @@ module Apify
 		Args:
 			data (object or list of objects, optional): The data to push to the default dataset.
 		"""
-		def self.push_data data
-			_get_default_instance.push_data data
-		end
+		def self.push_data(data) = _get_default_instance.push_data data
 		
 		def push_data data
 			_raise_if_not_initialized
@@ -462,9 +429,7 @@ module Apify
 		end
 
 		"""Get the actor input value from the default key-value store associated with the current actor run."""
-		def self.get_input
-			_get_default_instance.get_input
-		end
+		def self.get_input = _get_default_instance.get_input
 
 		def get_input
 			_raise_if_not_initialized
@@ -487,9 +452,7 @@ module Apify
 			key (str): The key of the record which to retrieve.
 			default_value (Any, optional): Default value returned in case the record does not exist.
 		"""
-		def self.get_value key, default_value=nil
-			_get_default_instance.get_value(key=key, default_value=default_value)
-		end
+		def self.get_value(*args, **kwargs) = _get_default_instance.get_value *args, **kwargs
 
 		def get_value key, default_value=nil
 			_raise_if_not_initialized
@@ -503,9 +466,8 @@ module Apify
 			value (any): The value of the record which to set, or None, if the record should be deleted.
 			content_type (str, optional): The content type which should be set to the value.
 		"""
-		def self.set_value key, value=nil, content_type=nil
-			_get_default_instance.set_value key, value, content_type
-		end
+		def self.set_value(*args, **kwargs) = _get_default_instance.set_value *args, **kwargs
+		
 		def set_value key, value=nil, content_type=nil
 			_raise_if_not_initialized
 			open_key_value_store.set_value key, value, content_type
@@ -536,9 +498,7 @@ module Apify
 			event_name (ActorEventTypes): The actor event for which to listen to.
 			listener (Callable): The function which is to be called when the event is emitted (can be async).
 		"""
-		def self.on event_name, listener
-			_get_default_instance.on event_name, listener
-		end
+		def self.on(*args, **kwargs) = _get_default_instance.on *args, **kwargs
 
 		def on event_name, listener
 			_raise_if_not_initialized
@@ -551,9 +511,7 @@ module Apify
 			event_name (ActorEventTypes): The actor event for which to remove listeners.
 			listener (Callable, optional): The listener which is supposed to be removed. If not passed, all listeners of this event are removed.
 		"""
-		def self.off event_name, listener
-			_get_default_instance.off event_name, listener
-		end
+		def self.off(*args, **kwargs) =_get_default_instance.off *args, **kwargs
 		
 		def off event_name, listener
 			_raise_if_not_initialized
@@ -563,7 +521,7 @@ module Apify
 		"""Return `True` when the actor is running on the Apify platform, and `False` otherwise (for example when running locally)."""
 		def self.is_at_home = _get_default_instance.is_at_home
 		
-		def is_at_home =  @config.is_at_home
+		def is_at_home = @config.is_at_home
 
 		"""Return a dictionary with information parsed from all the `APIFY_XXX` environment variables.
 
@@ -611,19 +569,8 @@ module Apify
 
 		Returns:
 			dict: Info about the started actor run
-		"""	
-		def self.start(
-			actor_id, run_input = nil,
-			token: nil,
-			content_type: nil, build: nil, memory_mbytes: nil, timeout_secs: nil, wait_for_finish: nil, webhooks: nil
-		)
-			_get_default_instance.start(
-				actor_id, run_input,
-				token: token,
-				content_type: content_type, build: build, memory_mbytes: memory_mbytes, timeout_secs: timeout_secs, 
-				wait_for_finish: wait_for_finish, webhooks: webhooks
-			)
-		end
+		"""			
+		def self.start(*args, **kwargs) = _get_default_instance.start *args, **kwargs 
 		
 		def start(
 			actor_id, run_input = nil,
@@ -652,9 +599,7 @@ module Apify
 		Returns:
 			dict: Info about the aborted actor run
 		"""
-		def self.abort run_id, token: nil, gracefully: nil
-			_get_default_instance.abort run_id, token: token, gracefully: gracefully
-		end
+		def self.abort(*args, **kwargs) = _get_default_instance.abort *args, **kwargs
 		
 		def abort run_id, token: nil, status_message: nil, gracefully: nil
 			_raise_if_not_initialized
@@ -688,18 +633,8 @@ module Apify
 
 		Returns:
 			dict: Info about the started actor run
-		"""
-		def self.call(
-			actor_id, run_input = nil,
-			token: nil, 
-			content_type: nil, build: nil, memory_mbytes: nil, timeout_secs: nil, webhooks: nil, wait_secs: nil
-		)
-			_get_default_instance.call(
-				actor_id, run_input,
-				token: token, 
-				content_type: content_type, build: build, memory_mbytes: memory_mbytes, timeout_secs: timeout_secs, webhooks: webhooks, wait_secs: wait_secs
-			)
-		end
+		"""		
+		def self.call(*args, **kwargs) = _get_default_instance.call *args, **kwargs
 		
 		def call(
 			actor_id, run_input = nil,
@@ -741,20 +676,7 @@ module Apify
 		Returns:
 			dict: Info about the started actor run
 		"""
-		def self.call_task(
-			task_id, task_input = nil,
-			build: nil, memory_mbytes: nil, timeout_secs: nil, webhooks: nil, wait_secs: nil, token: nil
-		)
-			_get_default_instance.call_task(
-				task_id, task_input,
-				token: token,
-				build: build,
-				memory_mbytes: memory_mbytes,
-				timeout_secs: timeout_secs,
-				webhooks: webhooks,
-				wait_secs: wait_secs
-			)
-		end
+		def self.call_task(*args, **kwargs) = _get_default_instance.call_task *args, **kwargs
 
 		def call_task(
 			task_id, task_input = nil,
@@ -790,57 +712,34 @@ module Apify
 		Returns:
 			dict: The actor run data.
 		"""
-=begin
-		@classmethod
-		async def metamorph(
-			cls,
-			target_actor_id: str,
-			run_input: Optional[Any] = None,
-			*,
-			target_actor_build: Optional[str] = None,
-			content_type: Optional[str] = None,
-			custom_after_sleep_millis: Optional[int] = None,
-		) -> None:
 
-			return await cls._get_default_instance().metamorph(
-				target_actor_id=target_actor_id,
-				target_actor_build=target_actor_build,
-				run_input=run_input,
-				content_type=content_type,
-				custom_after_sleep_millis=custom_after_sleep_millis,
-			)
+		def self.metamorph(*args, **kwargs) = _get_default_instance.metamorph *args, **kwargs
 
-		async def _metamorph_internal(
-			self,
-			target_actor_id: str,
-			run_input: Optional[Any] = None,
-			*,
-			target_actor_build: Optional[str] = None,
-			content_type: Optional[str] = None,
-			custom_after_sleep_millis: Optional[int] = None,
-		) -> None:
-			self._raise_if_not_initialized()
+		def metamorph target_actor_id, run_input = nil, target_actor_build: nil, content_type: nil, custom_after_sleep_millis: nil
+			_raise_if_not_initialized
 
-			if not self.is_at_home():
-				self.log.error('Actor.metamorph() is only supported when running on the Apify platform.')
+			if !is_at_home
+				Log.error 'Actor.metamorph() is only supported when running on the Apify platform.'
 				return
+			end
 
-			if not custom_after_sleep_millis:
-				custom_after_sleep_millis = self._config.metamorph_after_sleep_millis
+			custom_after_sleep_millis ||= @_config.metamorph_after_sleep_millis
 
 			# If is_at_home() is True, config.actor_run_id is always set
-			assert self._config.actor_run_id is not None
+			raise unless @_config.actor_run_id
 
-			await self._apify_client.run(self._config.actor_run_id).metamorph(
-				target_actor_id=target_actor_id,
-				run_input=run_input,
-				target_actor_build=target_actor_build,
-				content_type=content_type,
+			@apify_client.run(@_config.actor_run_id).metamorph(
+				target_actor_id,
+				run_input,
+				target_actor_build: target_actor_build,
+				content_type: content_type
 			)
 
-			if custom_after_sleep_millis:
-				await asyncio.sleep(custom_after_sleep_millis / 1000)
-=end
+			if custom_after_sleep_millis # && custom_after_sleep_millis > 0
+				#asyncio.sleep(custom_after_sleep_millis / 1000)
+				sleep custom_after_sleep_millis / 1000.0
+			end
+		end
 
 		"""Internally reboot this actor.
 
@@ -850,12 +749,7 @@ module Apify
 			event_listeners_timeout_secs (int, optional): How long should the actor wait for actor event listeners to finish before exiting
 			custom_after_sleep_millis (int, optional): How long to sleep for after the reboot, to wait for the container to be stopped.
 		"""
-		def self.reboot event_listeners_timeout_secs: EVENT_LISTENERS_TIMEOUT_SECS, custom_after_sleep_millis: nil
-			_get_default_instance.reboot(
-				event_listeners_timeout_secs: event_listeners_timeout_secs,
-				custom_after_sleep_millis: custom_after_sleep_millis,
-			)
-		end
+		def self.reboot(*args, **kwargs) = _get_default_instance.reboot *args, **kwargs
 		
 		def reboot event_listeners_timeout_secs: EVENT_LISTENERS_TIMEOUT_SECS, custom_after_sleep_millis: nil
 			_raise_if_not_initialized
@@ -904,16 +798,7 @@ module Apify
 			dict: The created webhook
 		"""
 
-		def self.add_webhook(
-			event_types, request_url,
-			payload_template: nil, ignore_ssl_errors: nil, do_not_retry: nil, idempotency_key: nil
-		)
-
-			_get_default_instance.add_webhook(
-				event_types, request_url,
-				payload_template: payload_template, ignore_ssl_errors: ignore_ssl_errors, do_not_retry: do_not_retry, idempotency_key: idempotency_key
-			)
-		end
+		def self.add_webhook(*args, **kwargs) = _get_default_instance.add_webhook *args, **kwargs
 		
 		def add_webhook(
 			event_types, request_url,
@@ -949,9 +834,7 @@ module Apify
 		Returns:
 			dict: The updated actor run object
 		"""
-		def self.set_status_message status_message, is_terminal: nil
-			_get_default_instance.set_status_message status_message, is_terminal: is_terminal
-		end
+		def self.set_status_message(*args, **kwargs) = _get_default_instance.set_status_message *args, **kwargs
 
 		def set_status_message status_message, is_terminal: nil
 			_raise_if_not_initialized
@@ -988,22 +871,7 @@ module Apify
 			ProxyConfiguration, optional: ProxyConfiguration object with the passed configuration,
 										  or None, if no proxy should be used based on the configuration.
 		"""
-		def self.create_proxy_configuration(
-			actor_proxy_input = nil,  # this is the raw proxy input from the actor run input, it is not spread or snake_cased in here
-			password: nil,
-			groups: nil,
-			country_code: nil,
-			proxy_urls: nil,
-			new_url_function: nil # Optional[Union[Callable[[Optional[str]], str], Callable[[Optional[str]], Awaitable[str]]]] = None,
-		)
-			_get_default_instance.create_proxy_configuration(
-				actor_proxy_input, 
-				password: password, 
-				groups: groups, 
-				country_code: country_code, 
-				proxy_urls: proxy_urls, 
-				new_url_function: new_url_function )
-		end
+		def self.create_proxy_configuration(*args, **kwargs) = _get_default_instance.create_proxy_configuration *args, **kwargs
 		
 		def create_proxy_configuration(
 			actor_proxy_input = nil, # this is the raw proxy input from the actor run input, it is not spread or snake_cased in here

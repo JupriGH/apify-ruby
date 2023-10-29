@@ -127,12 +127,12 @@ module Apify
 			@meta_origin 					= getenv(ApifyEnvVars::META_ORIGIN)
 			@metamorph_after_sleep_millis 	= metamorph_after_sleep_millis || getenv(ApifyEnvVars::METAMORPH_AFTER_SLEEP_MILLIS, 300000)  # noqa: E501
 			@persist_state_interval_millis 	= persist_state_interval_millis || getenv(ApifyEnvVars::PERSIST_STATE_INTERVAL_MILLIS, 60000)  # noqa: E501
-			@persist_storage 				= persist_storage || getenv(ApifyEnvVars::PERSIST_STORAGE, true)
+			@persist_storage 				= _is_bool(persist_storage) ? persist_storage : getenv(ApifyEnvVars::PERSIST_STORAGE, true)
 			@proxy_hostname 				= proxy_hostname || getenv(ApifyEnvVars::PROXY_HOSTNAME, 'proxy.apify.com')
 			@proxy_password 				= proxy_password || getenv(ApifyEnvVars::PROXY_PASSWORD)
 			@proxy_port 					= proxy_port || getenv(ApifyEnvVars::PROXY_PORT, 8000)
 			@proxy_status_url 				= proxy_status_url || getenv(ApifyEnvVars::PROXY_STATUS_URL, 'http://proxy.apify.com')
-			@purge_on_start 				= purge_on_start || getenv(ApifyEnvVars::PURGE_ON_START, false)
+			@purge_on_start 				= _is_bool(purge_on_start) ? purge_on_start : getenv(ApifyEnvVars::PURGE_ON_START, false)
 			@started_at 					= getenv(ActorEnvVars::STARTED_AT)
 			@timeout_at 					= getenv(ActorEnvVars::TIMEOUT_AT)	
 			@token 							= token || getenv(ApifyEnvVars::TOKEN)
@@ -146,10 +146,10 @@ module Apify
 			#pp self
 		end
 		
-		### Addiotional API by JUPRI
+		### Helpers
 		def to_json = to_h.to_json
 		def to_h = instance_variables.map { |a| [a, instance_variable_get(a)] }.to_h
-		
+		def _is_bool(var) = var.is_a?(TrueClass) || var.is_a?(FalseClass) 		
 		def getenv(*args) = Utils::_fetch_and_parse_env_var(*args)
 
 		def self._get_default_instance = @@_default_instance ||= new

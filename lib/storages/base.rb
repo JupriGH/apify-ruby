@@ -84,11 +84,10 @@ module Apify
 		end
 		
 		###================================================================================= ABSTRACTS
-=begin
-		def self._get_human_friendly_label
-			raise 'You must override this method in the subclass!' # NotImplementedError
-		end
-=end
+		#def self._get_human_friendly_label
+		#	raise 'You must override this method in the subclass!' # NotImplementedError
+		#end
+
 		def self._get_default_id config
 			raise NotImplementedError.new 'You must override this method in the subclass!'
 		end
