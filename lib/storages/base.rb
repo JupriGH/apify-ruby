@@ -163,7 +163,7 @@ module Apify
 			#raise if !@_storage_creating_lock
 			
 			@_storage_creating_lock.acquire
-
+			begin	
 				# Create the storage
 				if id && !is_default_storage_on_local
 
@@ -187,15 +187,19 @@ module Apify
 				# Cache by id and name
 				@_cache_by_id[storage._id] = storage
 				@_cache_by_name[storage._name] = storage if storage._name
-
-			@_storage_creating_lock.release
+			
+			rescue => exc
+				Log.error exc.to_s
+			ensure
+				@_storage_creating_lock.release
+			end
 			
 			return storage
 		end
 
 		def self._remove_from_cache id, name=nil
 			@_cache_by_id.delete(id) if @_cache_by_id
-			@_cache_by_name.delete(name) if @_cache_by_name && name		
+			@_cache_by_name.delete(name) if @_cache_by_name && name
 		end
 		
 		def _remove_from_cache = self.class._remove_from_cache @_id, @_name
