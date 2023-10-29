@@ -62,10 +62,10 @@ module Apify
 
 		attr_accessor :_id, :_name
 		
-		@@_cache_by_id
-		@@_cache_by_name
-		# _storage_creating_lock: Optional[asyncio.Lock] = None
-
+		# class attributes
+		# @_cache_by_id
+ 		# @_cache_by_name
+		
 		"""Initialize the storage.
 
 		Do not use this method directly, but use `Actor.open_<STORAGE>()` instead.
@@ -104,11 +104,9 @@ module Apify
 
 		def self._ensure_class_initialized
 			# TODO: cache type force_cloud / local
-			@@_cache_by_id 		||= {} 
-			@@_cache_by_name 	||= {}
-
-			#if cls._storage_creating_lock is None:
-			#    cls._storage_creating_lock = asyncio.Lock()
+			@_cache_by_id 		||= {} 
+			@_cache_by_name 	||= {}
+			# @_storage_creating_lock ||= asyncio.Lock()
 		end
 
 		"""Open a storage, or return a cached storage object if it was opened before.
@@ -133,8 +131,8 @@ module Apify
 		def self._open_internal id=nil, name: nil, force_cloud: false, config: nil
 			_ensure_class_initialized
 
-			raise if !@@_cache_by_id
-			raise if !@@_cache_by_name
+			raise if !@_cache_by_id
+			raise if !@_cache_by_name
 
 			raise "Can't use `id` and `name` at the same time!" if (id && name) # NEW: error message
 			
@@ -150,10 +148,11 @@ module Apify
 			end
 			
 			# Try to get the storage instance from cache
+			#cached_storage = nil
 			cached_storage = if id
-				@@_cache_by_id[id]
+				@_cache_by_id[id]
 			elsif name
-				@@_cache_by_name[name]
+				@_cache_by_name[name]
 			end
 			
 			# This cast is needed since MyPy doesn't understand very well that Self and Storage are the same
@@ -190,15 +189,15 @@ module Apify
 				storage = new storage_info['id'], name: storage_info['name'], client: used_client, config: used_config
 				
 				# Cache by id and name
-				@@_cache_by_id[storage._id] = storage
-				@@_cache_by_name[storage._name] = storage if storage._name
+				@_cache_by_id[storage._id] = storage
+				@_cache_by_name[storage._name] = storage if storage._name
 
 			return storage
 		end
 
 		def _remove_from_cache
-			@@_cache_by_id.delete(@_id) if @@_cache_by_id
-			@@_cache_by_name.delete(@_name) if @@_cache_by_name && @_name
+			@_cache_by_id.delete(@_id) if @_cache_by_id
+			@_cache_by_name.delete(@_name) if @_cache_by_name && @_name
 		end
 	end
 end

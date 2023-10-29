@@ -68,11 +68,11 @@ module Apify
 			raise 'EventManager was not initialized!' if !@_initialized # RuntimeError
 
 			if @_platform_events_websocket
-				Log.debug "@_platform_events_websocket.close"
+				# Log.debug "@_platform_events_websocket.close"
 				@_platform_events_websocket.close
 			end
 			if @_process_platform_messages_task
-				Log.debug "@_process_platform_messages_task.stop"
+				# Log.debug "@_process_platform_messages_task.stop"
 				@_process_platform_messages_task.stop
 			end
 			
@@ -95,8 +95,8 @@ module Apify
 			raise 'EventManager was not initialized!' if !@_initialized # RuntimeError
 
 			# Detect whether the listener will accept the event_data argument
-			raise 'The "listener" argument must be a callable which accepts 0 or 1 arguments!' if 
-				![Method, Proc].include?(listener.class) || (listener.parameters.count { |x| [:req,:opt].include?(x[0]) } < 1)
+			raise 'The "listener" argument must be a callable which accepts 0 or 1 arguments!' unless 
+				include.respond_to?(:call) && (listener.parameters.count {|x| [:req,:opt].include?(x[0])} < 1)
 				
 			#event_name = maybe_extract_enum_member_value(event_name)
 
@@ -170,17 +170,16 @@ module Apify
 			else
 				if timeout_secs
 					Log.warn "Cancelling #{tasks.length} listeners in #{timeout_secs} seconds ..."
-					sleep timeout_secs if timeout_secs 
+					Async::Task.current.sleep timeout_secs if timeout_secs 
 				end
 				if !tasks.empty?
-					
 					if timeout_secs
 						Log.warn "Timed out waiting for event listeners to complete, unfinished #{tasks.length} event listeners will be canceled"
 					else
 						Log.warn "Unfinished #{tasks.length} event listeners will be canceled"
 					end
 					
-					tasks.each { |task| task.stop }
+					tasks.each {|task| task.stop}
 					tasks.clear
 				end
 			end
@@ -195,10 +194,10 @@ module Apify
 
 			begin
 				endpoint = Async::HTTP::Endpoint.parse(url)
-				Log.debug "!!WS URL!!".red, url
+				#Log.debug "!!WS URL!!".red, url
 				
 				@_platform_events_websocket = connection = Async::WebSocket::Client.connect(endpoint)				
-				Log.debug "!!WS CONNECTED!!".red
+				#Log.debug "!!WS CONNECTED!!".red
 				
 				@_process_platform_messages_task = Async {
 					while message = connection.read							
