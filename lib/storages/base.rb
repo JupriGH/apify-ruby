@@ -61,11 +61,7 @@ module Apify
 	class BaseStorage
 
 		attr_accessor :_id, :_name
-		
-		# class attributes
-		# @_cache_by_id
- 		# @_cache_by_name
-		
+
 		"""Initialize the storage.
 
 		Do not use this method directly, but use `Actor.open_<STORAGE>()` instead.
@@ -82,7 +78,7 @@ module Apify
 			@_storage_client = client
 			@_config = config
 		end
-		
+
 		###================================================================================= ABSTRACTS
 		#def self._get_human_friendly_label
 		#	raise 'You must override this method in the subclass!' # NotImplementedError
@@ -103,10 +99,12 @@ module Apify
 		###=================================================================================
 
 		def self._ensure_class_initialized
+			# class attributes
 			# TODO: cache type force_cloud / local
+	
 			@_cache_by_id 		||= {} 
 			@_cache_by_name 	||= {}
-			# @_storage_creating_lock ||= asyncio.Lock()
+			@_storage_creating_lock ||= Async::Semaphore.new(1) # asyncio.Lock()
 		end
 
 		"""Open a storage, or return a cached storage object if it was opened before.
@@ -131,8 +129,8 @@ module Apify
 		def self._open_internal id=nil, name: nil, force_cloud: false, config: nil
 			_ensure_class_initialized
 
-			raise if !@_cache_by_id
-			raise if !@_cache_by_name
+			#raise if !@_cache_by_id
+			#raise if !@_cache_by_name
 
 			raise "Can't use `id` and `name` at the same time!" if (id && name) # NEW: error message
 			
@@ -148,7 +146,6 @@ module Apify
 			end
 			
 			# Try to get the storage instance from cache
-			#cached_storage = nil
 			cached_storage = if id
 				@_cache_by_id[id]
 			elsif name
@@ -159,14 +156,13 @@ module Apify
 			# return cast(Self, cached_storage)
 			return cached_storage if cached_storage
 
-			# Purge default storages if configured	
-			
+			# Purge default storages if configured				
 			used_client._purge_on_start if
 				used_config.purge_on_start && used_client.class == MemoryStorage::Client
 
-			#assert cls._storage_creating_lock is not None
-			#async with cls._storage_creating_lock:
-
+			#raise if !@_storage_creating_lock
+			
+			@_storage_creating_lock.acquire
 
 				# Create the storage
 				if id && !is_default_storage_on_local
@@ -192,12 +188,16 @@ module Apify
 				@_cache_by_id[storage._id] = storage
 				@_cache_by_name[storage._name] = storage if storage._name
 
+			@_storage_creating_lock.release
+			
 			return storage
 		end
 
-		def _remove_from_cache
-			@_cache_by_id.delete(@_id) if @_cache_by_id
-			@_cache_by_name.delete(@_name) if @_cache_by_name && @_name
+		def self._remove_from_cache id, name=nil
+			@_cache_by_id.delete(id) if @_cache_by_id
+			@_cache_by_name.delete(name) if @_cache_by_name && name		
 		end
+		
+		def _remove_from_cache = self.class._remove_from_cache @_id, @_name
 	end
 end
