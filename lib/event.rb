@@ -96,7 +96,7 @@ module Apify
 
 			# Detect whether the listener will accept the event_data argument
 			raise 'The "listener" argument must be a callable which accepts 0 or 1 arguments!' unless 
-				include.respond_to?(:call) && (listener.parameters.count {|x| [:req,:opt].include?(x[0])} < 1)
+				listener.respond_to?(:call) # && (listener.parameters.count {|x| [:req,:opt].include?(x[0])} >= 1)
 				
 			#event_name = maybe_extract_enum_member_value(event_name)
 

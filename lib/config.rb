@@ -48,7 +48,7 @@ module Apify
 			:xvfb,
 			:system_info_interval_millis
 		
-		@@_default_instance = nil
+		@@_default_instance = nil # SINGLETON
 
         """Create a `Configuration` instance.
 
@@ -139,19 +139,8 @@ module Apify
 			@user_id 						= getenv(ApifyEnvVars::USER_ID)
 			@xvfb 							= getenv(ApifyEnvVars::XVFB, false)
 			@system_info_interval_millis 	= system_info_interval_millis || getenv(ApifyEnvVars::SYSTEM_INFO_INTERVAL_MILLIS, 60000)
-			
-			#ENV.each do |key, val|
-			#	p "#{key}=#{val}"
-			#end
-			#pp self
 		end
 		
-		### Helpers
-		def to_json = to_h.to_json
-		def to_h = instance_variables.map { |a| [a, instance_variable_get(a)] }.to_h
-		def _is_bool(var) = var.is_a?(TrueClass) || var.is_a?(FalseClass) 		
-		def getenv(*args) = Utils::_fetch_and_parse_env_var(*args)
-
 		def self._get_default_instance = @@_default_instance ||= new
 
 		"""Retrive the global configuration.
@@ -160,6 +149,12 @@ module Apify
 		Also accessible via `Actor.config`.
 		"""		
 		def self.get_global_configuration = _get_default_instance
+
+		### Helpers
+		def to_json = to_h.to_json
+		def to_h = instance_variables.map { |a| [a, instance_variable_get(a)] }.to_h
+		def _is_bool(var) = var.is_a?(TrueClass) || var.is_a?(FalseClass) 		
+		def getenv(*args) = Utils::_fetch_and_parse_env_var(*args)
 
 	end
 	

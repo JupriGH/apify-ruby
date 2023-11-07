@@ -2,6 +2,9 @@
 require 'json'
 require 'csv'
 require 'net/http'
+require 'async/websocket' 
+require 'sys-proctable' 
+require 'mime-types'
 
 # Apify Internal Modules
 require_relative 'shared/consts'
